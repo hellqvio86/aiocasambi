@@ -125,6 +125,9 @@ class Units():
                     if 'fixture_model' in msg['details']:
                         self.units[key].fixture_model = msg['details']['fixture_model']
 
+                    if 'OEM' in msg['details']:
+                        self.units[key].oem = msg['details']['OEM']
+
                     changes[key] = self.units[key]
         
         return changes
@@ -200,6 +203,7 @@ class Unit():
         self._fixture = None
         self._wire_id = wire_id
         self._web_sock = web_sock
+        self._oem = None
 
     @property
     def value(self):
@@ -227,6 +231,14 @@ class Unit():
     @fixture_model.setter
     def fixture_model(self, fixture_model):
         self._fixture_model = fixture_model
+
+    @property
+    def oem(self):
+        return self._oem
+
+    @oem.setter
+    def oem(self, oem):
+        self._oem = oem
 
     @property
     def fixture(self):
@@ -357,6 +369,9 @@ class Unit():
 
         if self._fixture_model:
             result = f"{result} fixture_model={self._fixture_model}"
+
+        if self._oem:
+            result = f"{result} oem={self._oem}"
 
         result = f"{result} >"
 

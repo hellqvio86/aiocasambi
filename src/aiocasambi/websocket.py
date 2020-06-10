@@ -35,6 +35,12 @@ class WSClient():
         self._data = None
         self._state = None
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        result = f"<WSClient state={self._state} wire_id={self.wire_id}>"
+
+        return result
+
     @property
     def data(self):
         """Get data"""

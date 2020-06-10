@@ -148,6 +148,9 @@ class Controller:
         )
         self.websocket.start()
 
+    def get_websocket_state(self):
+        return self.websocket.state
+
     def stop_websocket(self) -> None:
         """Close websession and websocket to Casambi."""
         LOGGER.info("Shutting down connections to Casambi.")

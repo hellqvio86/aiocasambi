@@ -18,11 +18,7 @@ class Units():
         self._web_sock = web_sock
         self.units = {}
 
-        LOGGER.debug(f"Processing units {pformat(units)}")
-
         self.__process_units(units)
-
-        LOGGER.debug(f"Processing units {pformat(self.units)}")
 
     def process_unit_event(self, msg):
         """
@@ -93,6 +89,9 @@ class Units():
 
         LOGGER.debug(f"Processing msg: {msg}")
 
+        if 'online' in msg and msg['online'] == False:
+            LOGGER.debug(f"Gateway is not online msg{msg}")
+
         if 'method' in msg and msg['method'] == 'unitChanged':
             controls = msg['controls']
             for control in controls:
@@ -105,11 +104,17 @@ class Units():
                         # New unit discovered
                         #name = (msg['details']['name']).strip()
                         address = msg['details']['address']
+                        online = False
                         unit_id = msg['id']
+
+                        if 'online' in msg:
+                            online = msg['online']
+
                         unit = Unit(
                             name= name,
                             address = address,
                             unit_id = unit_id,
+                            online = online,
                             wire_id = self._wire_id,
                             network_id = self._network_id,
                             web_sock = self._web_sock
@@ -121,6 +126,9 @@ class Units():
 
                     if 'fixture' in msg['details']:
                         self.units[key].fixture = msg['details']['fixture']
+
+                    if 'online' in msg:
+                        self.units[key].online = msg['online']
 
                     if 'fixture_model' in msg['details']:
                         self.units[key].fixture_model = msg['details']['fixture_model']
@@ -192,7 +200,7 @@ class Units():
 
 class Unit():
     """Represents a client network device."""
-    def __init__(self, *, name, address, unit_id, network_id, wire_id, web_sock, value=0, state=UNIT_STATE_OFF):
+    def __init__(self, *, name, address, unit_id, network_id, wire_id, web_sock, value=0, online=True, state=UNIT_STATE_OFF):
         self._name = name
         self._address = address
         self._unit_id = unit_id
@@ -204,6 +212,7 @@ class Unit():
         self._wire_id = wire_id
         self._web_sock = web_sock
         self._oem = None
+        self._online = online
 
     @property
     def value(self):
@@ -233,6 +242,14 @@ class Unit():
         self._fixture_model = fixture_model
 
     @property
+    def online(self):
+        return self._online
+
+    @online.setter
+    def online(self, online):
+        self._online = online
+
+    @property
     def oem(self):
         return self._oem
 
@@ -251,6 +268,10 @@ class Unit():
     @property
     def unique_id(self):
         return f"{self._network_id}-{self._unit_id}"
+    
+    @property
+    def websocket(self):
+        return self._web_sock
 
     async def turn_unit_off(self):
         # Unit_id needs to be an integer
@@ -372,6 +393,9 @@ class Unit():
 
         if self._oem:
             result = f"{result} oem={self._oem}"
+        
+        if self._web_sock:
+            result = f"{result} websocket={self._web_sock}"
 
         result = f"{result} >"
 

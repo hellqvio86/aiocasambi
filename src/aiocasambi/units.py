@@ -383,7 +383,7 @@ class Unit():
 
         wire_id = self._wire_id
 
-        result = f"<Unit {name}: unit_id={unit_id} address={address} value={value} state={state} network_id={network_id} wire_id={wire_id}"
+        result = f"<Unit {name}: unit_id={unit_id} address={address} value={value} state={state} online={self._online} network_id={network_id} wire_id={wire_id}"
 
         if self._fixture:
             result = f"{result} fixure={self._fixture}"

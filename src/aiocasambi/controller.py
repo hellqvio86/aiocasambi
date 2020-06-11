@@ -177,15 +177,26 @@ class Controller:
             LOGGER.debug(f"signal: {signal}")
 
 
+    def handle_peer_changed(self, message: dict):
+        if 'online' in message:
+            self.units.online = message['online']
+
     def message_handler(self, message: dict) -> dict:
         """Receive event from websocket and identifies where the event belong."""
         changes = {}
 
         LOGGER.debug(f"message: {message}")
 
+        # Signaling of online gateway
+        # {'wire': 9, 'method': 'peerChanged', 'online': True}
+        # {'method': 'peerChanged', 'online': False, 'wire': 9}
+        #
+        # New state
+        # {'condition': 0.0, 'wire': 9, 'activeSceneId': 0, 'controls': [{'type': 'Overheat', 'status': 'ok'}, {'type': 'Dimmer', 'value': 0.0}], 'sensors': [], 'method': 'unitChanged', 'online': True, 'details': {'_name': 'ffff', 'name': 'Name', 'address': 'fffff', 'fixture_model': 'LD220WCM', 'fixture': 859.0, 'OEM': 'Vadsbo'}, 'id': 8, 'priority': 3.0, 'on': True, 'status': 'ok'}
         if 'method' in message and message['method'] == 'unitChanged':
             changes = self.units.process_unit_event(message)
-
+        elif 'method' in message and message['method'] == 'peerChanged':
+            self.handle_peer_changed(message)
         return changes
 
 

@@ -12,11 +12,12 @@ UNIT_STATE_OFF = 'off'
 UNIT_STATE_ON = 'on'
 
 class Units():
-    def __init__(self, units: set, *, network_id, wire_id, web_sock) -> None:
+    def __init__(self, units: set, *, network_id, wire_id, web_sock, online=True) -> None:
         self._network_id = network_id
         self._wire_id = wire_id
         self._web_sock = web_sock
         self.units = {}
+        self._online = online
 
         self.__process_units(units)
 
@@ -139,6 +140,17 @@ class Units():
                     changes[key] = self.units[key]
         
         return changes
+
+    @property
+    def online(self):
+        return self._online
+
+    @online.setter
+    def online(self, online):
+        self._online = online
+
+        for _, unit in self.units.items():
+            unit.online = online
 
 
     def get_units(self):

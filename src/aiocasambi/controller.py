@@ -2,8 +2,6 @@
 
 import logging
 
-from pprint import pformat
-
 from aiohttp import client_exceptions
 
 from .errors import raise_error, LoginRequired, ResponseError, RequestError
@@ -77,7 +75,7 @@ class Controller:
             'password': self.user_password,
         }
 
-        LOGGER.debug(f" headers: {pformat(headers)} auth: {pformat(auth)}")
+        LOGGER.debug(f" headers: {headers} auth: {auth}")
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
@@ -100,7 +98,7 @@ class Controller:
             "password": self.network_password,
         }
 
-        LOGGER.debug(f"headers: {pformat(headers)} auth: {pformat(auth)}")
+        LOGGER.debug(f"headers: {headers} auth: {auth}")
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
@@ -130,7 +128,7 @@ class Controller:
         self.scenes = Scenes(network_information['scenes'], web_sock = self.websocket, network_id=self._network_id, wire_id=self.wire_id)
 
 
-        LOGGER.debug(f"network__information: {pformat(network_information)}")
+        LOGGER.debug(f"network__information: {network_information}")
 
         return
 
@@ -183,7 +181,7 @@ class Controller:
         """Receive event from websocket and identifies where the event belong."""
         changes = {}
 
-        LOGGER.debug(f"message: {pformat(message)}")
+        LOGGER.debug(f"message: {message}")
 
         if 'method' in message and message['method'] == 'unitChanged':
             changes = self.units.process_unit_event(message)

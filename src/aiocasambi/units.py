@@ -99,7 +99,7 @@ class Units():
         changes = {}
         key = f"{self._network_id}-{msg['id']}"
 
-        LOGGER.debug(f"Processing msg: {msg}")
+        LOGGER.debug(f"process_unit_event Processing msg: {msg}")
 
         if 'online' in msg and msg['online'] == False:
             LOGGER.debug(f"Gateway is not online msg{msg}")
@@ -107,10 +107,15 @@ class Units():
         if 'method' in msg and msg['method'] == 'unitChanged':
             controls = msg['controls']
             for control in controls:
-                LOGGER.debug(f"method unit changed control: {control}")
+                LOGGER.debug(f"method \"unitChanged\" control: {control}")
                 if 'type' in control and control['type'] == 'Dimmer':
-                    name = (msg['details']['name']).strip()
-                    LOGGER.debug(f"key: {key} name: {name} method unit changed control value: {control['value']}")
+                    name = ''
+                    if 'details' in msg and 'name' in msg['details']:
+                            name = (msg['details']['name']).strip()
+                    elif 'name' in msg:
+                        name = (msg['name']).strip()
+                    LOGGER.debug(f"name: {name}")
+                    LOGGER.debug(f"key: {key} name: {name} msg: {msg} method unit changed control value: {control['value']}")
 
                     if key not in self.units:
                         # New unit discovered

@@ -132,6 +132,7 @@ class WSClient():
             if self.state != STATE_STOPPED:
                 LOGGER.error(f"websocket: Unexpected error {err}")
                 self.state = STATE_DISCONNECTED
+                raise err
 
         else:
             if self.state != STATE_STOPPED:

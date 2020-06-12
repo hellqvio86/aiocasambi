@@ -177,10 +177,6 @@ class Controller:
             LOGGER.debug(f"signal: {signal}")
 
 
-    def handle_peer_changed(self, message: dict):
-        if 'online' in message:
-            self.units.online = message['online']
-
     def message_handler(self, message: dict) -> dict:
         """Receive event from websocket and identifies where the event belong."""
         changes = {}
@@ -196,7 +192,7 @@ class Controller:
         if 'method' in message and message['method'] == 'unitChanged':
             changes = self.units.process_unit_event(message)
         elif 'method' in message and message['method'] == 'peerChanged':
-            self.handle_peer_changed(message)
+            changes = self.units.handle_peer_changed(message)
         return changes
 
 
@@ -233,5 +229,5 @@ class Controller:
 
         except client_exceptions.ClientError as err:
             raise RequestError(
-                f"Error requesting data from {self.host}: {err}"
+                f"Error requesting data: {err}"
             ) from None

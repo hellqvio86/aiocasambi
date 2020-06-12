@@ -21,6 +21,17 @@ class Units():
 
         self.__process_units(units)
 
+    def handle_peer_changed(self, message: dict):
+        changes = {}
+        if 'online' in message:
+            self.online = message['online']
+
+        for key, unit in self.units.items():
+            changes[key] = unit
+        
+        return changes
+
+
     def process_unit_event(self, msg):
         """
         Event like:

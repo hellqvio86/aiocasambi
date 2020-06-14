@@ -122,7 +122,7 @@ class Units():
                         #name = (msg['details']['name']).strip()
                         if 'details' in msg and 'address' in msg['details']:
                              address = msg['details']['address']
-                        elif 'address' in msg['details']:
+                        elif 'address' in msg:
                              address = msg['address']
                         online = False
                         unit_id = msg['id']
@@ -144,22 +144,22 @@ class Units():
                     # Update value
                     self.units[key].value = control['value']
 
-                    if 'details' in msg and 'fixture' in msg['details']:
-                        self.units[key].fixture = msg['details']['fixture']
-                    elif 'address' in msg['details']:
-                         address = msg['address']
+                    if 'details' in msg and 'fixtureId' in msg['details']:
+                        self.units[key].fixture = msg['details']['fixtureId']
+                    elif 'fixtureId' in msg:
+                        self.units[key].fixture = msg['fixtureId']
 
                     if 'online' in msg:
                         self.units[key].online = msg['online']
 
                     if 'details' in msg and 'fixture_model' in msg['details']:
                         self.units[key].fixture_model = msg['details']['fixture_model']
-                    elif 'fixture_model' in msg['details']:
+                    elif 'fixture_model' in msg:
                         self.units[key].fixture_model = msg['fixture_model']
 
                     if 'details' in msg and 'OEM' in msg['details']:
                         self.units[key].oem = msg['details']['OEM']
-                    elif 'OEM' in msg['details']:
+                    elif 'OEM' in msg:
                         self.units[key].oem = msg['OEM']
 
                     changes[key] = self.units[key]

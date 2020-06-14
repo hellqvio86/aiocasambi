@@ -120,7 +120,10 @@ class Units():
                     if key not in self.units:
                         # New unit discovered
                         #name = (msg['details']['name']).strip()
-                        address = msg['details']['address']
+                        if 'details' in msg and 'address' in msg['details']:
+                             address = msg['details']['address']
+                        elif 'address' in msg['details']:
+                             address = msg['address']
                         online = False
                         unit_id = msg['id']
 
@@ -141,17 +144,23 @@ class Units():
                     # Update value
                     self.units[key].value = control['value']
 
-                    if 'fixture' in msg['details']:
+                    if 'details' in msg and 'fixture' in msg['details']:
                         self.units[key].fixture = msg['details']['fixture']
+                    elif 'address' in msg['details']:
+                         address = msg['address']
 
                     if 'online' in msg:
                         self.units[key].online = msg['online']
 
-                    if 'fixture_model' in msg['details']:
+                    if 'details' in msg and 'fixture_model' in msg['details']:
                         self.units[key].fixture_model = msg['details']['fixture_model']
+                    elif 'fixture_model' in msg['details']:
+                        self.units[key].fixture_model = msg['fixture_model']
 
-                    if 'OEM' in msg['details']:
+                    if 'details' in msg and 'OEM' in msg['details']:
                         self.units[key].oem = msg['details']['OEM']
+                    elif 'OEM' in msg['details']:
+                        self.units[key].oem = msg['OEM']
 
                     changes[key] = self.units[key]
         

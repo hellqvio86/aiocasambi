@@ -114,7 +114,6 @@ class Units():
                         name = (msg['details']['name']).strip()
                     elif 'name' in msg:
                         name = (msg['name']).strip()
-                    LOGGER.debug(f"name: {name}")
                     LOGGER.debug(f"key: {key} name: {name} msg: {msg} method unit changed control value: {control['value']}")
 
                     if key not in self.units:

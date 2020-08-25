@@ -283,6 +283,8 @@ class Unit():
 
     @online.setter
     def online(self, online):
+        if not self._online and online:
+            LOGGER.info(f"unit is back online: {self}")
         self._online = online
 
     @property

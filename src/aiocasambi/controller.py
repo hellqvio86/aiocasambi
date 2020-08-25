@@ -1,11 +1,12 @@
 """Casambi implementation."""
 
 import logging
+import async_timeout
 
 from aiohttp import client_exceptions
 
 from .errors import raise_error, LoginRequired, ResponseError, RequestError
-from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA
+from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING, STATE_STARTING, STATE_STOPPED
 
 from .units import Units
 from .scenes import Scenes
@@ -172,6 +173,7 @@ class Controller:
 
         elif signal == SIGNAL_CONNECTION_STATE and self.callback:
             LOGGER.debug(f"SIGNAL_CONNECTION_STATE: {signal}")
+
             self.callback(SIGNAL_CONNECTION_STATE, self.websocket.state)
         else:
             LOGGER.debug(f"signal: {signal}")
@@ -195,6 +197,11 @@ class Controller:
             changes = self.units.handle_peer_changed(message)
         return changes
 
+    async def reconnect(self):
+        with async_timeout.timeout(10):
+            await self.create_user_session()
+            await self.create_network_session()
+            await self.start_websocket()
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""

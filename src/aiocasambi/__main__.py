@@ -116,7 +116,10 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
 
     try:
         while True:
-            await asyncio.sleep(1)
+            await asyncio.sleep(60)
+            msg = f"Current Units state: {controller.get_units()} websocket: {controller.get_websocket_state()}"
+
+            LOGGER.info(msg)
 
     except asyncio.CancelledError:
         pass

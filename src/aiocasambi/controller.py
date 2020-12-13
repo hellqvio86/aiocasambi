@@ -211,9 +211,11 @@ class Controller:
         self._reconnecting = True
 
         while(True):
+            reconnect_counter = 0
             try:
+                reconnect_counter += 1
                 with async_timeout.timeout(60):
-                    LOGGER.debug("Controller is trying to reconnect")
+                    LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
                     await self.create_user_session()
                     await self.create_network_session()
                     await self.start_websocket()

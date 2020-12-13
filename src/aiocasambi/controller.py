@@ -6,7 +6,7 @@ import async_timeout
 from aiohttp import client_exceptions
 from asyncio import TimeoutError
 
-from .errors import raise_error, LoginRequired, ResponseError, RequestError
+from .errors import raise_error, LoginRequired, ResponseError, RequestError, RateLimit
 from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING, STATE_STARTING, STATE_STOPPED
 
 from .units import Units
@@ -84,6 +84,9 @@ class Controller:
         data = await self.request("post", url=url, json=auth, headers=headers)
 
         LOGGER.debug(f"create_user_session data from request {data} dir(data): {dir(data)}")
+
+        if data.status == 429:
+            raise RateLimit('Server rate limit exceeded!') 
 
         self._user_session_id = data['sessionId']
         self.headers['X-Casambi-Session'] = self._user_session_id

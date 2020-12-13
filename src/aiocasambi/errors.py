@@ -26,6 +26,8 @@ class LoginRequired(AiocasambiException):
 class NoPermission(AiocasambiException):
     """Users permissions are read only."""
 
+class RateLimit(AiocasambiException):
+    """Exceeded server rate limit"""
 
 ERRORS = {
     'api.err.LoginRequired': LoginRequired,

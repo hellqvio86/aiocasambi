@@ -3,9 +3,10 @@
 import logging
 import async_timeout
 
-from aiohttp import client_exceptions
+from aiohttp import client_exceptions, ClientTimeout
+from asyncio import TimeoutError, sleep
 
-from .errors import raise_error, LoginRequired, ResponseError, RequestError
+from .errors import raise_error, LoginRequired, ResponseError, RequestError, RateLimit
 from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING, STATE_STARTING, STATE_STOPPED
 
 from .units import Units
@@ -57,6 +58,8 @@ class Controller:
         self.units = None
         self.scenes = None
 
+        self._reconnecting = False
+
     def get_units(self):
         return self.units.get_units()
 
@@ -80,6 +83,8 @@ class Controller:
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
+        LOGGER.debug(f"create_user_session data from request {data} dir(data): {dir(data)}")
+
         self._user_session_id = data['sessionId']
         self.headers['X-Casambi-Session'] = self._user_session_id
 
@@ -102,6 +107,8 @@ class Controller:
         LOGGER.debug(f"headers: {headers} auth: {auth}")
 
         data = await self.request("post", url=url, json=auth, headers=headers)
+
+        LOGGER.debug(f"create_network_session data from request {data}")
 
         self._network_id = list(data.keys())[0]
 
@@ -198,10 +205,42 @@ class Controller:
         return changes
 
     async def reconnect(self):
-        with async_timeout.timeout(10):
-            await self.create_user_session()
-            await self.create_network_session()
-            await self.start_websocket()
+        timeout = 5 * 60
+        LOGGER.debug("Controller is reconnecting")
+
+        if self._reconnecting:
+            return
+        
+        self._reconnecting = True
+
+        # Trying to reconnect
+        reconnect_counter = 0
+        while(True):
+            try:
+                reconnect_counter += 1
+
+                LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
+                await self.create_user_session()
+            except RateLimit as err:
+                LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
+
+                await sleep(timeout)
+
+                continue
+            except TimeoutError as err:
+                LOGGER.debug("caught asyncio.TimeoutError, trying again")
+
+                await sleep(timeout)
+
+                continue
+
+            # Reconnected
+            self._reconnecting = False
+            break
+        
+        
+        await self.create_network_session()
+        await self.start_websocket()
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""
@@ -228,6 +267,9 @@ class Controller:
                 if res.status == 410:
                     raise ResponseError(f"Call {url} received 410 Gone")
 
+                if res.status == 429:
+                    raise RateLimit(f"Call {url} received 429 Server rate limit exceeded!") 
+
                 if res.content_type == "application/json":
                     response = await res.json()
 
@@ -235,6 +277,4 @@ class Controller:
                 return res
 
         except client_exceptions.ClientError as err:
-            raise RequestError(
-                f"Error requesting data: {err}"
-            ) from None
+            raise err

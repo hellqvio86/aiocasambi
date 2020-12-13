@@ -7,6 +7,7 @@ import logging.handlers
 import yaml
 import pprint
 import sys
+import random
 import os
 
 sys.path.append(os.path.split(os.path.dirname(sys.argv[0]))[0])
@@ -92,7 +93,8 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
     """Main function."""
     LOGGER.info("Starting aioCasambi")
 
-    websession = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=False))
+    timeout = aiohttp.ClientTimeout(total=30, connect=10)
+    websession = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=False), timeout=timeout)
 
     controller = await get_casambi_controller(
         email=email,
@@ -121,9 +123,15 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
 
             LOGGER.info(msg)
 
-    except asyncio.CancelledError:
-        pass
+            if controller.get_websocket_state() == 'disconnected':
+                await controller.reconnect()
 
+    except asyncio.CancelledError as err:
+        LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")
+        pass
+    except Exception as err:
+        LOGGER.debug(f"Caught Exception in main loop: {err}")
+        raise err
     finally:
         controller.stop_websocket()
         await websession.close()
@@ -160,7 +168,7 @@ if __name__ == "__main__":
         config['debug'] = False
 
     if 'wire_id' not in config:
-        config['wire_id'] = 5
+        config['wire_id'] = random.randint(10,60)
     
     setup_logger(debug=config['debug'])
 

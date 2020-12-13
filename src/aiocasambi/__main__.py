@@ -122,6 +122,9 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
 
             LOGGER.info(msg)
 
+            if controller.get_websocket_state() == 'disconnected':
+                await controller.reconnect()
+
     except asyncio.CancelledError as err:
         LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")
         pass

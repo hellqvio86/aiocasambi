@@ -85,7 +85,7 @@ class Controller:
 
         LOGGER.debug(f"create_user_session data from request {data} dir(data): {dir(data)}")
 
-        if data.status == 429:
+        if hasattr(data, 'status') and data.status == 429:
             raise RateLimit('Server rate limit exceeded!') 
 
         self._user_session_id = data['sessionId']

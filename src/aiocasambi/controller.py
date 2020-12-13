@@ -201,11 +201,13 @@ class Controller:
         LOGGER.debug("Controller is reconnecting")
         while(True):
             with async_timeout.timeout(10):
+                LOGGER.debug("Controller is trying to reconnect")
                 await self.create_user_session()
                 await self.create_network_session()
                 await self.start_websocket()
             
             if self.get_websocket_state() == STATE_RUNNING:
+                # Reconnected
                 break
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):

@@ -214,8 +214,8 @@ class Controller:
         self._reconnecting = True
 
         # Trying to reconnect
+        reconnect_counter = 0
         while(True):
-            reconnect_counter = 0
             try:
                 reconnect_counter += 1
                 with async_timeout.timeout(timeout):

@@ -199,10 +199,14 @@ class Controller:
 
     async def reconnect(self):
         LOGGER.debug("Controller is reconnecting")
-        with async_timeout.timeout(10):
-            await self.create_user_session()
-            await self.create_network_session()
-            await self.start_websocket()
+        while(True):
+            with async_timeout.timeout(10):
+                await self.create_user_session()
+                await self.create_network_session()
+                await self.start_websocket()
+            
+            if self.get_websocket_state() == STATE_RUNNING:
+                break
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""

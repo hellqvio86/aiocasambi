@@ -60,8 +60,6 @@ class Controller:
 
         self._reconnecting = False
 
-        self.session.timeout = ClientTimeout(total=30, connect=10)
-
     def get_units(self):
         return self.units.get_units()
 

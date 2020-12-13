@@ -224,10 +224,9 @@ class Controller:
                 LOGGER.debug("caught asyncio.TimeoutError, trying again")
                 continue
 
-            if self.get_websocket_state() == STATE_RUNNING:
-                # Reconnected
-                self._reconnecting = False
-                break
+            # Reconnected
+            self._reconnecting = False
+            break
         
         with async_timeout.timeout(60):
             await self.create_network_session()

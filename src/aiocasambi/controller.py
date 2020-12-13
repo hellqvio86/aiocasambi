@@ -224,9 +224,15 @@ class Controller:
                     await sleep(timeout)
             except RateLimit as err:
                 LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
+
+                await sleep(timeout)
+
                 continue
             except TimeoutError as err:
                 LOGGER.debug("caught asyncio.TimeoutError, trying again")
+
+                await sleep(timeout)
+
                 continue
 
             # Reconnected

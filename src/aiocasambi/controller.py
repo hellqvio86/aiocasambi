@@ -108,6 +108,8 @@ class Controller:
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
+        LOGGER.debug(f"create_network_session data from request {data}")
+
         self._network_id = list(data.keys())[0]
 
         LOGGER.debug(f"network_id: {self._network_id}")
@@ -210,6 +212,7 @@ class Controller:
         
         self._reconnecting = True
 
+        # Trying to reconnect
         while(True):
             reconnect_counter = 0
             try:
@@ -217,8 +220,6 @@ class Controller:
                 with async_timeout.timeout(60):
                     LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
                     await self.create_user_session()
-                    await self.create_network_session()
-                    await self.start_websocket()
             except TimeoutError as err:
                 LOGGER.debug("caught asyncio.TimeoutError, trying again")
                 continue
@@ -227,6 +228,10 @@ class Controller:
                 # Reconnected
                 self._reconnecting = False
                 break
+        
+        with async_timeout.timeout(60):
+            await self.create_network_session()
+            await self.start_websocket()
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""

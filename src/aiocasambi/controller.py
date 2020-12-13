@@ -269,5 +269,5 @@ class Controller:
 
         except client_exceptions.ClientError as err:
             raise RequestError(
-                f"Error requesting data: {err}"
-            ) from None
+                f"Error requesting data: {err} dir(err): {dir(err)}"
+            )

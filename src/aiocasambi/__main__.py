@@ -7,6 +7,7 @@ import logging.handlers
 import yaml
 import pprint
 import sys
+import random
 import os
 
 sys.path.append(os.path.split(os.path.dirname(sys.argv[0]))[0])
@@ -163,7 +164,7 @@ if __name__ == "__main__":
         config['debug'] = False
 
     if 'wire_id' not in config:
-        config['wire_id'] = 5
+        config['wire_id'] = random.randint(10,60)
     
     setup_logger(debug=config['debug'])
 

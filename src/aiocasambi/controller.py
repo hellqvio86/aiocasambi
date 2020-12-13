@@ -268,6 +268,4 @@ class Controller:
                 return res
 
         except client_exceptions.ClientError as err:
-            raise RequestError(
-                f"Error requesting data: {err} dir(err): {dir(err)}"
-            )
+            raise err

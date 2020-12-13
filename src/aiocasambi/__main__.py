@@ -121,9 +121,12 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
 
             LOGGER.info(msg)
 
-    except asyncio.CancelledError:
+    except asyncio.CancelledError as err:
+        LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")
         pass
-
+    except Exception as err:
+        LOGGER.debug(f"Caught Exception in main loop: {err}")
+        raise err
     finally:
         controller.stop_websocket()
         await websession.close()

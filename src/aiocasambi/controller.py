@@ -198,6 +198,7 @@ class Controller:
         return changes
 
     async def reconnect(self):
+        LOGGER.debug("Controller is reconnecting")
         with async_timeout.timeout(10):
             await self.create_user_session()
             await self.create_network_session()

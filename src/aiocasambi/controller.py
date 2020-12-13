@@ -83,7 +83,7 @@ class Controller:
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
-        LOGGER.debug(f"create_user_session data from request {data}")
+        LOGGER.debug(f"create_user_session data from request {data} dir(data): {dir(data)}")
 
         self._user_session_id = data['sessionId']
         self.headers['X-Casambi-Session'] = self._user_session_id

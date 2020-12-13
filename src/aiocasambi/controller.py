@@ -58,6 +58,8 @@ class Controller:
         self.units = None
         self.scenes = None
 
+        self._reconnecting = False
+
     def get_units(self):
         return self.units.get_units()
 
@@ -200,9 +202,15 @@ class Controller:
 
     async def reconnect(self):
         LOGGER.debug("Controller is reconnecting")
+
+        if self._reconnecting:
+            return
+        
+        self._reconnecting = True
+
         while(True):
             try:
-                with async_timeout.timeout(10):
+                with async_timeout.timeout(60):
                     LOGGER.debug("Controller is trying to reconnect")
                     await self.create_user_session()
                     await self.create_network_session()
@@ -213,6 +221,7 @@ class Controller:
 
             if self.get_websocket_state() == STATE_RUNNING:
                 # Reconnected
+                self._reconnecting = False
                 break
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):

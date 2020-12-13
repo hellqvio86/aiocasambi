@@ -85,9 +85,6 @@ class Controller:
 
         LOGGER.debug(f"create_user_session data from request {data} dir(data): {dir(data)}")
 
-        if hasattr(data, 'status') and data.status == 429:
-            raise RateLimit('Server rate limit exceeded!') 
-
         self._user_session_id = data['sessionId']
         self.headers['X-Casambi-Session'] = self._user_session_id
 
@@ -220,7 +217,7 @@ class Controller:
             reconnect_counter = 0
             try:
                 reconnect_counter += 1
-                with async_timeout.timeout(60):
+                with async_timeout.timeout(5*60):
                     LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
                     await self.create_user_session()
             except TimeoutError as err:
@@ -260,6 +257,9 @@ class Controller:
 
                 if res.status == 410:
                     raise ResponseError(f"Call {url} received 410 Gone")
+
+                if res.status == 429:
+                    raise RateLimit(f"Call {url} received 429 Server rate limit exceeded!") 
 
                 if res.content_type == "application/json":
                     response = await res.json()

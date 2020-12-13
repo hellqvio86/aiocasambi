@@ -4,7 +4,7 @@ import logging
 import async_timeout
 
 from aiohttp import client_exceptions, ClientTimeout
-from asyncio import TimeoutError
+from asyncio import TimeoutError, sleep
 
 from .errors import raise_error, LoginRequired, ResponseError, RequestError, RateLimit
 from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING, STATE_STARTING, STATE_STOPPED
@@ -205,6 +205,7 @@ class Controller:
         return changes
 
     async def reconnect(self):
+        timeout = 5 * 60
         LOGGER.debug("Controller is reconnecting")
 
         if self._reconnecting:
@@ -217,9 +218,10 @@ class Controller:
             reconnect_counter = 0
             try:
                 reconnect_counter += 1
-                with async_timeout.timeout(5*60):
+                with async_timeout.timeout(timeout):
                     LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
                     await self.create_user_session()
+                    await sleep(timeout)
             except RateLimit as err:
                 LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
                 continue

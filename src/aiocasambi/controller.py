@@ -4,6 +4,7 @@ import logging
 import async_timeout
 
 from aiohttp import client_exceptions
+from asyncio import TimeoutError
 
 from .errors import raise_error, LoginRequired, ResponseError, RequestError
 from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING, STATE_STARTING, STATE_STOPPED
@@ -200,12 +201,16 @@ class Controller:
     async def reconnect(self):
         LOGGER.debug("Controller is reconnecting")
         while(True):
-            with async_timeout.timeout(10):
-                LOGGER.debug("Controller is trying to reconnect")
-                await self.create_user_session()
-                await self.create_network_session()
-                await self.start_websocket()
-            
+            try:
+                with async_timeout.timeout(10):
+                    LOGGER.debug("Controller is trying to reconnect")
+                    await self.create_user_session()
+                    await self.create_network_session()
+                    await self.start_websocket()
+            except TimeoutError as err:
+                LOGGER.debug("caught asyncio.TimeoutError, trying again")
+                continue
+
             if self.get_websocket_state() == STATE_RUNNING:
                 # Reconnected
                 break

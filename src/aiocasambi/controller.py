@@ -218,10 +218,9 @@ class Controller:
         while(True):
             try:
                 reconnect_counter += 1
-                with async_timeout.timeout(timeout):
-                    LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
-                    await self.create_user_session()
-                    await sleep(timeout)
+
+                LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
+                await self.create_user_session()
             except RateLimit as err:
                 LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
 

@@ -220,6 +220,9 @@ class Controller:
                 with async_timeout.timeout(5*60):
                     LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
                     await self.create_user_session()
+            except RateLimit as err:
+                LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
+                continue
             except TimeoutError as err:
                 LOGGER.debug("caught asyncio.TimeoutError, trying again")
                 continue

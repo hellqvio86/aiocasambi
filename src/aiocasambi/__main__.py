@@ -93,9 +93,7 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
     """Main function."""
     LOGGER.info("Starting aioCasambi")
 
-    timeout = aiohttp.ClientTimeout(total=30, connect=10)
-
-    websession = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=False), timeout=timeout)
+    websession = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=False))
 
     controller = await get_casambi_controller(
         email=email,

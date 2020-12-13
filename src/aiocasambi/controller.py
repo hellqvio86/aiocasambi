@@ -3,7 +3,7 @@
 import logging
 import async_timeout
 
-from aiohttp import client_exceptions
+from aiohttp import client_exceptions, ClientTimeout
 from asyncio import TimeoutError
 
 from .errors import raise_error, LoginRequired, ResponseError, RequestError, RateLimit
@@ -59,6 +59,8 @@ class Controller:
         self.scenes = None
 
         self._reconnecting = False
+
+        self.session.timeout = ClientTimeout(total=30, connect=10)
 
     def get_units(self):
         return self.units.get_units()

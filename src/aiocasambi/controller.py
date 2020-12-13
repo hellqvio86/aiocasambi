@@ -238,9 +238,9 @@ class Controller:
             self._reconnecting = False
             break
         
-        with async_timeout.timeout(60):
-            await self.create_network_session()
-            await self.start_websocket()
+        
+        await self.create_network_session()
+        await self.start_websocket()
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""

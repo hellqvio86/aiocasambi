@@ -236,7 +236,7 @@ class Units():
 
 class Unit():
     """Represents a client network device."""
-    def __init__(self, *, name, address, unit_id, network_id, wire_id, web_sock, value=0, online=True, state=UNIT_STATE_OFF):
+    def __init__(self, *, name, address, unit_id, network_id, wire_id, web_sock, controller, value=0, online=True, state=UNIT_STATE_OFF):
         self._name = name
         self._address = address
         self._unit_id = unit_id
@@ -249,6 +249,7 @@ class Unit():
         self._web_sock = web_sock
         self._oem = None
         self._online = online
+        self._controller = controller
 
     @property
     def value(self):

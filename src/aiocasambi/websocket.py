@@ -16,7 +16,7 @@ STATE_STARTING = "starting"
 STATE_STOPPED = "stopped"
 
 class WSClient():
-    def __init__(self, *, session, ssl_context, api_key, network_id, user_session_id, callback, wire_id=3):
+    def __init__(self, *, session, ssl_context, api_key, network_id, user_session_id, callback, controller, wire_id=3):
         self.api_key = api_key
         self.network_id = network_id
         self.user_session_id = user_session_id
@@ -30,6 +30,7 @@ class WSClient():
         self._loop = asyncio.get_running_loop()
 
         self.web_sock = None
+        self._controller = controller
         self.wire_id = wire_id
 
         self._data = None
@@ -85,12 +86,17 @@ class WSClient():
         await self.web_sock.send_str(json.dumps(message))
 
     async def send_messge(self, message):
+        success = False
         LOGGER.debug(f"send_messge message {message}")
         try:
             await self.web_sock.send_str(json.dumps(message))
+            success = True
         except ConnectionError as err:
             LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {self.err}")
             self.state = STATE_DISCONNECTED
+        
+        if not success:
+            await self._controller.reconnect()
 
     async def running(self):
         """Start websocket connection."""

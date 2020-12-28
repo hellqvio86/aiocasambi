@@ -150,6 +150,7 @@ class Controller:
             network_id = self._network_id,
             user_session_id = self._user_session_id,
             wire_id = self.wire_id,
+            controller=self,
             callback=self.session_handler,
         )
         self.websocket.start()

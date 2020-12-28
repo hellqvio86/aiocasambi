@@ -140,7 +140,8 @@ class WSClient():
 
         except Exception as err:
             if self.state != STATE_STOPPED:
-                LOGGER.error(f"websocket: Unexpected error {err}")
+                LOGGER.error(f"websocket: Unexpected error: <{err} type=\"{type(err)}\">")
+                LOGGER.exception('An unknown exception was thrown!')
                 self.state = STATE_DISCONNECTED
                 raise err
 

@@ -86,7 +86,11 @@ class WSClient():
 
     async def send_messge(self, message):
         LOGGER.debug(f"send_messge message {message}")
-        await self.web_sock.send_str(json.dumps(message))
+        try:
+            await self.web_sock.send_str(json.dumps(message))
+        except ConnectionError as err:
+            LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {self.err}")
+            self.state = STATE_DISCONNECTED
 
     async def running(self):
         """Start websocket connection."""

@@ -336,7 +336,7 @@ class Unit():
             "targetControls": target_controls
         }
 
-        await self._web_sock.send_messge(message)
+        await self._web_sock.send_message(message)
 
     async def turn_unit_on(self):
         '''
@@ -369,7 +369,7 @@ class Unit():
             "targetControls": target_controls
         }
 
-        await self._web_sock.send_messge(message)
+        await self._web_sock.send_message(message)
 
     async def set_unit_value(self, *, value):
         '''
@@ -404,7 +404,7 @@ class Unit():
             "targetControls": target_controls
         }
 
-        await self._web_sock.send_messge(message)
+        await self._web_sock.send_message(message)
 
 
     def __repr__(self) -> str:

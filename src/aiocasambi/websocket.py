@@ -85,9 +85,9 @@ class WSClient():
 
         await self.web_sock.send_str(json.dumps(message))
 
-    async def send_messge(self, message):
+    async def send_message(self, message):
         success = False
-        LOGGER.debug(f"send_messge message {message}")
+        LOGGER.debug(f"send_message message {message}")
         try:
             await self.web_sock.send_str(json.dumps(message))
             success = True

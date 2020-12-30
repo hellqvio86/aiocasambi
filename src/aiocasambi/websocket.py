@@ -92,7 +92,7 @@ class WSClient():
             await self.web_sock.send_str(json.dumps(message))
             success = True
         except ConnectionError as err:
-            LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {self.err}")
+            LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {err}")
             self.state = STATE_DISCONNECTED
         
         if not success:

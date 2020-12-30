@@ -133,9 +133,13 @@ class WSClient():
                         LOGGER.error("websocket AIOHTTP websocket error")
                         break
 
+        except ConnectionResetError:
+            if self.state != STATE_STOPPED:
+                LOGGER.error("websocket caught ConnectionResetError")
+                self.state = STATE_DISCONNECTED
         except aiohttp.ClientConnectorError:
             if self.state != STATE_STOPPED:
-                LOGGER.error("websocket: Client connection error")
+                LOGGER.error("websocket caught aiohttp.ClientConnectorError")
                 self.state = STATE_DISCONNECTED
 
         except Exception as err:

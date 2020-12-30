@@ -61,12 +61,15 @@ class Controller:
         self._reconnecting = False
 
     def get_units(self):
+        """ Getter for getting units. """
         return self.units.get_units()
 
     def get_scenes(self):
+        """ Getter for getting scenes. """
         return self.scenes.get_scenes()
 
     async def create_user_session(self):
+        """ Creating user session. """
         url = f"{self.rest_url}/users/session"
 
         headers = {
@@ -92,6 +95,7 @@ class Controller:
 
 
     async def create_network_session(self):
+        """ Creating network session. """
         url = f"{self.rest_url}/networks/session"
 
         headers = {
@@ -116,6 +120,7 @@ class Controller:
 
 
     async def get_network_information(self):
+        """ Creating network information. """
         # GET https://door.casambi.com/v1/networks/{id}
 
         url = f"{self.rest_url}/networks/{self._network_id}"
@@ -128,8 +133,21 @@ class Controller:
 
         return response
 
+    async def get_network_state(self):
+        """ Get network state. """
+        # GET https://door.casambi.com/v1/networks/{networkId}/state
+        url = f"{self.rest_url}/networks/{self._network_id}/state"
+
+        LOGGER.debug(f"get_network_information request url: {url} headers= {self.headers}")
+
+        response = await self.request("get", url=url, headers=self.headers)
+
+        LOGGER.debug(f"get_network_information response: {response}")
+
+        return response
 
     async def initialize(self):
+        """Initialiser"""
         network_information = await self.get_network_information()
 
         self.units = Units(network_information['units'], web_sock = self.websocket, network_id=self._network_id, wire_id=self.wire_id)

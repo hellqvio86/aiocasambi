@@ -138,11 +138,11 @@ class Controller:
         # GET https://door.casambi.com/v1/networks/{networkId}/state
         url = f"{self.rest_url}/networks/{self._network_id}/state"
 
-        LOGGER.debug(f"get_network_information request url: {url} headers= {self.headers}")
+        LOGGER.debug(f"get_network_state request url: {url} headers= {self.headers}")
 
         response = await self.request("get", url=url, headers=self.headers)
 
-        LOGGER.debug(f"get_network_information response: {response}")
+        LOGGER.debug(f"get_network_state response: {response}")
 
         return response
 

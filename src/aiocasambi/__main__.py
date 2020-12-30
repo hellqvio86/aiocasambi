@@ -120,6 +120,7 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
         while True:
             await asyncio.sleep(60)
             network_state = await controller.get_network_state()
+            network_state = pprint.pformat(network_state)
             msg = f"Current Units state: {controller.get_units()} websocket: {controller.get_websocket_state()} network_state: {network_state}"
 
             LOGGER.info(msg)

@@ -205,7 +205,16 @@ class Controller:
             changes = self.units.handle_peer_changed(message)
         return changes
 
+    async def check_connection(self):
+        """ async function for checking connection """
+        if self.get_websocket_state == STATE_RUNNING:
+            return
+
+        # Try to reconnect
+        await self.reconnect()
+
     async def reconnect(self):
+        """ async function for reconnecting."""
         timeout = 5 * 60
         LOGGER.debug("Controller is reconnecting")
 
@@ -224,6 +233,12 @@ class Controller:
                 await self.create_user_session()
             except RateLimit as err:
                 LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
+
+                await sleep(timeout)
+
+                continue
+            except client_exceptions.ClientConnectorError:
+                LOGGER.debug("caught aiohttp.client_exceptions.ClientConnectorError, trying again")
 
                 await sleep(timeout)
 

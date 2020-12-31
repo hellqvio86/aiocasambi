@@ -127,8 +127,8 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
 
             units = network_state_data['units']
 
-            for unit_key, unit_data in units:
-                LOGGER.info(f"unit_key: {unit_key}\nunit_data: {pprint.pformat(unit_data)}")
+            for unit_key in units:
+                LOGGER.info(f"unit_key: {unit_key}\nunit_data: {pprint.pformat(units[unit_key])}")
 
             if controller.get_websocket_state() == 'disconnected':
                 await controller.reconnect()

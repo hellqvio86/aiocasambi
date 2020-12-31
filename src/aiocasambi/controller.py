@@ -146,6 +146,8 @@ class Controller:
 
         self.units.process_network_state(response)
 
+        return response
+
     async def initialize(self):
         """Initialiser"""
         network_information = await self.get_network_information()

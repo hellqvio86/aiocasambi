@@ -192,7 +192,7 @@ class Controller:
     
     async def ws_send_message(self, msg):
         """Send websocket message to casambi api"""
-        LOGGER.debug(f"ws_send_message: msg {msg}")
+        LOGGER.debug(f"Sending websocket message: msg {msg}")
 
         succcess = await self.websocket.send_message(msg)
 
@@ -238,7 +238,7 @@ class Controller:
         """Receive event from websocket and identifies where the event belong."""
         changes = {}
 
-        LOGGER.debug(f"message_handler message: {message}")
+        LOGGER.debug(f"message_handler recieved websocket message: {message}")
 
         # Signaling of online gateway
         # {'wire': 9, 'method': 'peerChanged', 'online': True}

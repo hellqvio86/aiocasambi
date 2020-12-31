@@ -134,7 +134,14 @@ class Units():
             # Safe guard
             return
 
-        #for unit in data['units']:
+        for unit_key in data['units']:
+            unit_data = data['units'][unit_key]
+            key = f"{self._network_id}-{unit_key}"
+
+            self.units[key].online = unit_data['online']
+            self.units[key].name = unit_data['name']
+            if unit_data.online:
+                self.units[key].value = unit_data['dimLevel']
 
     def process_unit_event(self, msg):
         """
@@ -372,6 +379,10 @@ class Unit():
     @property
     def name(self):
         return self._name
+    
+    @name.setter
+    def name(self, name):
+        self._name = name
 
     @property
     def fixture_model(self):

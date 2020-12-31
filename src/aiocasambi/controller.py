@@ -168,6 +168,9 @@ class Controller:
 
         LOGGER.debug(f"network__information: {network_information}")
 
+        # Get initial network state
+        self.get_network_state()
+
         return
 
     async def start_websocket(self):
@@ -186,6 +189,9 @@ class Controller:
         )
 
         self.websocket.start()
+
+        # Give the new websocket to all units
+        self.units.websocket = self.websocket
 
     def get_websocket_state(self):
         return self.websocket.state
@@ -225,7 +231,7 @@ class Controller:
         """Receive event from websocket and identifies where the event belong."""
         changes = {}
 
-        LOGGER.debug(f"message: {message}")
+        LOGGER.debug(f"message_handler message: {message}")
 
         # Signaling of online gateway
         # {'wire': 9, 'method': 'peerChanged', 'online': True}
@@ -233,10 +239,14 @@ class Controller:
         #
         # New state
         # {'condition': 0.0, 'wire': 9, 'activeSceneId': 0, 'controls': [{'type': 'Overheat', 'status': 'ok'}, {'type': 'Dimmer', 'value': 0.0}], 'sensors': [], 'method': 'unitChanged', 'online': True, 'details': {'_name': 'ffff', 'name': 'Name', 'address': 'fffff', 'fixture_model': 'LD220WCM', 'fixture': 859.0, 'OEM': 'Vadsbo'}, 'id': 8, 'priority': 3.0, 'on': True, 'status': 'ok'}
-        if 'method' in message and message['method'] == 'unitChanged':
-            changes = self.units.process_unit_event(message)
-        elif 'method' in message and message['method'] == 'peerChanged':
-            changes = self.units.handle_peer_changed(message)
+        try:
+            if 'method' in message and message['method'] == 'unitChanged':
+                changes = self.units.process_unit_event(message)
+            elif 'method' in message and message['method'] == 'peerChanged':
+                changes = self.units.handle_peer_changed(message)
+        except TypeError as err:
+            LOGGER.debug(f"caught TypeError in message_handler for message: {message} err: {err}")
+            raise err
         return changes
 
     async def check_connection(self):

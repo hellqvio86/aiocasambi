@@ -295,6 +295,17 @@ class Units():
         for _, unit in self.units.items():
             unit.online = online
 
+    @property
+    def websocket(self):
+        return self._online
+
+    @websocket.setter
+    def websocket(self, websocket):
+        self._web_sock = websocket
+
+        for _, unit in self.units.items():
+            unit.websocket = websocket
+
     def get_units(self):
         result = []
         for _, value in self.units.items():
@@ -431,6 +442,10 @@ class Unit():
     @property
     def websocket(self):
         return self._web_sock
+
+    @websocket.setter
+    def websocket(self, websocket):
+        self._web_sock = websocket
 
     async def turn_unit_off(self):
         # Unit_id needs to be an integer

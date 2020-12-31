@@ -131,17 +131,17 @@ class WSClient():
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         self._data = json.loads(msg.data)
                         self.session_handler_callback(SIGNAL_DATA)
-                        LOGGER.debug(f"websocket msg.type: {msg.type} data: {self._data}")
+                        LOGGER.debug(f"websocket recived msg.type: {msg.type} data: {self._data}")
                     elif msg.type == aiohttp.WSMsgType.BINARY:
                         self._data = json.loads(msg.data)
                         self.session_handler_callback(SIGNAL_DATA)
-                        LOGGER.debug(f"websocket msg.type {msg.type} data: {self._data}")
+                        LOGGER.debug(f"websocket recived msg.type {msg.type} data: {self._data}")
                     elif msg.type == aiohttp.WSMsgType.CLOSED:
-                        LOGGER.warning("websocket AIOHTTP websocket connection closed")
+                        LOGGER.warning("websocket recived AIOHTTP websocket connection closed")
                         break
 
                     elif msg.type == aiohttp.WSMsgType.ERROR:
-                        LOGGER.error("websocket AIOHTTP websocket error")
+                        LOGGER.error("websocket recived AIOHTTP websocket error")
                         break
 
         except ConnectionResetError:

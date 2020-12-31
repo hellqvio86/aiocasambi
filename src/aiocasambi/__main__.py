@@ -125,7 +125,7 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
 
             LOGGER.info(msg)
 
-            units = []
+            units = network_state_data['units']
 
             for unit in units:
                 LOGGER.info(f"unit: {pprint.pformat(unit)}")

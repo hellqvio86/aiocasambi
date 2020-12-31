@@ -154,14 +154,14 @@ class Controller:
 
         self.units = Units(
             network_information['units'],
-            web_sock=self.websocket,
+            controller=self,
             network_id=self._network_id,
             wire_id=self.wire_id
             )
 
         self.scenes = Scenes(
             network_information['scenes'],
-            web_sock=self.websocket,
+            controller=self,
             network_id=self._network_id,
             wire_id=self.wire_id
             )

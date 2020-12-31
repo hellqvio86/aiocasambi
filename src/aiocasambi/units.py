@@ -1,7 +1,6 @@
 """State representation of Casanbi Unit"""
 
 import logging
-import json
 
 from .errors import AiocasambiException
 from pprint import pformat
@@ -11,8 +10,17 @@ LOGGER = logging.getLogger(__name__)
 UNIT_STATE_OFF = 'off'
 UNIT_STATE_ON = 'on'
 
+
 class Units():
-    def __init__(self, units: set, *, network_id, wire_id, web_sock, online=True) -> None:
+    def __init__(
+        self,
+        units: set,
+        *,
+        network_id,
+        wire_id,
+        web_sock,
+        online=True
+        ) -> None:
         self._network_id = network_id
         self._wire_id = wire_id
         self._web_sock = web_sock
@@ -28,7 +36,7 @@ class Units():
 
         for key, unit in self.units.items():
             changes[key] = unit
-        
+
         return changes
 
     def process_network_state(self, data):
@@ -130,7 +138,7 @@ class Units():
                         'type': 'Luminaire'},
                }
         """
-        if not 'units' in data:
+        if 'units' not in data:
             # Safe guard
             return
 
@@ -212,7 +220,7 @@ class Units():
 
         LOGGER.debug(f"process_unit_event Processing msg: {msg}")
 
-        if 'online' in msg and msg['online'] == False:
+        if 'online' in msg and not msg['online']:
             LOGGER.debug(f"Gateway is not online msg{msg}")
 
         if 'method' in msg and msg['method'] == 'unitChanged':
@@ -231,9 +239,9 @@ class Units():
                         # New unit discovered
                         address = None
                         if 'details' in msg and 'address' in msg['details']:
-                             address = msg['details']['address']
+                            address = msg['details']['address']
                         elif 'address' in msg:
-                             address = msg['address']
+                            address = msg['address']
                         online = False
                         unit_id = msg['id']
 
@@ -241,13 +249,13 @@ class Units():
                             online = msg['online']
 
                         unit = Unit(
-                            name= name,
-                            address = address,
-                            unit_id = unit_id,
-                            online = online,
-                            wire_id = self._wire_id,
-                            network_id = self._network_id,
-                            web_sock = self._web_sock
+                            name=name,
+                            address=address,
+                            unit_id=unit_id,
+                            online=online,
+                            wire_id=self._wire_id,
+                            network_id=self._network_id,
+                            web_sock=self._web_sock
                             )
                         self.units[key] = unit
 
@@ -273,7 +281,7 @@ class Units():
                         self.units[key].oem = msg['OEM']
 
                     changes[key] = self.units[key]
-        
+
         return changes
 
     @property
@@ -287,14 +295,12 @@ class Units():
         for _, unit in self.units.items():
             unit.online = online
 
-
     def get_units(self):
         result = []
         for _, value in self.units.items():
             result.append(value)
 
         return result
-
 
     def __process_units(self, units):
         """
@@ -335,12 +341,12 @@ class Units():
             tmp = units[unit_id]
             key = f"{self._network_id}-{unit_id}"
             unit = Unit(
-                name= tmp['name'].strip(),
-                address = tmp['address'],
-                unit_id = unit_id,
-                wire_id = self._wire_id,
-                network_id = self._network_id,
-                web_sock = self._web_sock
+                name=tmp['name'].strip(),
+                address=tmp['address'],
+                unit_id=unit_id,
+                wire_id=self._wire_id,
+                network_id=self._network_id,
+                web_sock=self._web_sock
                 )
             self.units[key] = unit
 
@@ -379,7 +385,7 @@ class Unit():
     @property
     def name(self):
         return self._name
-    
+
     @name.setter
     def name(self, name):
         self._name = name
@@ -421,7 +427,7 @@ class Unit():
     @property
     def unique_id(self):
         return f"{self._network_id}-{self._unit_id}"
-    
+
     @property
     def websocket(self):
         return self._web_sock
@@ -521,7 +527,6 @@ class Unit():
 
         await self._web_sock.send_message(message)
 
-
     def __repr__(self) -> str:
         """Return the representation."""
         name = self._name
@@ -546,7 +551,7 @@ class Unit():
 
         if self._oem:
             result = f"{result} oem={self._oem}"
-        
+
         if self._web_sock:
             result = f"{result} websocket={self._web_sock}"
 

@@ -1,19 +1,22 @@
 """Casambi implementation."""
 
 import logging
-import async_timeout
 
-from aiohttp import client_exceptions, ClientTimeout
+from aiohttp import client_exceptions
 from asyncio import TimeoutError, sleep
 
-from .errors import raise_error, LoginRequired, ResponseError, RequestError, RateLimit
-from .websocket import WSClient, SIGNAL_CONNECTION_STATE, SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING, STATE_STARTING, STATE_STOPPED
+from .errors import LoginRequired, ResponseError, RateLimit
+from .websocket import (
+    WSClient,
+    SIGNAL_CONNECTION_STATE,
+    SIGNAL_DATA,
+    STATE_RUNNING
+)
 
 from .units import Units
 from .scenes import Scenes
 
 LOGGER = logging.getLogger(__name__)
-
 
 
 class Controller:
@@ -39,13 +42,12 @@ class Controller:
 
         self.session = websession
 
-
         self.sslcontext = sslcontext
         self.callback = callback
 
         self.rest_url = 'https://door.casambi.com/v1'
 
-        self.headers =  headers = {
+        self.headers = {
             'Content-type': 'application/json',
             'X-Casambi-Key': self.api_key
         }
@@ -93,7 +95,6 @@ class Controller:
 
         LOGGER.debug(f"user_session_id: {self._user_session_id}")
 
-
     async def create_network_session(self):
         """ Creating network session. """
         url = f"{self.rest_url}/networks/session"
@@ -117,7 +118,6 @@ class Controller:
         self._network_id = list(data.keys())[0]
 
         LOGGER.debug(f"network_id: {self._network_id}")
-
 
     async def get_network_information(self):
         """ Creating network information. """
@@ -152,9 +152,19 @@ class Controller:
         """Initialiser"""
         network_information = await self.get_network_information()
 
-        self.units = Units(network_information['units'], web_sock = self.websocket, network_id=self._network_id, wire_id=self.wire_id)
-        self.scenes = Scenes(network_information['scenes'], web_sock = self.websocket, network_id=self._network_id, wire_id=self.wire_id)
+        self.units = Units(
+            network_information['units'],
+            web_sock=self.websocket,
+            network_id=self._network_id,
+            wire_id=self.wire_id
+            )
 
+        self.scenes = Scenes(
+            network_information['scenes'],
+            web_sock=self.websocket,
+            network_id=self._network_id,
+            wire_id=self.wire_id
+            )
 
         LOGGER.debug(f"network__information: {network_information}")
 
@@ -163,16 +173,18 @@ class Controller:
     async def start_websocket(self):
         """Start websession and websocket to Casambi."""
         LOGGER.debug(f"start_websocket: api_key: {self.api_key}, network_id: {self._network_id}, user_session_id: {self._user_session_id} wire_id: {self.wire_id}")
+
         self.websocket = WSClient(
-            session = self.session,
-            ssl_context= self.sslcontext,
-            api_key = self.api_key,
-            network_id = self._network_id,
-            user_session_id = self._user_session_id,
-            wire_id = self.wire_id,
+            session=self.session,
+            ssl_context=self.sslcontext,
+            api_key=self.api_key,
+            network_id=self._network_id,
+            user_session_id=self._user_session_id,
+            wire_id=self.wire_id,
             controller=self,
             callback=self.session_handler,
         )
+
         self.websocket.start()
 
     def get_websocket_state(self):
@@ -180,7 +192,9 @@ class Controller:
 
     def stop_websocket(self) -> None:
         """Close websession and websocket to Casambi."""
+
         LOGGER.info("Shutting down connections to Casambi.")
+
         if self.websocket:
             self.websocket.stop()
 
@@ -196,6 +210,7 @@ class Controller:
         if signal == SIGNAL_DATA:
             LOGGER.debug(f"SIGNAL_DATA: {signal}")
             new_items = self.message_handler(self.websocket.data)
+
             if new_items and self.callback:
                 self.callback(SIGNAL_DATA, new_items)
 
@@ -205,7 +220,6 @@ class Controller:
             self.callback(SIGNAL_CONNECTION_STATE, self.websocket.state)
         else:
             LOGGER.debug(f"signal: {signal}")
-
 
     def message_handler(self, message: dict) -> dict:
         """Receive event from websocket and identifies where the event belong."""
@@ -240,7 +254,7 @@ class Controller:
 
         if self._reconnecting:
             return
-        
+
         self._reconnecting = True
 
         # Trying to reconnect
@@ -263,7 +277,7 @@ class Controller:
                 await sleep(timeout)
 
                 continue
-            except TimeoutError as err:
+            except TimeoutError:
                 LOGGER.debug("caught asyncio.TimeoutError, trying again")
 
                 await sleep(timeout)
@@ -273,8 +287,7 @@ class Controller:
             # Reconnected
             self._reconnecting = False
             break
-        
-        
+
         await self.create_network_session()
         await self.start_websocket()
 
@@ -304,7 +317,7 @@ class Controller:
                     raise ResponseError(f"Call {url} received 410 Gone")
 
                 if res.status == 429:
-                    raise RateLimit(f"Call {url} received 429 Server rate limit exceeded!") 
+                    raise RateLimit(f"Call {url} received 429 Server rate limit exceeded!")
 
                 if res.content_type == "application/json":
                     response = await res.json()

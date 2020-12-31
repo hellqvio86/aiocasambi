@@ -15,8 +15,20 @@ STATE_RUNNING = "running"
 STATE_STARTING = "starting"
 STATE_STOPPED = "stopped"
 
+
 class WSClient():
-    def __init__(self, *, session, ssl_context, api_key, network_id, user_session_id, callback, controller, wire_id=3):
+    def __init__(
+        self,
+        *,
+        session,
+        ssl_context,
+        api_key,
+        network_id,
+        user_session_id,
+        callback,
+        controller,
+        wire_id=3
+        ):
         self.api_key = api_key
         self.network_id = network_id
         self.user_session_id = user_session_id
@@ -94,7 +106,7 @@ class WSClient():
         except ConnectionError as err:
             LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {err}")
             self.state = STATE_DISCONNECTED
-        
+
         if not success:
             await self._controller.reconnect()
 
@@ -114,7 +126,7 @@ class WSClient():
                     LOGGER.debug(f"websocket running: wire_id: {self.wire_id} msg: {msg}")
 
                     if self.state == STATE_STOPPED:
-                        LOGGER.debug(f"websocket running STATE_STOPPED")
+                        LOGGER.debug("websocket running STATE_STOPPED")
                         break
 
                     if msg.type == aiohttp.WSMsgType.TEXT:
@@ -155,5 +167,5 @@ class WSClient():
 
         else:
             if self.state != STATE_STOPPED:
-                LOGGER.debug(f"websocket setting state to STATE_DISCONNECED")
+                LOGGER.debug("websocket setting state to STATE_DISCONNECED")
                 self.state = STATE_DISCONNECTED

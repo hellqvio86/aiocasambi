@@ -14,6 +14,8 @@ SCENE_STATE_ON = 'on'
 'scenes': {'1': {'name': 'Foobar', 'id': 1, 'position': 0, 'icon': 0, 'color': '#FFFFFF', 'type': 'REGULAR', 'hidden': False, 'units': {'8': {'id': 8, 'state': 'fc03'}, '10': {'id': 10, 'state': 'fc03'}}}, '2': {'name': 'Foo', 'id': 2, 'position': 1, 'icon': 0, 'color': '#FFFFFF', 'type': 'REGULAR', 'hidden': False, 'units': {'12': {'id': 12, 'state': 'fc03'}}}, '3': {'name': 'Master Bathroom', 'id': 3, 'position': 2, 'icon':
 0, 'color': '#FFFFFF', 'type': 'REGULAR', 'hidden': False, 'units': {'1': {'id': 1, 'state': 'fc03'}}}}
 '''
+
+
 class Scene():
     """Represents a client network device."""
     def __init__(self, *, name, scene_id, network_id, wire_id, web_sock, state=SCENE_STATE_OFF):
@@ -76,10 +78,10 @@ class Scenes():
             tmp = scenes[scene_id]
             key = f"{self._network_id}-{scene_id}"
             scene = Scene(
-                name= tmp['name'].strip(),
-                scene_id = scene_id,
-                network_id = self._network_id,
-                wire_id = self._wire_id,
-                web_sock = self._web_sock
+                name=tmp['name'].strip(),
+                scene_id=scene_id,
+                network_id=self._network_id,
+                wire_id=self._wire_id,
+                web_sock=self._web_sock
                 )
             self.scenes[key] = scene

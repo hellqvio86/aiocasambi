@@ -107,8 +107,7 @@ class WSClient():
             LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {err}")
             self.state = STATE_DISCONNECTED
 
-        if not success:
-            await self._controller.reconnect()
+        return success
 
     async def running(self):
         """Start websocket connection."""

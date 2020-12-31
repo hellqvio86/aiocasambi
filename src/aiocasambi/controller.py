@@ -189,9 +189,16 @@ class Controller:
         )
 
         self.websocket.start()
+    
+    async def ws_send_message(self, msg):
+        """Send websocket message to casambi api"""
+        LOGGER.debug(f"ws_send_message: msg {msg}")
 
-        # Give the new websocket to all units
-        self.units.websocket = self.websocket
+        succcess = await self.websocket.send_message(msg)
+
+        if not succcess:
+            # Try to reconnect
+            await self.reconnect()
 
     def get_websocket_state(self):
         return self.websocket.state

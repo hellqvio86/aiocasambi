@@ -18,12 +18,12 @@ class Units():
         *,
         network_id,
         wire_id,
-        web_sock,
+        controller,
         online=True
         ) -> None:
         self._network_id = network_id
         self._wire_id = wire_id
-        self._web_sock = web_sock
+        self._controller = controller
         self.units = {}
         self._online = online
 
@@ -255,7 +255,7 @@ class Units():
                             online=online,
                             wire_id=self._wire_id,
                             network_id=self._network_id,
-                            web_sock=self._web_sock
+                            controller=self._controller
                             )
                         self.units[key] = unit
 
@@ -294,17 +294,6 @@ class Units():
 
         for _, unit in self.units.items():
             unit.online = online
-
-    @property
-    def websocket(self):
-        return self._online
-
-    @websocket.setter
-    def websocket(self, websocket):
-        self._web_sock = websocket
-
-        for _, unit in self.units.items():
-            unit.websocket = websocket
 
     def get_units(self):
         result = []
@@ -357,14 +346,25 @@ class Units():
                 unit_id=unit_id,
                 wire_id=self._wire_id,
                 network_id=self._network_id,
-                web_sock=self._web_sock
+                controller=self._controller
                 )
             self.units[key] = unit
 
 
 class Unit():
     """Represents a client network device."""
-    def __init__(self, *, name, address, unit_id, network_id, wire_id, web_sock, value=0, online=True, state=UNIT_STATE_OFF):
+    def __init__(
+        self,
+        *,
+        name,
+        address,
+        unit_id,
+        network_id,
+        wire_id,
+        controller,
+        value=0,
+        online=True,
+        state=UNIT_STATE_OFF):
         self._name = name
         self._address = address
         self._unit_id = unit_id
@@ -374,7 +374,7 @@ class Unit():
         self._fixture_model = None
         self._fixture = None
         self._wire_id = wire_id
-        self._web_sock = web_sock
+        self._controller = controller
         self._oem = None
         self._online = online
 
@@ -440,12 +440,12 @@ class Unit():
         return f"{self._network_id}-{self._unit_id}"
 
     @property
-    def websocket(self):
-        return self._web_sock
+    def controller(self):
+        return self._controller
 
-    @websocket.setter
-    def websocket(self, websocket):
-        self._web_sock = websocket
+    @controller.setter
+    def controller(self, controller):
+        self._controller = controller
 
     async def turn_unit_off(self):
         # Unit_id needs to be an integer
@@ -460,9 +460,6 @@ class Unit():
             raise AiocasambiException(
                 f"expected unit_id to be an integer, got: {unit_id}")
 
-        if not self._web_sock:
-            raise AiocasambiException('No websocket connection!')
-
         target_controls = {'Dimmer': {'value': 0}}
 
         message = {
@@ -472,7 +469,7 @@ class Unit():
             "targetControls": target_controls
         }
 
-        await self._web_sock.send_message(message)
+        await self._controller.ws_send_message(message)
 
     async def turn_unit_on(self):
         '''
@@ -493,9 +490,6 @@ class Unit():
             reason += "got: {}".format(unit_id)
             raise AiocasambiException(reason)
 
-        if not self._web_sock:
-            raise AiocasambiException('No websocket connection!')
-
         target_controls = {'Dimmer': {'value': 1}}
 
         message = {
@@ -505,7 +499,7 @@ class Unit():
             "targetControls": target_controls
         }
 
-        await self._web_sock.send_message(message)
+        await self._controller.ws_send_message(message)
 
     async def set_unit_value(self, *, value):
         '''
@@ -528,9 +522,6 @@ class Unit():
         if not(value >= 0 and value <= 1):
             raise AiocasambiException('value needs to be between 0 and 1')
 
-        if not self._web_sock:
-            raise AiocasambiException('No websocket connection!')
-
         target_controls = {'Dimmer': {'value': value}}
 
         message = {
@@ -540,7 +531,7 @@ class Unit():
             "targetControls": target_controls
         }
 
-        await self._web_sock.send_message(message)
+        await self._controller.ws_send_message(message)
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -566,9 +557,6 @@ class Unit():
 
         if self._oem:
             result = f"{result} oem={self._oem}"
-
-        if self._web_sock:
-            result = f"{result} websocket={self._web_sock}"
 
         result = f"{result} >"
 

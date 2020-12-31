@@ -119,11 +119,15 @@ async def main(*, email, user_password, network_password, api_key, wire_id=1, ss
     try:
         while True:
             await asyncio.sleep(60)
-            network_state = await controller.get_network_state()
-            network_state = pprint.pformat(network_state)
+            network_state_data = await controller.get_network_state()
+            network_state = pprint.pformat(network_state_data)
+            units = network_state_data['units']
             msg = f"Current Units state: {controller.get_units()} websocket: {controller.get_websocket_state()} network_state: {network_state}"
 
             LOGGER.info(msg)
+
+            for unit in units:
+                LOGGER.info(f"unit: {pprint.pformat(unit)}")
 
             if controller.get_websocket_state() == 'disconnected':
                 await controller.reconnect()

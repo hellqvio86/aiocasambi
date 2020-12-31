@@ -144,7 +144,7 @@ class Controller:
 
         LOGGER.debug(f"get_network_state response: {response}")
 
-        return response
+        self.units.process_network_state(response)
 
     async def initialize(self):
         """Initialiser"""

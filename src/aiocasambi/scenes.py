@@ -18,13 +18,22 @@ SCENE_STATE_ON = 'on'
 
 class Scene():
     """Represents a client network device."""
-    def __init__(self, *, name, scene_id, network_id, wire_id, web_sock, state=SCENE_STATE_OFF):
+    def __init__(
+        self,
+        *,
+        name,
+        scene_id,
+        network_id,
+        wire_id,
+        controller,
+        state=SCENE_STATE_OFF
+        ):
         self._name = name
         self._scene_id = scene_id
         self._network_id = network_id
         self.state = state
         self._wire_id = wire_id
-        self._web_sock = web_sock
+        self._controller = controller
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -45,9 +54,9 @@ class Scene():
 
 
 class Scenes():
-    def __init__(self, scenes: set, *, network_id, wire_id, web_sock) -> None:
+    def __init__(self, scenes: set, *, network_id, wire_id, controller) -> None:
         self._network_id = network_id
-        self._web_sock = web_sock
+        self._controller = controller
         self._wire_id = wire_id
         self.scenes = {}
 
@@ -82,6 +91,6 @@ class Scenes():
                 scene_id=scene_id,
                 network_id=self._network_id,
                 wire_id=self._wire_id,
-                web_sock=self._web_sock
+                controller=self._controller
                 )
             self.scenes[key] = scene

@@ -31,6 +31,117 @@ class Units():
         
         return changes
 
+    def process_network_state(self, data):
+        """
+         'dimLevel': 1.0 is unit "ON"
+
+        Event like:
+
+        {'activeScenes': [],
+        'dimLevel': 0.41263616557734206,
+        'gateway': {'name': 'Galaxy S8'},
+        'grade': 'CLASSIC',
+        'groups': {},
+        'id': '...',
+        'mac': 'ffffffffffff',
+        'name': 'Foobar',
+        'photos': [],
+        'revision': 97,
+        'scenes': {'1': {'color': '#FFFFFF',
+                        'hidden': False,
+                        'icon': 0,
+                        'id': 1,
+                        'name': 'Foo',
+                        'position': 0,
+                        'type': 'REGULAR',
+                        'units': {'10': {'id': 10}, '8': {'id': 8}}},
+                    },
+        'timezone': 'Europe/Stockholm',
+        'type': 'PROTECTED',
+        'units': {'1': {'activeSceneId': 0,
+                        'address': 'ffffffffffff',
+                        'condition': 0,
+                        'controls': [[{'status': 'ok', 'type': 'Overheat'},
+                                    {'type': 'Dimmer',
+                                        'value': 0.7372549019607844}]],
+                        'dimLevel': 0.7372549019607844,
+                        'fixtureId': 859,
+                        'groupId': 0,
+                        'id': 1,
+                        'image': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                        'name': 'Spottar bad',
+                        'on': True,
+                        'online': True,
+                        'position': 0,
+                        'priority': 3,
+                        'status': 'ok',
+                        'type': 'Luminaire'},
+                '10': {'activeSceneId': 0,
+                        'address': 'ffffffffffff',
+                        'condition': 0,
+                        'controls': [[{'status': 'ok', 'type': 'Overheat'},
+                                        {'type': 'Dimmer', 'value': 1.0}]],
+                        'dimLevel': 1.0,
+                        'fixtureId': 2516,
+                        'groupId': 0,
+                        'id': 10,
+                        'image': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                        'name': 'Skärmtak',
+                        'on': True,
+                        'online': True,
+                        'position': 7,
+                        'priority': 3,
+                        'status': 'ok',
+                        'type': 'Luminaire'},
+                '12': {'activeSceneId': 0,
+                        'address': 'ffffffffffff',
+                        'condition': 0,
+                        'controls': [[{'status': 'ok', 'type': 'Overheat'},
+                                        {'type': 'Dimmer',
+                                        'value': 0.9764705882352941}]],
+                        'dimLevel': 0.9764705882352941,
+                        'fixtureId': 2516,
+                        'groupId': 0,
+                        'id': 12,
+                        'image': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                        'name': 'Husnummer ',
+                        'on': True,
+                        'online': True,
+                        'position': 10,
+                        'priority': 3,
+                        'status': 'ok',
+                        'type': 'Luminaire'},
+                '2': {'activeSceneId': 0,
+                        'address': 'ffffffffffff',
+                        'condition': 0,
+                        'controls': [[{'status': 'ok', 'type': 'Overheat'},
+                                    {'type': 'Dimmer', 'value': 0.0}]],
+                        'dimLevel': 0.0,
+                        'fixtureId': 859,
+                        'groupId': 0,
+                        'id': 2,
+                        'image': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                        'name': 'Tvättstuga bänk',
+                        'on': True,
+                        'online': True,
+                        'position': 1,
+                        'priority': 0,
+                        'status': 'ok',
+                        'type': 'Luminaire'},
+               }
+        """
+        if not 'units' in data:
+            # Safe guard
+            return
+
+        for unit_key in data['units']:
+            unit_data = data['units'][unit_key]
+            key = f"{self._network_id}-{unit_key}"
+
+            self.units[key].online = unit_data['online']
+            self.units[key].name = unit_data['name']
+            if unit_data['online']:
+                self.units[key].value = unit_data['dimLevel']
 
     def process_unit_event(self, msg):
         """
@@ -118,7 +229,7 @@ class Units():
 
                     if key not in self.units:
                         # New unit discovered
-                        #name = (msg['details']['name']).strip()
+                        address = None
                         if 'details' in msg and 'address' in msg['details']:
                              address = msg['details']['address']
                         elif 'address' in msg:
@@ -268,6 +379,10 @@ class Unit():
     @property
     def name(self):
         return self._name
+    
+    @name.setter
+    def name(self, name):
+        self._name = name
 
     @property
     def fixture_model(self):

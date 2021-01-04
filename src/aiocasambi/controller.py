@@ -308,6 +308,8 @@ class Controller:
         await self.create_network_session()
         await self.start_websocket()
 
+        LOGGER.debug(f"Controller is reconnected")
+
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""
 

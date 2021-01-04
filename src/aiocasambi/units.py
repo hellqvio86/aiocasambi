@@ -112,7 +112,7 @@ class Units():
                         'groupId': 0,
                         'id': 12,
                         'image': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-                        'name': 'Husnummer ',
+                        'name': 'Husnummer',
                         'on': True,
                         'online': True,
                         'position': 10,

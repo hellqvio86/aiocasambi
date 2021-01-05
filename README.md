@@ -1,3 +1,5 @@
+![PyPI](https://img.shields.io/pypi/v/aiocasambi)
+
 # Python library for controlling Casambi lights
 
 aio Python library for controlling Casambi via Cloud API

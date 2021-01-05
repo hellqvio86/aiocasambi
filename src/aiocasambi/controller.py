@@ -33,12 +33,14 @@ class Controller:
         wire_id=1,
         sslcontext=None,
         callback=None,
+        network_timeout=300
     ):
         self.email = email
         self.user_password = user_password
         self.network_password = network_password
         self.api_key = api_key
         self.wire_id = wire_id
+        self.network_timeout = network_timeout
 
         self.session = websession
 
@@ -266,7 +268,6 @@ class Controller:
 
     async def reconnect(self):
         """ async function for reconnecting."""
-        timeout = 5 * 60
         LOGGER.debug("Controller is reconnecting")
 
         if self._reconnecting:
@@ -285,19 +286,19 @@ class Controller:
             except RateLimit as err:
                 LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
 
-                await sleep(timeout)
+                await sleep(self.network_timeout)
 
                 continue
             except client_exceptions.ClientConnectorError:
                 LOGGER.debug("caught aiohttp.client_exceptions.ClientConnectorError, trying again")
 
-                await sleep(timeout)
+                await sleep(self.network_timeout)
 
                 continue
             except TimeoutError:
                 LOGGER.debug("caught asyncio.TimeoutError, trying again")
 
-                await sleep(timeout)
+                await sleep(self.network_timeout)
 
                 continue
 

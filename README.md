@@ -1,4 +1,4 @@
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/aiocasambi) ![PyPI](https://img.shields.io/pypi/v/aiocasambi) ![GitHub](https://img.shields.io/github/license/hellqvio86/casambi ![PyPI - Downloads](https://img.shields.io/pypi/dm/aiocasambi)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/aiocasambi) ![PyPI](https://img.shields.io/pypi/v/aiocasambi) ![GitHub](https://img.shields.io/github/license/hellqvio86/aiocasambi) ![PyPI - Downloads](https://img.shields.io/pypi/dm/aiocasambi)
 
 # Python library for controlling Casambi lights
 

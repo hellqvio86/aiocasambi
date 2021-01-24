@@ -81,13 +81,14 @@ def parse_config(config_file='casambi.yaml'):
 
 def setup_logger(*, debug=False):
     root = logging.getLogger()
-    formatter = logging.Formatter('%(asctime)s %(process)d %(processName)-10s %(name)-8s %(funcName)-8s %(levelname)-8s %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s %(process)d %(processName)-10s %(name)-8s %(funcName)-8s %(levelname)-8s %(message)s')
 
     if debug:
         max_bytes = 3 * 10**6
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler('casambi.log', 'a',
-            max_bytes, backup_count)
+                                                            max_bytes, backup_count)
         file_handler.setFormatter(formatter)
         root.addHandler(file_handler)
 
@@ -107,7 +108,7 @@ async def main(
     api_key,
     wire_id=1,
     sslcontext=False
-    ):
+):
     """Main function."""
     LOGGER.info("Starting aioCasambi")
 
@@ -115,7 +116,7 @@ async def main(
     websession = aiohttp.ClientSession(
         cookie_jar=aiohttp.CookieJar(unsafe=False),
         timeout=timeout
-        )
+    )
 
     controller = await get_casambi_controller(
         email=email,
@@ -194,7 +195,7 @@ if __name__ == "__main__":
 
     setup_logger(debug=config['debug'])
 
-    LOGGER.info(
+    LOGGER.debug(
         f"{args.email}, {args.api_key}, {args.user_password}, {args.network_password}"
     )
 

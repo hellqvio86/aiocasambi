@@ -23,4 +23,4 @@ pip install aiocasambi
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ### Test script
-Add the credentials to casambi.yaml.example and rename the file to casambi.yaml
+Add the credentials to _casambi.yaml.example_ and rename the file to _casambi.yaml_

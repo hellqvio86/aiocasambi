@@ -5,15 +5,17 @@ import uuid
 
 import aiohttp
 
+from .consts import (
+    SIGNAL_CONNECTION_STATE,
+    SIGNAL_DATA,
+    SIGNAL_UNIT_PULL_UPDATE,
+    STATE_RUNNING,
+    STATE_DISCONNECTED,
+    STATE_STARTING,
+    STATE_STOPPED
+)
+
 LOGGER = logging.getLogger(__name__)
-
-SIGNAL_DATA = "data"
-SIGNAL_CONNECTION_STATE = "state"
-
-STATE_DISCONNECTED = "disconnected"
-STATE_RUNNING = "running"
-STATE_STARTING = "starting"
-STATE_STOPPED = "stopped"
 
 
 class WSClient():

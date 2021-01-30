@@ -302,6 +302,13 @@ class Units():
 
         return result
 
+    def get_units_unique_ids(self):
+        result = []
+        for _, value in self.units.items():
+            result.append(value.unique_id)
+
+        return result
+
     def __process_units(self, units):
         """
             Function for processing units

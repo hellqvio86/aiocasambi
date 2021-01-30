@@ -8,9 +8,12 @@ from asyncio import TimeoutError, sleep
 from .errors import LoginRequired, ResponseError, RateLimit
 from .websocket import (
     WSClient,
+)
+from .consts import (
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
-    STATE_RUNNING
+    STATE_RUNNING,
+    SIGNAL_UNIT_PULL_UPDATE
 )
 
 from .units import Units
@@ -148,6 +151,8 @@ class Controller:
 
         self.units.process_network_state(response)
 
+        self.callback(SIGNAL_UNIT_PULL_UPDATE, self.units.get_units_unique_ids())
+
         return response
 
     async def initialize(self):
@@ -191,7 +196,7 @@ class Controller:
         )
 
         self.websocket.start()
-    
+
     async def ws_send_message(self, msg):
         """Send websocket message to casambi api"""
         LOGGER.debug(f"Sending websocket message: msg {msg}")

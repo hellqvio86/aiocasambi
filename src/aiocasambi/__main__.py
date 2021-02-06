@@ -85,7 +85,7 @@ def setup_logger(*, debug=False):
         '%(asctime)s %(process)d %(processName)-10s %(name)-8s %(funcName)-8s %(levelname)-8s %(message)s')
 
     if debug:
-        max_bytes = 3 * 10**6
+        max_bytes = 3 * 10**7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler('casambi.log', 'a',
                                                             max_bytes, backup_count)

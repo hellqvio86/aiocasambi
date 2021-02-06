@@ -1,6 +1,7 @@
 """Casambi implementation."""
 
 import logging
+import time
 
 from aiohttp import client_exceptions
 from asyncio import TimeoutError, sleep
@@ -66,6 +67,7 @@ class Controller:
         self.scenes = None
 
         self._reconnecting = False
+        self._last_websocket_ping = time.time()
 
     def get_units(self):
         """ Getter for getting units. """
@@ -197,8 +199,30 @@ class Controller:
 
         self.websocket.start()
 
+    async def ws_ping(self):
+        current_time = time.time()
+
+        if current_time < (self._last_websocket_ping + 60*3 + 30):
+            # Ping should be sent every 5 min
+            return
+
+        message = {
+            "method": "ping",
+            "wire": self._wire_id,
+        }
+
+        LOGGER.debug(f"Sending websocket ping: {message}")
+
+        succcess = await self.websocket.send_message(message)
+
+        if not succcess:
+            # Try to reconnect
+            await self.reconnect()
+
     async def ws_send_message(self, msg):
         """Send websocket message to casambi api"""
+        await self.ws_ping()
+
         LOGGER.debug(f"Sending websocket message: msg {msg}")
 
         succcess = await self.websocket.send_message(msg)
@@ -318,8 +342,9 @@ class Controller:
 
     async def request(self, method, path=None, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""
+        await self.ws_ping()
 
-        LOGGER.debug(f"url: {url}")
+        LOGGER.debug(f"request url: {url}")
 
         try:
             async with self.session.request(

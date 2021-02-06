@@ -208,7 +208,7 @@ class Controller:
 
         message = {
             "method": "ping",
-            "wire": self._wire_id,
+            "wire": self.wire_id,
         }
 
         LOGGER.debug(f"Sending websocket ping: {message}")

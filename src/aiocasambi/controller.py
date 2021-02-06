@@ -219,6 +219,8 @@ class Controller:
             # Try to reconnect
             await self.reconnect()
 
+        self._last_websocket_ping = current_time
+
     async def ws_send_message(self, msg):
         """Send websocket message to casambi api"""
         await self.ws_ping()

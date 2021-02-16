@@ -204,6 +204,10 @@ class Controller:
 
         if current_time < (self._last_websocket_ping + 60*3 + 30):
             # Ping should be sent every 5 min
+            msg = 'Not sending websocket ping, '
+            msg += f"current_time: {current_time}, "
+            msg += f"last websocket ping: {self._last_websocket_ping}"
+            LOGGER.debug(msg)
             return
 
         message = {
@@ -232,6 +236,10 @@ class Controller:
         if not succcess:
             # Try to reconnect
             await self.reconnect()
+
+    async def wake_up_units(self):
+        LOGGER.debug('Trying to wake up units that is offline')
+        await self.units.wake_up_offline_units
 
     def get_websocket_state(self):
         return self.websocket.state

@@ -309,6 +309,12 @@ class Units():
 
         return result
 
+    async def wake_up_offline_units(self):
+        for _, unit in self.units.items():
+            if not unit.online:
+                LOGGER.debug(f"Trying to wake up unit: {unit}")
+                await unit.wake_up_unit()
+
     def __process_units(self, units):
         """
             Function for processing units
@@ -443,6 +449,24 @@ class Unit():
         self._fixture = fixture
 
     @property
+    def value(self):
+        return self._value
+
+    @fixture.setter
+    def value(self, value):
+        self._value = value
+
+    @property
+    def state(self):
+        return self._state
+
+    @fixture.setter
+    def state(self, state):
+        if state == UNIT_STATE_OFF:
+            self.value = 0
+        self._state = state
+
+    @property
     def unique_id(self):
         return f"{self._network_id}-{self._unit_id}"
 
@@ -538,7 +562,19 @@ class Unit():
             "targetControls": target_controls
         }
 
+        self.value = value
+
         await self._controller.ws_send_message(message)
+
+    async def wake_up_unit(self):
+        """ Try to wake up the unit by sending the same state"""
+        if self.online:
+            return
+
+        if self.state == UNIT_STATE_OFF:
+            await self.turn_unit_off()
+        else:
+            await self.set_unit_value(value=self.value)
 
     def __repr__(self) -> str:
         """Return the representation."""

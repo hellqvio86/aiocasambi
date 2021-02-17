@@ -207,7 +207,7 @@ class Controller:
     async def ws_ping(self):
         current_time = time.time()
 
-        if not self.websocket:
+        if self.websocket is None:
             await self.reconnect()
 
         if (self.websocket.get_state() == STATE_DISCONNECTED) or (self.websocket.get_state() == STATE_STOPPED):

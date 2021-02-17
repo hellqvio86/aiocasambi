@@ -207,12 +207,6 @@ class Controller:
     async def ws_ping(self):
         current_time = time.time()
 
-        if self.websocket is None:
-            await self.reconnect()
-
-        if (self.websocket.get_state() == STATE_DISCONNECTED) or (self.websocket.get_state() == STATE_STOPPED):
-            await self.reconnect()
-
         if current_time < (self._last_websocket_ping + 60*3 + 30):
             # Ping should be sent every 5 min
             msg = 'Not sending websocket ping, '

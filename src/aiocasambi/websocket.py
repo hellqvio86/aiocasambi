@@ -61,6 +61,10 @@ class WSClient():
         """Get data"""
         return self._data
 
+    def get_state(self):
+        """Get state"""
+        return self._state
+
     @property
     def state(self):
         """Get state"""

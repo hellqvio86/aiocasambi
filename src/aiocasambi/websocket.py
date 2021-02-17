@@ -102,13 +102,23 @@ class WSClient():
     async def send_message(self, message):
         success = False
         LOGGER.debug(f"send_message message {message}")
+
+        if not self.web_sock:
+            # Websocket is none
+            LOGGER.error('websocket.send_message: websocket is None')
+            self.state = STATE_DISCONNECTED
+
+            return success
+
         try:
             await self.web_sock.send_str(json.dumps(message))
             success = True
         except ConnectionError as err:
             LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {err}")
             self.state = STATE_DISCONNECTED
-
+        except AttributeError as err:
+            LOGGER.error(f"websocket caught ConnectionError in websocket.send_message: {err}")
+            self.state = STATE_DISCONNECTED
         return success
 
     async def running(self):

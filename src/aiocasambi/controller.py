@@ -14,7 +14,9 @@ from .consts import (
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
     STATE_RUNNING,
-    SIGNAL_UNIT_PULL_UPDATE
+    SIGNAL_UNIT_PULL_UPDATE,
+    STATE_DISCONNECTED,
+    STATE_STOPPED
 )
 
 from .units import Units
@@ -199,8 +201,14 @@ class Controller:
 
         self.websocket.start()
 
+        # We don't want to ping right after we setup a websocket
+        self._last_websocket_ping = time.time()
+
     async def ws_ping(self):
         current_time = time.time()
+
+        if (self.websocket.state == STATE_DISCONNECTED) or (self.websocket.state == STATE_STOPPED):
+            await self.reconnect()
 
         if current_time < (self._last_websocket_ping + 60*3 + 30):
             # Ping should be sent every 5 min

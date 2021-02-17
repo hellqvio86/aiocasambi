@@ -377,6 +377,7 @@ class Unit():
         controller,
         value=0,
         online=True,
+        enabled=True,
         state=UNIT_STATE_OFF):
         self._name = name
         self._address = address
@@ -390,6 +391,7 @@ class Unit():
         self._controller = controller
         self._oem = None
         self._online = online
+        self._enabled = enabled
 
     @property
     def value(self):
@@ -452,15 +454,23 @@ class Unit():
     def value(self):
         return self._value
 
-    @fixture.setter
+    @value.setter
     def value(self, value):
         self._value = value
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, enabled):
+        self._enabled = enabled
 
     @property
     def state(self):
         return self._state
 
-    @fixture.setter
+    @state.setter
     def state(self, state):
         if state == UNIT_STATE_OFF:
             self.value = 0
@@ -569,6 +579,9 @@ class Unit():
     async def wake_up_unit(self):
         """ Try to wake up the unit by sending the same state"""
         if self.online:
+            return
+
+        if not self.enabled:
             return
 
         if self.state == UNIT_STATE_OFF:

@@ -239,7 +239,7 @@ class Controller:
 
     async def wake_up_units(self):
         LOGGER.debug('Trying to wake up units that is offline')
-        await self.units.wake_up_offline_units
+        await self.units.wake_up_offline_units()
 
     def get_websocket_state(self):
         return self.websocket.state

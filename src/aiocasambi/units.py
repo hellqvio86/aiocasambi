@@ -138,9 +138,13 @@ class Units():
                         'type': 'Luminaire'},
                }
         """
-        if 'units' not in data:
-            # Safe guard
-            return
+        try:
+            if 'units' not in data:
+                # Safe guard
+                return
+        except TypeError as err:
+            LOGGER.error(f"process_network_state: unknown data: {data}")
+            raise err
 
         for unit_key in data['units']:
             unit_data = data['units'][unit_key]

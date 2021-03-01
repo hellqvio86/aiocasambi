@@ -6,7 +6,7 @@ import time
 from aiohttp import client_exceptions
 from asyncio import TimeoutError, sleep
 
-from .errors import LoginRequired, ResponseError, RateLimit
+from .errors import LoginRequired, ResponseError, RateLimit, CasambiAPIServerError
 from .websocket import (
     WSClient,
 )
@@ -383,6 +383,9 @@ class Controller:
 
                 if res.status == 429:
                     raise RateLimit(f"Call {url} received 429 Server rate limit exceeded!")
+
+                if res.status == 500:
+                    raise CasambiAPIServerError(f"Server Error: status: {res.status} response: {res}")
 
                 if res.content_type == "application/json":
                     response = await res.json()

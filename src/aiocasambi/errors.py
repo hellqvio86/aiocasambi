@@ -31,6 +31,10 @@ class RateLimit(AiocasambiException):
     """Exceeded server rate limit"""
 
 
+class CasambiAPIServerError(AiocasambiException):
+    """500 errors"""
+
+
 ERRORS = {
     'api.err.LoginRequired': LoginRequired,
     'api.err.Invalid': Unauthorized,

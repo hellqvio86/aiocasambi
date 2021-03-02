@@ -385,7 +385,11 @@ class Controller:
                     raise RateLimit(f"Call {url} received 429 Server rate limit exceeded!")
 
                 if res.status == 500:
-                    raise CasambiAPIServerError(f"Server Error: status: {res.status} response: {res}")
+                    log_msg = f"Server Error: url: {url} "
+                    log_msg += f"headers: {headers} "
+                    log_msg += f"status: {res.status} "
+                    log_msg += f"response: {res}"
+                    raise CasambiAPIServerError(log_msg)
 
                 if res.content_type == "application/json":
                     response = await res.json()

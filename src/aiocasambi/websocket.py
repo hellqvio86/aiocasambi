@@ -26,14 +26,14 @@ class WSClient():
         ssl_context,
         api_key,
         network_id,
-        user_session_id,
+        session_id,
         callback,
         controller,
         wire_id=3
         ):
         self.api_key = api_key
         self.network_id = network_id
-        self.user_session_id = user_session_id
+        self.session_id = session_id
 
         self.session = session
         self.ssl_context = ssl_context
@@ -95,7 +95,7 @@ class WSClient():
         message = {
             "method": "open",
             "id": self.network_id,
-            "session": self.user_session_id,
+            "session": self.session_id,
             "ref": reference,
             "wire": self.wire_id,  # wire id
             "type": 1  # Client type, use value 1 (FRONTEND)

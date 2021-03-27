@@ -32,11 +32,11 @@ class Controller:
         self,
         *,
         email,
-        user_password,
-        network_password,
         api_key,
         websession,
         wire_id=1,
+        user_password=None,
+        network_password=None,
         sslcontext=None,
         callback=None,
         network_timeout=300
@@ -62,7 +62,7 @@ class Controller:
 
         self.websocket = None
 
-        self._user_session_id = None
+        self._session_id = None
         self._network_id = None
 
         self.units = None
@@ -78,6 +78,13 @@ class Controller:
     def get_scenes(self):
         """ Getter for getting scenes. """
         return self.scenes.get_scenes()
+
+    async def create_session(self):
+        if self.user_password:
+            await self.create_user_session()
+
+        if self.network_password:
+            await self.create_network_session()
 
     async def create_user_session(self):
         """ Creating user session. """
@@ -99,10 +106,10 @@ class Controller:
 
         LOGGER.debug(f"create_user_session data from request {data} dir(data): {dir(data)}")
 
-        self._user_session_id = data['sessionId']
-        self.headers['X-Casambi-Session'] = self._user_session_id
+        self._session_id = data['sessionId']
+        self.headers['X-Casambi-Session'] = self._session_id
 
-        LOGGER.debug(f"user_session_id: {self._user_session_id}")
+        LOGGER.debug(f"user_session_id: {self._session_id}")
 
     async def create_network_session(self):
         """ Creating network session. """
@@ -125,8 +132,9 @@ class Controller:
         LOGGER.debug(f"create_network_session data from request {data}")
 
         self._network_id = list(data.keys())[0]
+        self._session_id = data[self._network_id]['sessionId']
 
-        LOGGER.debug(f"network_id: {self._network_id}")
+        LOGGER.debug(f"network_id: {self._network_id} session_id: {self._session_id}")
 
     async def get_network_information(self):
         """ Creating network information. """
@@ -186,14 +194,14 @@ class Controller:
 
     async def start_websocket(self):
         """Start websession and websocket to Casambi."""
-        LOGGER.debug(f"start_websocket: api_key: {self.api_key}, network_id: {self._network_id}, user_session_id: {self._user_session_id} wire_id: {self.wire_id}")
+        LOGGER.debug(f"start_websocket: api_key: {self.api_key}, network_id: {self._network_id}, user_session_id: {self._session_id} wire_id: {self.wire_id}")
 
         self.websocket = WSClient(
             session=self.session,
             ssl_context=self.sslcontext,
             api_key=self.api_key,
             network_id=self._network_id,
-            user_session_id=self._user_session_id,
+            session_id=self._session_id,
             wire_id=self.wire_id,
             controller=self,
             callback=self.session_handler,
@@ -326,7 +334,7 @@ class Controller:
                 reconnect_counter += 1
 
                 LOGGER.debug(f"Controller is trying to reconnect, try {reconnect_counter}")
-                await self.create_user_session()
+                await self.create_session()
             except RateLimit as err:
                 LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
 
@@ -350,7 +358,6 @@ class Controller:
             self._reconnecting = False
             break
 
-        await self.create_network_session()
         await self.start_websocket()
 
         LOGGER.debug("Controller is reconnected")

@@ -864,7 +864,7 @@ class Unit():
 
         return (min, max, current)
 
-    def get_max_mirred(self) -> int:
+    def get_max_mired(self) -> int:
         '''
         M = 1000000 / T
 
@@ -887,7 +887,7 @@ class Unit():
         '''
         return round(1000000/self._controls['CCT']['max'])
 
-    def get_min_mirred(self) -> int:
+    def get_min_mired(self) -> int:
         '''
         M = 1000000 / T
 

@@ -779,10 +779,15 @@ class Unit():
                                          value: int,
                                          source="TW"):
         '''
-        Setter for unit color temperature (kelvin)
+        Setter for unit color temperature
         '''
         # Unit_id needs to be an integer
         unit_id = self._unit_id
+
+        target_value = value
+        if source == 'mired':
+            # Convert to Kelvin
+            target_value = round(1000000 / value)
 
         if isinstance(unit_id, int):
             pass
@@ -795,7 +800,7 @@ class Unit():
                 "expected unit_id to be an integer, got: {}".format(unit_id))
 
         target_controls = {
-            'ColorTemperature': {'value': value},
+            'ColorTemperature': {'value': target_value},
             'Colorsource': {'source': source}
         }
 

@@ -822,6 +822,11 @@ class Unit():
             "targetControls": target_controls
         }
 
+        dbg_msg = 'set_unit_color_temperature '
+        dbg_msg += f"value: {value}, source: {source} "
+        dbg_msg += f"sending: {message}"
+        LOGGER.debug(dbg_msg)
+
         await self._controller.ws_send_message(message)
 
     async def set_unit_value(self, *, value):

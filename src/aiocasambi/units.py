@@ -864,6 +864,75 @@ class Unit():
 
         return (min, max, current)
 
+    def get_max_mirred(self) -> int:
+        '''
+        M = 1000000 / T
+
+        25000 K, has a mired value of M = 40 mireds
+        1000000 / 25000 = 40
+
+        {
+            'Dimmer': {
+                'type': 'Dimmer',
+                'value': 0.0
+                },
+            'CCT': {
+                'min': 2200,
+                'max': 6000,
+                'level': 0.4631578947368421,
+                'type': 'CCT',
+                'value': 3960.0
+                }
+        }
+        '''
+        return round(1000000/self._controls['CCT']['max'])
+
+    def get_min_mirred(self) -> int:
+        '''
+        M = 1000000 / T
+
+        25000 K, has a mired value of M = 40 mireds
+        1000000 / 25000 = 40
+
+        {
+            'Dimmer': {
+                'type': 'Dimmer',
+                'value': 0.0
+                },
+            'CCT': {
+                'min': 2200,
+                'max': 6000,
+                'level': 0.4631578947368421,
+                'type': 'CCT',
+                'value': 3960.0
+                }
+        }
+        '''
+        return round(1000000/self._controls['CCT']['min'])
+
+    def get_color_temp(self):
+        """
+        M = 1 000 000 / T
+
+        25000 K, has a mired value of M = 40 mireds
+        1000000 / 25000 = 40
+
+        {
+            'Dimmer': {
+                'type': 'Dimmer',
+                'value': 0.0
+                },
+            'CCT': {
+                'min': 2200,
+                'max': 6000,
+                'level': 0.4631578947368421,
+                'type': 'CCT',
+                'value': 3960.0
+                }
+        }
+        """
+        return round(1000000/self._controls['CCT']['value'])
+
     def supports_color_temperature(self) -> bool:
         '''
         Returns true if unit supports color temperature

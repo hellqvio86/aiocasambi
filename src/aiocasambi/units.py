@@ -883,6 +883,10 @@ class Unit():
             max = self._controls['CCT']['max']
             current = self._controls['CCT']['value']
 
+        dbg_msg = 'get_supported_color_temperature returning '
+        dbg_msg += f"min={min} max={max} current={current}"
+        LOGGER.debug(dbg_msg)
+
         return (min, max, current)
 
     def get_max_mired(self) -> int:
@@ -906,7 +910,11 @@ class Unit():
                 }
         }
         '''
-        return round(1000000/self._controls['CCT']['max'])
+        result = round(1000000/self._controls['CCT']['max'])
+
+        LOGGER.debug(f"get_max_mired returning {result}")
+
+        return result
 
     def get_min_mired(self) -> int:
         '''
@@ -929,6 +937,10 @@ class Unit():
                 }
         }
         '''
+        result = round(1000000/self._controls['CCT']['min'])
+
+        LOGGER.debug(f"get_min_mired returning {result}")
+
         return round(1000000/self._controls['CCT']['min'])
 
     def get_color_temp(self):
@@ -952,7 +964,11 @@ class Unit():
                 }
         }
         """
-        return round(1000000/self._controls['CCT']['value'])
+        result = round(1000000/self._controls['CCT']['value'])
+
+        LOGGER.debug(f"get_color_temp returning {result}")
+
+        return result
 
     def supports_color_temperature(self) -> bool:
         '''

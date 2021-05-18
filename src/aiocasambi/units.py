@@ -910,9 +910,10 @@ class Unit():
                 }
         }
         '''
-        result = round(1000000/self._controls['CCT']['max'])
+        cct_max = self._controls['CCT']['max']
+        result = round(1000000/cct_max)
 
-        LOGGER.debug(f"get_max_mired returning {result}")
+        LOGGER.debug(f"get_max_mired returning {result} (in kv {cct_max})")
 
         return result
 
@@ -937,11 +938,12 @@ class Unit():
                 }
         }
         '''
-        result = round(1000000/self._controls['CCT']['min'])
+        cct_min = self._controls['CCT']['min']
+        result = round(1000000/cct_min)
 
-        LOGGER.debug(f"get_min_mired returning {result}")
+        LOGGER.debug(f"get_min_mired returning {result} (in kv {cct_min})")
 
-        return round(1000000/self._controls['CCT']['min'])
+        return result
 
     def get_color_temp(self):
         """
@@ -964,9 +966,10 @@ class Unit():
                 }
         }
         """
-        result = round(1000000/self._controls['CCT']['value'])
+        cct_value = self._controls['CCT']['value']
+        result = round(1000000/cct_value)
 
-        LOGGER.debug(f"get_color_temp returning {result}")
+        LOGGER.debug(f"get_color_temp returning {result} (in kv {cct_value})")
 
         return result
 

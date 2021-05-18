@@ -796,6 +796,10 @@ class Unit():
             elif target_value > max:
                 target_value = max
 
+        # Convert to nerest 50 in kelvin, like the gui is doing
+        if target_value % 50 != 0:
+            target_value = target_value/50*50+50
+
         if isinstance(unit_id, int):
             pass
         elif isinstance(unit_id, str):

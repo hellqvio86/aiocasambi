@@ -789,6 +789,13 @@ class Unit():
             # Convert to Kelvin
             target_value = round(1000000 / value)
 
+            # Get min and max temperature color in kelvin
+            (min, max, _) = self.get_supported_color_temperature()
+            if target_value < min:
+                target_value = min
+            elif target_value > max:
+                target_value = max
+
         if isinstance(unit_id, int):
             pass
         elif isinstance(unit_id, str):

@@ -1,0 +1,1 @@
+python -m src.aiocasambi.__main__

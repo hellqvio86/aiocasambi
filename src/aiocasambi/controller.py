@@ -366,8 +366,9 @@ class Controller:
                 self.callback(SIGNAL_DATA, new_items)
 
         elif signal == SIGNAL_CONNECTION_STATE and self.callback:
-            LOGGER.debug(
-                f"session_handler is handling SIGNAL_CONNECTION_STATE: {signal}")
+            dbg_msg = 'session_handler is handling'
+            dbg_msg += f"SIGNAL_CONNECTION_STATE: {signal}"
+            LOGGER.debug(dbg_msg)
 
             self.callback(SIGNAL_CONNECTION_STATE, self.websocket.state)
         else:
@@ -515,9 +516,18 @@ class Controller:
         '''
         Get supported color temperatures
         '''
-        (min, max, current) = self.units.get_supported_color_temperature(unit_id=unit_id)
+        (min, max, current) = \
+            self.units.get_supported_color_temperature(unit_id=unit_id)
 
         return (min, max, current)
+
+    def unit_supports_brightness(self, *, unit_id: int):
+        '''
+        Check if unit supports color temperature
+        '''
+        result = self.units.supports_brightness(unit_id=unit_id)
+
+        return result
 
     async def set_unit_color_temperature(self, *,
                                          unit_id: int,
@@ -526,7 +536,11 @@ class Controller:
         '''
         Set unit color temperature
         '''
-        await self.units.set_unit_color_temperature(unit_id=unit_id, value=value, source=source)
+        await self.units.set_unit_color_temperature(
+            unit_id=unit_id,
+            value=value,
+            source=source
+            )
 
     async def request(self,
                       method,

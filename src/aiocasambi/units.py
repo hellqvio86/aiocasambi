@@ -416,6 +416,15 @@ class Units():
 
         return result
 
+    def supports_brightness(self, *, unit_id: int):
+        '''
+        Check if unit supports brightness temperature
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        result = self.units[key].supports_brightness()
+
+        return result
+
     def get_supported_color_temperature(self, *, unit_id: int):
         '''
         Get supported color temperatures
@@ -892,7 +901,7 @@ class Unit():
         if 'CCT' in self._controls and self._controls['CCT']:
             return True
         return False
-    
+
     def supports_brightness(self) -> bool:
         '''
         Returns true if unit supports color temperature
@@ -965,8 +974,12 @@ class Unit():
 
         if self._controls:
             # Controls state is set, not None
+            result = f"{result} supports_brightness="
+            result = f"{result}{self.supports_brightness()}"
+
             result = f"{result} supports_color_temperature="
             result = f"{result}{self.supports_color_temperature()}"
+
             result = f"{result} controls={self._controls}"
 
         result = f"{result} >"

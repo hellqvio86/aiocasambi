@@ -162,8 +162,9 @@ async def main(
             try:
                 network_state_data = await controller.get_network_state()
             except AttributeError as err:
-                LOGGER.error(
-                    f"Caught AttributeError: {err} dir(controller): {dir(controller)}")
+                error_msg = f"Caught AttributeError: {err} "
+                error_msg += f"dir(controller): {dir(controller)}"
+                LOGGER.error(error_msg)
                 raise err
 
             msg = f"Current Units state: {controller.get_units()}"
@@ -194,10 +195,15 @@ async def main(
                             unit_id=unit_id)
 
                     color_temp = random.randint(min_color_temp, max_color_temp)
-                    LOGGER.info(
-                        f"Setting unit: {unit_id} to Color temperature: {color_temp}")
-                    await controller.set_unit_color_temperature(unit_id=unit_id,
-                                                                value=color_temp)
+
+                    info_msg = f"Setting unit: {unit_id} "
+                    info_msg += f"to Color temperature: {color_temp}"
+                    LOGGER.info(info_msg)
+
+                    await controller.set_unit_color_temperature(
+                        unit_id=unit_id,
+                        value=color_temp
+                        )
                     await asyncio.sleep(60)
 
                     print_unit_information(

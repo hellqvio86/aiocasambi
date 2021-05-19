@@ -910,10 +910,10 @@ class Unit():
                 }
         }
         '''
-        cct_max = self._controls['CCT']['max']
-        result = round(1000000/cct_max)
+        cct_min = self._controls['CCT']['min']
+        result = round(1000000/cct_min)
 
-        LOGGER.debug(f"get_max_mired returning {result} (in kv {cct_max})")
+        LOGGER.debug(f"get_max_mired returning {result} (in kv {cct_min})")
 
         return result
 
@@ -938,10 +938,10 @@ class Unit():
                 }
         }
         '''
-        cct_min = self._controls['CCT']['min']
-        result = round(1000000/cct_min)
+        cct_max = self._controls['CCT']['max']
+        result = round(1000000/cct_max)
 
-        LOGGER.debug(f"get_min_mired returning {result} (in kv {cct_min})")
+        LOGGER.debug(f"get_min_mired returning {result} (in kv {cct_max})")
 
         return result
 

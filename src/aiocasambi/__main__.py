@@ -203,7 +203,7 @@ async def main(
                     await controller.set_unit_color_temperature(
                         unit_id=unit_id,
                         value=color_temp
-                        )
+                    )
                     await asyncio.sleep(60)
 
                     print_unit_information(

@@ -33,17 +33,17 @@ class Controller:
     """Casambi controller."""
 
     def __init__(
-        self,
-        *,
-        email,
-        api_key,
-        websession,
-        wire_id=1,
-        user_password=None,
-        network_password=None,
-        sslcontext=None,
-        callback=None,
-        network_timeout=300
+            self,
+            *,
+            email,
+            api_key,
+            websession,
+            wire_id=1,
+            user_password=None,
+            network_password=None,
+            sslcontext=None,
+            callback=None,
+            network_timeout=300
     ):
         self.email = email
         self.user_password = user_password
@@ -239,7 +239,7 @@ class Controller:
             'type': 'Luminaire'
         }
         '''
-        data = await self.get_unit_state(unit_id)
+        data = await self.get_unit_state(unit_id=unit_id)
 
         if 'controls' in data:
             return data['controls']
@@ -516,10 +516,10 @@ class Controller:
         '''
         Get supported color temperatures
         '''
-        (min, max, current) = \
+        (cct_min, cct_max, current) = \
             self.units.get_supported_color_temperature(unit_id=unit_id)
 
-        return (min, max, current)
+        return (cct_min, cct_max, current)
 
     def unit_supports_brightness(self, *, unit_id: int):
         '''
@@ -555,12 +555,12 @@ class Controller:
 
         try:
             async with self.session.request(
-                method,
-                url,
-                json=json,
-                ssl=self.sslcontext,
-                headers=headers,
-                **kwargs,
+                    method,
+                    url,
+                    json=json,
+                    ssl=self.sslcontext,
+                    headers=headers,
+                    **kwargs,
             ) as res:
                 LOGGER.debug(f"request: {res.status} {res.content_type} {res}")
 

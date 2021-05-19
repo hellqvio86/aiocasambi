@@ -2,8 +2,8 @@
 
 import logging
 
-from .errors import AiocasambiException
 from pprint import pformat
+from .errors import AiocasambiException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,13 +17,13 @@ class Units():
     '''
 
     def __init__(
-        self,
-        units: set,
-        *,
-        network_id,
-        wire_id,
-        controller,
-        online=True
+            self,
+            units: set,
+            *,
+            network_id,
+            wire_id,
+            controller,
+            online=True
     ) -> None:
         self._network_id = network_id
         self._wire_id = wire_id
@@ -249,7 +249,7 @@ class Units():
 
             LOGGER.error(error_msg)
 
-            return
+            return None
 
         key = f"{self._network_id}-{msg['id']}"
 
@@ -430,9 +430,9 @@ class Units():
         Get supported color temperatures
         '''
         key = f"{self._network_id}-{unit_id}"
-        (min, max, current) = self.units[key].get_supported_color_temperature()
+        (cct_min, cct_max, current) = self.units[key].get_supported_color_temperature()
 
-        return (min, max, current)
+        return (cct_min, cct_max, current)
 
     async def set_unit_color_temperature(self, *,
                                          unit_id: int,
@@ -650,20 +650,6 @@ class Unit():
         self._fixture = fixture
 
     @property
-    def value(self):
-        '''
-        Getter for value
-        '''
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        '''
-        Setter for value
-        '''
-        self._value = value
-
-    @property
     def enabled(self):
         '''
         Getter for enabled
@@ -790,11 +776,11 @@ class Unit():
             target_value = round(1000000 / value)
 
             # Get min and max temperature color in kelvin
-            (min, max, _) = self.get_supported_color_temperature()
-            if target_value < min:
-                target_value = min
-            elif target_value > max:
-                target_value = max
+            (cct_min, cct_max, _) = self.get_supported_color_temperature()
+            if target_value < cct_min:
+                target_value = cct_min
+            elif target_value > cct_max:
+                target_value = cct_max
 
         # Convert to nerest 50 in kelvin, like the gui is doing
         if target_value % 50 != 0:
@@ -870,8 +856,8 @@ class Unit():
         Return the supported color temperatures,
         (0, 0, 0) if nothing is supported
         '''
-        min = 0
-        max = 0
+        cct_min = 0
+        cct_max = 0
         current = 0
 
         if not self._controls:
@@ -879,15 +865,15 @@ class Unit():
             return (min, max, current)
 
         if 'CCT' in self._controls and self._controls['CCT']:
-            min = self._controls['CCT']['min']
-            max = self._controls['CCT']['max']
+            cct_min = self._controls['CCT']['min']
+            cct_max = self._controls['CCT']['max']
             current = self._controls['CCT']['value']
 
         dbg_msg = 'get_supported_color_temperature returning '
-        dbg_msg += f"min={min} max={max} current={current}"
+        dbg_msg += f"min={cct_min} max={cct_max} current={current}"
         LOGGER.debug(dbg_msg)
 
-        return (min, max, current)
+        return (cct_min, cct_max, current)
 
     def get_max_mired(self) -> int:
         '''

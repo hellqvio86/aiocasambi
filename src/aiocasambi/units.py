@@ -812,7 +812,7 @@ class Unit():
 
         target_controls = {
             'ColorTemperature': {'value': target_value},
-            'Colorsource': {'source': source}
+            'Colorsource': {'source': 'TW'}
         }
 
         message = {

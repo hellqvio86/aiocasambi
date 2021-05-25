@@ -870,7 +870,8 @@ class Unit():
             current = self._controls['CCT']['value']
 
         dbg_msg = 'get_supported_color_temperature returning '
-        dbg_msg += f"min={cct_min} max={cct_max} current={current}"
+        dbg_msg += f"min={cct_min} max={cct_max} current={current} "
+        dbg_msg += f" for name={self.name}"
         LOGGER.debug(dbg_msg)
 
         return (cct_min, cct_max, current)
@@ -899,7 +900,9 @@ class Unit():
         cct_min = self._controls['CCT']['min']
         result = round(1000000/cct_min)
 
-        LOGGER.debug(f"get_max_mired returning {result} (in kv {cct_min})")
+        dbg_msg = f"get_max_mired returning {result} (in kv {cct_min}) "
+        dbg_msg += f" for name={self.name}"
+        LOGGER.debug(dbg_msg)
 
         return result
 
@@ -927,7 +930,10 @@ class Unit():
         cct_max = self._controls['CCT']['max']
         result = round(1000000/cct_max)
 
-        LOGGER.debug(f"get_min_mired returning {result} (in kv {cct_max})")
+        dbg_msg = f"get_min_mired returning {result} (in kv {cct_max}) "
+        dbg_msg += f" for name={self.name}"
+
+        LOGGER.debug(dbg_msg)
 
         return result
 
@@ -955,7 +961,10 @@ class Unit():
         cct_value = self._controls['CCT']['value']
         result = round(1000000/cct_value)
 
-        LOGGER.debug(f"get_color_temp returning {result} (in kv {cct_value})")
+        dbg_msg = f"get_color_temp returning {result} (in kv {cct_value}) "
+        dbg_msg += f" for name={self.name}"
+
+        LOGGER.debug(dbg_msg)
 
         return result
 

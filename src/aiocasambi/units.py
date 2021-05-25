@@ -871,7 +871,7 @@ class Unit():
 
         dbg_msg = 'get_supported_color_temperature returning '
         dbg_msg += f"min={cct_min} max={cct_max} current={current} "
-        dbg_msg += f" for name={self.name}"
+        dbg_msg += f"for name={self.name}"
         LOGGER.debug(dbg_msg)
 
         return (cct_min, cct_max, current)
@@ -901,7 +901,7 @@ class Unit():
         result = round(1000000/cct_min)
 
         dbg_msg = f"get_max_mired returning {result} (in kv {cct_min}) "
-        dbg_msg += f" for name={self.name}"
+        dbg_msg += f"for name={self.name}"
         LOGGER.debug(dbg_msg)
 
         return result
@@ -931,7 +931,7 @@ class Unit():
         result = round(1000000/cct_max)
 
         dbg_msg = f"get_min_mired returning {result} (in kv {cct_max}) "
-        dbg_msg += f" for name={self.name}"
+        dbg_msg += f"for name={self.name}"
 
         LOGGER.debug(dbg_msg)
 
@@ -962,7 +962,7 @@ class Unit():
         result = round(1000000/cct_value)
 
         dbg_msg = f"get_color_temp returning {result} (in kv {cct_value}) "
-        dbg_msg += f" for name={self.name}"
+        dbg_msg += f"for name={self.name}"
 
         LOGGER.debug(dbg_msg)
 

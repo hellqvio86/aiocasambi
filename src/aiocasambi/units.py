@@ -430,7 +430,8 @@ class Units():
         Get supported color temperatures
         '''
         key = f"{self._network_id}-{unit_id}"
-        (cct_min, cct_max, current) = self.units[key].get_supported_color_temperature()
+        (cct_min, cct_max, current) = \
+            self.units[key].get_supported_color_temperature()
 
         return (cct_min, cct_max, current)
 
@@ -775,16 +776,30 @@ class Unit():
             # Convert to Kelvin
             target_value = round(1000000 / value)
 
-            # Get min and max temperature color in kelvin
-            (cct_min, cct_max, _) = self.get_supported_color_temperature()
-            if target_value < cct_min:
-                target_value = cct_min
-            elif target_value > cct_max:
-                target_value = cct_max
-
         # Convert to nerest 50 in kelvin, like the gui is doing
         if target_value % 50 != 0:
             target_value = target_value/50*50+50
+
+        # Get min and max temperature color in kelvin
+        (cct_min, cct_max, _) = self.get_supported_color_temperature()
+        if target_value < cct_min:
+            dbg_msg = 'set_unit_color_temperature '
+            dbg_msg += f"target_value: {target_value}"
+            dbg_msg += ' smaller than min supported temperature,'
+            dbg_msg += ' setting to min supported color temperature:'
+            dbg_msg += f" {cct_min}"
+            LOGGER.debug(dbg_msg)
+
+            target_value = cct_min
+        elif target_value > cct_max:
+            dbg_msg = 'set_unit_color_temperature '
+            dbg_msg += f"target_value: {target_value}"
+            dbg_msg += ' larger than max supported temperature,'
+            dbg_msg += ' setting to max supported color temperature:'
+            dbg_msg += f" {cct_max}"
+            LOGGER.debug(dbg_msg)
+
+            target_value = cct_max
 
         if isinstance(unit_id, int):
             pass

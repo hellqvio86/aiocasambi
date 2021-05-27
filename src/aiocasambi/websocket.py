@@ -26,16 +26,16 @@ class WSClient():
     '''
 
     def __init__(
-        self,
-        *,
-        session,
-        ssl_context,
-        api_key,
-        network_id,
-        session_id,
-        callback,
-        controller,
-        wire_id=3
+            self,
+            *,
+            session,
+            ssl_context,
+            api_key,
+            network_id,
+            session_id,
+            callback,
+            controller,
+            wire_id=3
     ):
         '''
         Constructor for Web Socket Client
@@ -155,10 +155,10 @@ class WSClient():
         """
         try:
             async with self.session.ws_connect(
-                self.url,
-                ssl=self.ssl_context,
-                heartbeat=15,
-                protocols=(self.api_key,)
+                    self.url,
+                    ssl=self.ssl_context,
+                    heartbeat=15,
+                    protocols=(self.api_key,)
             ) as web_sock:
                 self.state = STATE_RUNNING
 

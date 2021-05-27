@@ -778,7 +778,12 @@ class Unit():
 
         # Convert to nerest 50 in kelvin, like the gui is doing
         if target_value % 50 != 0:
-            target_value = target_value/50*50+50
+            target_value = int(target_value/50)*50+50
+
+            dbg_msg = 'set_unit_color_temperature '
+            dbg_msg += f"converting target value to {target_value}"
+            dbg_msg += ' (nearest 50 kelvin like GUI)'
+            LOGGER.debug(dbg_msg)
 
         # Get min and max temperature color in kelvin
         (cct_min, cct_max, _) = self.get_supported_color_temperature()

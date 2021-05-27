@@ -22,11 +22,11 @@ class Helper:
     """Casambi helper."""
 
     def __init__(
-        self,
-        *,
-        email,
-        api_key,
-        websession=None,
+            self,
+            *,
+            email,
+            api_key,
+            websession=None,
     ):
         self.email = email
         self.api_key = api_key
@@ -43,7 +43,10 @@ class Helper:
             'X-Casambi-Key': self.api_key
         }
 
-    async def test_user_password(self, *, password: str) -> bool:
+    async def test_user_password(
+                self,
+                *,
+                password: str) -> bool:
         """ Test user session password """
         url = f"{self.rest_url}/users/session"
 
@@ -101,11 +104,11 @@ class Helper:
 
         try:
             async with self.session.request(
-                method,
-                url,
-                json=json,
-                headers=headers,
-                **kwargs,
+                    method,
+                    url,
+                    json=json,
+                    headers=headers,
+                    **kwargs,
             ) as res:
                 LOGGER.debug(f"request: {res.status} {res.content_type} {res}")
 

@@ -43,14 +43,14 @@ class Scene():
     """Represents a client network device."""
 
     def __init__(
-        self,
-        *,
-        name,
-        scene_id,
-        network_id,
-        wire_id,
-        controller,
-        state=SCENE_STATE_OFF
+            self,
+            *,
+            name,
+            scene_id,
+            network_id,
+            wire_id,
+            controller,
+            state=SCENE_STATE_OFF
     ):
         self._name = name
         self._scene_id = scene_id
@@ -61,6 +61,7 @@ class Scene():
 
     def __repr__(self) -> str:
         """Return the representation."""
+        result = ''
         name = self._name
 
         scene_id = self._scene_id
@@ -70,7 +71,11 @@ class Scene():
 
         wire_id = self._wire_id
 
-        return f"<Scene {name}: scene_id={scene_id} state={state} network_id={network_id} wire_id={wire_id}>"
+        result += f"<Scene {name}: scene_id={scene_id} "
+        result += f"state={state} network_id={network_id} "
+        result += f"wire_id={wire_id}>"
+
+        return result
 
     @property
     def name(self):
@@ -85,7 +90,13 @@ class Scenes():
     Class for representing Casambi Scenes
     '''
 
-    def __init__(self, scenes: set, *, network_id, wire_id, controller) -> None:
+    def __init__(
+            self,
+            scenes: set,
+            *,
+            network_id,
+            wire_id,
+            controller) -> None:
         '''
         Constructor
         '''
@@ -114,8 +125,57 @@ class Scenes():
         """
             Function for processing units
             Units raw format:
-            'scenes': {'1': {'name': 'Foo', 'id': 1, 'position': 0, 'icon': 0, 'color': '#FFFFFF', 'type': 'REGULAR', 'hidden': False, 'units': {'8': {'id': 8, 'state': 'fc03'}, '10': {'id': 10, 'state': 'fc03'}}}, '2': {'name': 'Foobar', 'id': 2, 'position': 1, 'icon': 0, 'color': '#FFFFFF', 'type': 'REGULAR', 'hidden': False, 'units': {'12': {'id': 12, 'state': 'fc03'}}}, '3': {'name': 'Master Bathroom', 'id': 3, 'position': 2, 'icon':
-0, 'color': '#FFFFFF', 'type': 'REGULAR', 'hidden': False, 'units': {'1': {'id': 1, 'state': 'fc03'}}}}
+            'scenes':
+            {
+            '1': {
+                'name': 'Foo',
+                'id': 1,
+                'position': 0,
+                'icon': 0,
+                'color': '#FFFFFF',
+                'type': 'REGULAR',
+                'hidden': False,
+                'units': {
+                    '8': {
+                        'id': 8,
+                        'state': 'fc03'
+                        },
+                    '10': {
+                        'id': 10,
+                        'state':
+                        'fc03'}
+                    }
+                },
+            '2': {
+                'name': 'Foobar',
+                'id': 2,
+                'position': 1,
+                'icon': 0,
+                'color': '#FFFFFF',
+                'type': 'REGULAR',
+                'hidden': False,
+                'units': {
+                    '12': {
+                        'id': 12,
+                        'state': 'fc03'}
+                    }
+                },
+            '3': {
+                'name': 'Master Bathroom',
+                'id': 3,
+                'position': 2,
+                'icon': 0,
+                'color': '#FFFFFF',
+                'type': 'REGULAR',
+                'hidden': False,
+                'units': {
+                    '1': {
+                        'id': 1,
+                        'state': 'fc03'
+                        }
+                    }
+                }
+            }
             '''
         """
         LOGGER.debug(f"Processing units {pformat(scenes)}")

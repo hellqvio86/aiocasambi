@@ -240,7 +240,8 @@ if __name__ == "__main__":
     PARSER = argparse.ArgumentParser()
     PARSER.add_argument("--email", type=str, required=False)
     PARSER.add_argument("--api_key", type=str, required=False)
-    PARSER.add_argument("--user_password", type=str, required=False)
+    PARSER.add_argument("--user_password", type=str, required=False,
+                        help="User password (site password)")
     PARSER.add_argument("--network_password", type=str, required=False)
     PARSER.add_argument("-D", "--debug", action="store_true")
     ARGS = PARSER.parse_args()

@@ -4,6 +4,13 @@
 
 aio Python library for controlling Casambi via Cloud API
 
+## Supported modes
+These modes are implemented:
+
+* on/off
+* brightness
+* color temperature
+
 ## Getting Started
 1. Request developer api key from Casambi: https://developer.casambi.com/
 2. Setup a site in Casambi app: http://support.casambi.com/support/solutions/articles/12000041325-how-to-create-a-site

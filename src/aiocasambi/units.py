@@ -148,6 +148,8 @@ class Units():
         try:
             if 'units' not in data:
                 # Safe guard
+                LOGGER.debug(
+                    f"process_network_state: units not in data: {data}")
                 return
         except TypeError as err:
             LOGGER.error(f"process_network_state: unknown data: {data}")

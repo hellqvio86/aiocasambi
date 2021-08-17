@@ -155,6 +155,8 @@ class Units():
             LOGGER.error(f"process_network_state: unknown data: {data}")
             raise err
 
+        LOGGER.debug(f"process_network_state: {data}")
+
         for unit_key in data['units']:
             unit_data = data['units'][unit_key]
             key = f"{self._network_id}-{unit_key}"

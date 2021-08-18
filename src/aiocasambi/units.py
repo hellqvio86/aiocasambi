@@ -147,13 +147,14 @@ class Units():
             if 'units' not in data:
                 # Safe guard
                 LOGGER.debug(
-                    f"process_network_state: units not in data: {data}")
+                    f"process_network_state - units not in data: {pformat(data)}")
                 return
         except TypeError as err:
-            LOGGER.error(f"process_network_state: unknown data: {data}")
+            LOGGER.error(
+                f"process_network_state - unknown data: {pformat(data)}")
             raise err
 
-        LOGGER.debug(f"process_network_state: {data}")
+        LOGGER.debug(f"process_network_state - data={pformat(data)}")
 
         for unit_key in data['units']:
             unit_data = data['units'][unit_key]
@@ -243,11 +244,11 @@ class Units():
         """
         changes = {}
 
-        LOGGER.debug(f"process_unit_event Processing msg: {msg}")
+        LOGGER.debug(f"process_unit_event - Processing msg: {pformat(msg)}")
 
         if 'id' not in msg:
-            error_msg = 'processing_unit_event discarding message, '
-            error_msg += f"id is missing in msg: {msg}"
+            error_msg = 'processing_unit_event - discarding message, '
+            error_msg += f"id is missing in msg: {pformat(msg)}"
 
             LOGGER.error(error_msg)
 
@@ -256,13 +257,15 @@ class Units():
         key = f"{self._network_id}-{msg['id']}"
 
         if 'online' in msg and not msg['online']:
-            LOGGER.debug(f"Gateway is not online msg{msg}")
+            LOGGER.debug(
+                f"processing_unit_event - Gateway is not online msg: {pformat(msg)}")
 
         if 'method' in msg and msg['method'] == 'unitChanged':
             controls = msg['controls']
             for control in controls:
 
-                LOGGER.debug(f"method \"unitChanged\" control: {control}")
+                LOGGER.debug(
+                    f"processing_unit_event - method \"unitChanged\" control: {pformat(control)}")
 
                 if 'type' in control and control['type'] == 'Dimmer':
                     name = ''
@@ -271,9 +274,9 @@ class Units():
                     elif 'name' in msg:
                         name = (msg['name']).strip()
 
-                    dbg_msg = f"key: {key} name: {name} msg: {msg} "
+                    dbg_msg = f"processing_unit_event - key: {key} name: {name} msg: {msg} "
                     dbg_msg += 'method unit changed control'
-                    dbg_msg += f" value: {control['value']}"
+                    dbg_msg += f" value: {pformat(control['value'])}"
                     LOGGER.debug(dbg_msg)
 
                     if key not in self.units:
@@ -481,7 +484,7 @@ class Units():
                     'type': 'Luminaire'}}
             '''
         """
-        LOGGER.debug(f"Processing units {pformat(units)}")
+        LOGGER.debug(f"__process_units - Processing units {pformat(units)}")
 
         for unit_id in units:
             tmp = units[unit_id]

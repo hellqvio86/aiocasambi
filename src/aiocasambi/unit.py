@@ -60,7 +60,8 @@ class Unit():
         '''
         Setter for value
         '''
-        LOGGER.debug(f"unit_id={self._unit_id} setting value to: {value}")
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - value - setting value to: {value}")
         if value == 0:
             self._state = UNIT_STATE_OFF
             self._value = value
@@ -111,7 +112,8 @@ class Unit():
         Setter for online
         '''
         if not self._online and online:
-            LOGGER.info(f"unit_id={self._unit_id} unit is back online")
+            LOGGER.info(
+                f"unit_id={self._unit_id} - online - unit is back online")
         self._online = online
 
     @property
@@ -129,12 +131,12 @@ class Unit():
         if isinstance(controls, list):
             for control in controls:
                 LOGGER.debug(
-                    f"unit_id={self._unit_id} Adding following control to controls: {control}")
+                    f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {control}")
                 key = control['type']
                 self._controls[key] = control
         elif isinstance(controls, dict):
             LOGGER.debug(
-                f"unit_id={self._unit_id} Adding following control to controls: {controls}")
+                f"unit_id={self._unit_id} - setter controls -Adding following control to controls: {controls}")
             key = controls['type']
             self._controls[key] = controls
 
@@ -296,29 +298,29 @@ class Unit():
         if target_value % 50 != 0:
             target_value = int(target_value/50)*50+50
 
-            dbg_msg = 'set_unit_color_temperature '
-            dbg_msg += f"converting target value to {target_value}"
+            dbg_msg = f"converting target value to {target_value}"
             dbg_msg += ' (nearest 50 kelvin like GUI)'
-            LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
 
         # Get min and max temperature color in kelvin
         (cct_min, cct_max, _) = self.get_supported_color_temperature()
         if target_value < cct_min:
-            dbg_msg = 'set_unit_color_temperature '
-            dbg_msg += f"target_value: {target_value}"
+            dbg_msg = f"target_value: {target_value}"
             dbg_msg += ' smaller than min supported temperature,'
             dbg_msg += ' setting to min supported color temperature:'
             dbg_msg += f" {cct_min}"
-            LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
 
             target_value = cct_min
         elif target_value > cct_max:
-            dbg_msg = 'set_unit_color_temperature '
-            dbg_msg += f"target_value: {target_value}"
+            dbg_msg = f"target_value: {target_value}"
             dbg_msg += ' larger than max supported temperature,'
             dbg_msg += ' setting to max supported color temperature:'
             dbg_msg += f" {cct_max}"
-            LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
 
             target_value = cct_max
 
@@ -346,7 +348,8 @@ class Unit():
 
         dbg_msg = f"value: {value}, source: {source} "
         dbg_msg += f"sending: {message}"
-        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
 
         await self._controller.ws_send_message(message)
 
@@ -384,6 +387,9 @@ class Unit():
 
         self.value = value
 
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_value - value={value}")
+
         await self._controller.ws_send_message(message)
 
     def get_supported_color_temperature(self):
@@ -407,7 +413,8 @@ class Unit():
         dbg_msg = 'returning '
         dbg_msg += f"min={cct_min} max={cct_max} current={current} "
         dbg_msg += f"for name={self.name}"
-        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - get_supported_color_temperature - {dbg_msg}")
 
         return (cct_min, cct_max, current)
 
@@ -437,7 +444,7 @@ class Unit():
 
         dbg_msg = f"returning {result} (in kv {cct_min}) "
         dbg_msg += f"for name={self.name}"
-        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+        LOGGER.debug(f"unit_id={self._unit_id} - get_max_mired - {dbg_msg}")
 
         return result
 
@@ -465,9 +472,9 @@ class Unit():
         cct_max = self._controls['CCT']['max']
         result = round(1000000/cct_max)
 
-        dbg_msg = f"get_min_mired returning {result} (in kv {cct_max}) "
+        dbg_msg = f"returning {result} (in kv {cct_max}) "
         dbg_msg += f"for name={self.name}"
-        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+        LOGGER.debug(f"unit_id={self._unit_id} - get_min_mired  - {dbg_msg}")
 
         return result
 
@@ -495,9 +502,9 @@ class Unit():
         cct_value = self._controls['CCT']['value']
         result = round(1000000/cct_value)
 
-        dbg_msg = f"get_color_temp returning {result} (in kv {cct_value}) "
+        dbg_msg = f"returning {result} (in kv {cct_value}) "
         dbg_msg += f"for name={self.name}"
-        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
+        LOGGER.debug(f"unit_id={self._unit_id} - get_color_temp - {dbg_msg}")
 
         return result
 
@@ -532,7 +539,8 @@ class Unit():
 
         '''
         if not self._controls:
-            LOGGER.debug(f"unit_id={self._unit_id} controls is None")
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - supports_color_temperature - controls is None")
             return False
 
         if 'CCT' in self._controls and self._controls['CCT']:
@@ -570,7 +578,8 @@ class Unit():
 
         '''
         if not self._controls:
-            LOGGER.debug(f"unit_id={self._unit_id} controls is None")
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - supports_brightness - controls is None")
             return False
 
         if 'Dimmer' in self._controls and self._controls['Dimmer']:

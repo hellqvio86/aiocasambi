@@ -60,7 +60,7 @@ class Unit():
         '''
         Setter for value
         '''
-        self.__logg(msg=f"setting value to: {value}")
+        LOGGER.debug(f"unit_id={self._unit_id} setting value to: {value}")
         if value == 0:
             self._state = UNIT_STATE_OFF
             self._value = value
@@ -111,7 +111,7 @@ class Unit():
         Setter for online
         '''
         if not self._online and online:
-            self.__logg(msg='unit is back online', log_level='info')
+            LOGGER.info(f"unit_id={self._unit_id} unit is back online")
         self._online = online
 
     @property
@@ -128,13 +128,13 @@ class Unit():
         '''
         if isinstance(controls, list):
             for control in controls:
-                self.__logg(
-                    msg=f"Adding following control to controls: {control}")
+                LOGGER.debug(
+                    f"unit_id={self._unit_id} Adding following control to controls: {control}")
                 key = control['type']
                 self._controls[key] = control
         elif isinstance(controls, dict):
-            self.__logg(
-                msg=f"Adding following control to controls: {controls}")
+            LOGGER.debug(
+                f"unit_id={self._unit_id} Adding following control to controls: {controls}")
             key = controls['type']
             self._controls[key] = controls
 
@@ -299,7 +299,7 @@ class Unit():
             dbg_msg = 'set_unit_color_temperature '
             dbg_msg += f"converting target value to {target_value}"
             dbg_msg += ' (nearest 50 kelvin like GUI)'
-            self.__logg(msg=dbg_msg)
+            LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
         # Get min and max temperature color in kelvin
         (cct_min, cct_max, _) = self.get_supported_color_temperature()
@@ -309,7 +309,7 @@ class Unit():
             dbg_msg += ' smaller than min supported temperature,'
             dbg_msg += ' setting to min supported color temperature:'
             dbg_msg += f" {cct_min}"
-            self.__logg(msg=dbg_msg)
+            LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
             target_value = cct_min
         elif target_value > cct_max:
@@ -318,7 +318,7 @@ class Unit():
             dbg_msg += ' larger than max supported temperature,'
             dbg_msg += ' setting to max supported color temperature:'
             dbg_msg += f" {cct_max}"
-            self.__logg(msg=dbg_msg)
+            LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
             target_value = cct_max
 
@@ -344,10 +344,9 @@ class Unit():
             "targetControls": target_controls
         }
 
-        dbg_msg = 'set_unit_color_temperature '
-        dbg_msg += f"value: {value}, source: {source} "
+        dbg_msg = f"value: {value}, source: {source} "
         dbg_msg += f"sending: {message}"
-        self.__logg(msg=dbg_msg)
+        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
         await self._controller.ws_send_message(message)
 
@@ -397,7 +396,7 @@ class Unit():
         current = 0
 
         if not self._controls:
-            self.__logg(msg='get_supported_color_temperature: control is None')
+            LOGGER.debug(f"unit_id={self._unit_id} control is None")
             return (min, max, current)
 
         if 'CCT' in self._controls and self._controls['CCT']:
@@ -405,10 +404,10 @@ class Unit():
             cct_max = self._controls['CCT']['max']
             current = self._controls['CCT']['value']
 
-        dbg_msg = 'get_supported_color_temperature returning '
+        dbg_msg = 'returning '
         dbg_msg += f"min={cct_min} max={cct_max} current={current} "
         dbg_msg += f"for name={self.name}"
-        self.__logg(msg=dbg_msg)
+        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
         return (cct_min, cct_max, current)
 
@@ -436,9 +435,9 @@ class Unit():
         cct_min = self._controls['CCT']['min']
         result = round(1000000/cct_min)
 
-        dbg_msg = f"get_max_mired returning {result} (in kv {cct_min}) "
+        dbg_msg = f"returning {result} (in kv {cct_min}) "
         dbg_msg += f"for name={self.name}"
-        self.__logg(msg=dbg_msg)
+        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
         return result
 
@@ -468,7 +467,7 @@ class Unit():
 
         dbg_msg = f"get_min_mired returning {result} (in kv {cct_max}) "
         dbg_msg += f"for name={self.name}"
-        self.__logg(msg=dbg_msg)
+        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
         return result
 
@@ -498,7 +497,7 @@ class Unit():
 
         dbg_msg = f"get_color_temp returning {result} (in kv {cct_value}) "
         dbg_msg += f"for name={self.name}"
-        self.__logg(msg=dbg_msg)
+        LOGGER.debug(f"unit_id={self._unit_id} {dbg_msg}")
 
         return result
 
@@ -533,7 +532,7 @@ class Unit():
 
         '''
         if not self._controls:
-            self.__logg(msg='supports_color_temperature: controls is None')
+            LOGGER.debug(f"unit_id={self._unit_id} controls is None")
             return False
 
         if 'CCT' in self._controls and self._controls['CCT']:
@@ -571,20 +570,12 @@ class Unit():
 
         '''
         if not self._controls:
-            self.__logg(msg='controls is None')
+            LOGGER.debug(f"unit_id={self._unit_id} controls is None")
             return False
 
         if 'Dimmer' in self._controls and self._controls['Dimmer']:
             return True
         return False
-
-    def __logg(self, *, msg: str, log_level: str = 'debug'):
-        msg = f"unit_id={self._unit_id} {msg}"
-
-        if log_level == 'debug':
-            LOGGER.debug(msg)
-        elif log_level == 'info':
-            LOGGER.info(msg)
 
     def __repr__(self) -> str:
         """Return the representation."""

@@ -53,7 +53,7 @@ class Unit():
         '''
         Getter for value
         '''
-        return self._value
+        return self._controls['Dimmer']['value']
 
     @value.setter
     def value(self, value):
@@ -114,6 +114,9 @@ class Unit():
         if not self._online and online:
             LOGGER.info(
                 f"unit_id={self._unit_id} - online - unit is back online")
+        elif self._online and not online:
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - online - Setting unit to offline")
         self._online = online
 
     @property

@@ -163,7 +163,16 @@ class Units():
             self.units[key].online = unit_data['online']
             self.units[key].name = unit_data['name']
             if unit_data['online']:
-                self.units[key].value = unit_data['dimLevel']
+                if 'dimLevel' in unit_data:
+                    self.units[key].value = unit_data['dimLevel']
+                else:
+                    err_msg = "process_network_state dimLevel is missing"
+                    err_msg += f" unit_key: {unit_key}"
+                    err_msg += f"\nunit_data: {pformat(unit_data)}"
+                    err_msg += f"\ndata: {pformat(data)}"
+
+                    LOGGER.error(err_msg)
+                    raise AiocasambiException(err_msg)
 
     def process_unit_event(self, msg):
         """

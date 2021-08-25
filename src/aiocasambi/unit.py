@@ -133,15 +133,14 @@ class Unit():
         '''
         if isinstance(controls, list):
             for control in controls:
-                LOGGER.debug(
-                    f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {control}")
-                key = control['type']
-                self._controls[key] = control
+                # Recusive call
+                self.controls = control
         elif isinstance(controls, dict):
             LOGGER.debug(
-                f"unit_id={self._unit_id} - setter controls -Adding following control to controls: {controls}")
+                f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {controls}")
             key = controls['type']
             self._controls[key] = controls
+
 
     @property
     def oem(self):

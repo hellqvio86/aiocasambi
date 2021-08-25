@@ -178,8 +178,8 @@ async def main(
                 LOGGER.error(error_msg)
                 raise err
 
-            msg = f"Current Units state: {controller.get_units()}"
-            msg += f"websocket: {controller.get_websocket_state()} "
+            msg = f"Current Units state: {pformat(controller.get_units())}\n"
+            msg += f"websocket: {pformat(controller.get_websocket_state())}\n"
             msg += f"network_state: {pformat(network_state_data)}"
 
             LOGGER.info(msg)

@@ -413,6 +413,15 @@ class Units():
 
         self.units[key].controls = data
 
+    def supports_rgb(self, *, unit_id: int):
+        '''
+        Check if unit supports RGB
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        result = self.units[key].supports_rgb()
+
+        return result
+
     def supports_color_temperature(self, *, unit_id: int):
         '''
         Check if unit supports color temperature

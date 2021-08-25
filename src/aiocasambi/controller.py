@@ -504,6 +504,14 @@ class Controller:
         '''
         await self.units.turn_unit_off(unit_id=unit_id)
 
+    def unit_supports_rgb(self, *, unit_id: int):
+        '''
+        Check if unit supports color temperature
+        '''
+        result = self.units.supports_rgb(unit_id=unit_id)
+
+        return result
+
     def unit_supports_color_temperature(self, *, unit_id: int):
         '''
         Check if unit supports color temperature

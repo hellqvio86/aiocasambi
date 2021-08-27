@@ -310,7 +310,7 @@ class Unit():
         }
 
         dbg_msg = f"Setting color to rgb({red}, {green}, {blue}) - "
-        dbg_msg += f"sending: {message}"
+        dbg_msg += f"sending: {pformat(message)}"
         LOGGER.debug(
             f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
 
@@ -558,9 +558,13 @@ class Unit():
         
         match = regexp.match(rgb_value)
 
-        red = match.group('red')
-        green = match.group('green')
-        blue = match.group('blue')
+        red = int(match.group('red'))
+        green = int(match.group('green'))
+        blue = int(match.group('blue'))
+
+        dbg_msg = f"returning ({red}, {green}, {blue}) "
+        dbg_msg += f"for name={self.name}"
+        LOGGER.debug(f"unit_id={self._unit_id} - get_rgb_color - {dbg_msg}")
 
         return (red, green, blue)
 

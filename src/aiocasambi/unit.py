@@ -54,7 +54,16 @@ class Unit():
         '''
         Getter for value
         '''
-        return self._controls['Dimmer']['value']
+
+        try:
+            return self._controls['Dimmer']['value']
+        except KeyError as err:
+            err_msg = f"unit_id={self._unit_id} - value - "
+            err_msg += f"caught KeyError unit: {self} err: {err}"
+
+            LOGGER.debug(err)
+
+            raise AiocasambiException(err)
 
     @value.setter
     def value(self, value):

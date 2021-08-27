@@ -224,6 +224,27 @@ async def main(
                     await controller.turn_unit_off(unit_id=unit_id)
                     await asyncio.sleep(60)
 
+                if controller.unit_supports_rgb(unit_id=unit_id):
+                    red = random.randint(0, 255)
+                    green = random.randint(0, 255)
+                    blue = random.randint(0, 255)
+
+                    info_msg = f"Setting unit: {unit_id} "
+                    info_msg += f"to Color to: ({red}, {green}, {blue})"
+                    LOGGER.info(info_msg)
+
+                    await controller.set_unit_rgb(
+                        value=(red, green, blue)
+                    )
+                    await asyncio.sleep(60)
+
+                    print_unit_information(
+                        controller=controller, unit_id=unit_id)
+
+                    LOGGER.info(f"Turn unit: {unit_id} off!")
+                    await controller.turn_unit_off(unit_id=unit_id)
+                    await asyncio.sleep(60)
+
     except asyncio.CancelledError as err:
         LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")
         pass

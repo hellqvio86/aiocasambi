@@ -3,6 +3,7 @@
 import logging
 
 from pprint import pformat
+from typing import Tuple
 from .errors import AiocasambiException
 
 LOGGER = logging.getLogger(__name__)
@@ -140,7 +141,6 @@ class Unit():
                 f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {controls}")
             key = controls['type']
             self._controls[key] = controls
-
 
     @property
     def oem(self):
@@ -282,7 +282,29 @@ class Unit():
 
         await self._controller.ws_send_message(message)
 
-    async def set_unit_rgb(self, value: (int, int, int)):
+    async def set_unit_rgb(self, value: Tuple[int, int, int]):
+        (red, green, blue) = value
+
+        unit_id = self._unit_id
+
+        target_controls = {
+            'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
+            'Colorsource': {'source': 'RGB'}
+        }
+
+        message = {
+            "wire": self._wire_id,
+            "method": 'controlUnit',
+            "id": unit_id,
+            "targetControls": target_controls
+        }
+
+        dbg_msg = f"Setting color to rgb({red}, {green}, {blue}) - "
+        dbg_msg += f"sending: {message}"
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
+
+        await self._controller.ws_send_message(message)
         return
 
     async def set_unit_color_temperature(self, *,

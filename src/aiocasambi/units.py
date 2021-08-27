@@ -2,6 +2,7 @@
 
 import logging
 
+from typing import Tuple
 from pprint import pformat
 from .errors import AiocasambiException
 from .unit import Unit
@@ -449,6 +450,13 @@ class Units():
             self.units[key].get_supported_color_temperature()
 
         return (cct_min, cct_max, current)
+
+    async def set_unit_rgb(self, *, unit_id: int, value: Tuple[int, int, int]):
+        '''
+        Set unit rgb
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        await self.units[key].set_unit_rgb(value=value)
 
     async def set_unit_color_temperature(self, *,
                                          unit_id: int,

@@ -4,5 +4,6 @@ network_password:  'replaceme'
 user_password: 'replaceme'
 unit_id: 14
 units:
+  - 13
   - 14
 debug: True

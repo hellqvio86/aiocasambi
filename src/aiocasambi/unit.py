@@ -61,9 +61,9 @@ class Unit():
             err_msg = f"unit_id={self._unit_id} - value - "
             err_msg += f"caught KeyError unit: {self} err: {err}"
 
-            LOGGER.debug(err)
+            LOGGER.debug(err_msg)
 
-            raise AiocasambiException(err)
+            raise AiocasambiException(err_msg)
 
     @value.setter
     def value(self, value):

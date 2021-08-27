@@ -1,6 +1,7 @@
 """State representation of Casanbi Unit"""
 
 import logging
+import re
 
 from pprint import pformat
 from typing import Tuple
@@ -543,6 +544,25 @@ class Unit():
         LOGGER.debug(f"unit_id={self._unit_id} - get_color_temp - {dbg_msg}")
 
         return result
+    
+    def get_rgb_color(self):
+        """
+        Return rgb color
+
+        {
+            'Color': {'sat': 1.0, 'name': 'rgb', 'hue': 1.0, 'rgb': 'rgb(255,  0,  4)'
+        }
+        """
+        regexp = re.compile(r'rgb\((?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
+        rgb_value = self._controls['Color']['rgb']
+        
+        match = regexp.match(rgb_value)
+
+        red = match.group('red')
+        green = match.group('green')
+        blue = match.group('blue')
+
+        return (red, green, blue)
 
     def supports_rgb(self) -> bool:
         '''

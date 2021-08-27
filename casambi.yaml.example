@@ -2,3 +2,8 @@ api_key: '...'
 email: 'replace.me@foobar.com'
 network_password:  'replaceme'
 user_password: 'replaceme'
+unit_id: 14
+units:
+  - 13
+  - 14
+debug: True

@@ -3,6 +3,7 @@
 import logging
 
 from pprint import pformat
+from typing import Tuple
 from .errors import AiocasambiException
 
 LOGGER = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class Unit():
         '''
         Getter for value
         '''
-        return self._value
+        return self._controls['Dimmer']['value']
 
     @value.setter
     def value(self, value):
@@ -114,6 +115,9 @@ class Unit():
         if not self._online and online:
             LOGGER.info(
                 f"unit_id={self._unit_id} - online - unit is back online")
+        elif self._online and not online:
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - online - Setting unit to offline")
         self._online = online
 
     @property
@@ -130,13 +134,11 @@ class Unit():
         '''
         if isinstance(controls, list):
             for control in controls:
-                LOGGER.debug(
-                    f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {control}")
-                key = control['type']
-                self._controls[key] = control
+                # Recusive call
+                self.controls = control
         elif isinstance(controls, dict):
             LOGGER.debug(
-                f"unit_id={self._unit_id} - setter controls -Adding following control to controls: {controls}")
+                f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {controls}")
             key = controls['type']
             self._controls[key] = controls
 
@@ -279,6 +281,31 @@ class Unit():
         }
 
         await self._controller.ws_send_message(message)
+
+    async def set_unit_rgb(self, value: Tuple[int, int, int]):
+        (red, green, blue) = value
+
+        unit_id = self._unit_id
+
+        target_controls = {
+            'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
+            'Colorsource': {'source': 'RGB'}
+        }
+
+        message = {
+            "wire": self._wire_id,
+            "method": 'controlUnit',
+            "id": unit_id,
+            "targetControls": target_controls
+        }
+
+        dbg_msg = f"Setting color to rgb({red}, {green}, {blue}) - "
+        dbg_msg += f"sending: {message}"
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
+
+        await self._controller.ws_send_message(message)
+        return
 
     async def set_unit_color_temperature(self, *,
                                          value: int,
@@ -508,6 +535,45 @@ class Unit():
 
         return result
 
+    def supports_rgb(self) -> bool:
+        '''
+        Returns true if unit supports color temperature
+
+        {
+            'activeSceneId': 0,
+            'address': 'ffffffffffff',
+            'condition': 0,
+            'controls': [[{'type': 'Dimmer', 'value': 0.0},
+                        {'level': 0.49736842105263157,
+                            'max': 6000,
+                            'min': 2200,
+                            'type': 'CCT',
+                            'value': 4090.0}]],
+            'dimLevel': 0.0,
+            'firmwareVersion': '26.24',
+            'fixtureId': 14235,
+            'groupId': 0,
+            'id': 13,
+            'image': 'ffffffffffffffffffffffffffffffff',
+            'name': 'Arbetslampa',
+            'on': True,
+            'online': True,
+            'position': 9,
+            'priority': 3,
+            'status': 'ok',
+            'type': 'Luminaire'
+        }
+
+        '''
+        if not self._controls:
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - supports_rgb - controls is None")
+            return False
+
+        if 'Color' in self._controls:
+            return True
+        return False
+
     def supports_color_temperature(self) -> bool:
         '''
         Returns true if unit supports color temperature
@@ -543,7 +609,7 @@ class Unit():
                 f"unit_id={self._unit_id} - supports_color_temperature - controls is None")
             return False
 
-        if 'CCT' in self._controls and self._controls['CCT']:
+        if 'CCT' in self._controls:
             return True
         return False
 
@@ -582,7 +648,7 @@ class Unit():
                 f"unit_id={self._unit_id} - supports_brightness - controls is None")
             return False
 
-        if 'Dimmer' in self._controls and self._controls['Dimmer']:
+        if 'Dimmer' in self._controls:
             return True
         return False
 
@@ -625,6 +691,9 @@ class Unit():
 
             result = f"{result} supports_color_temperature="
             result = f"{result}{self.supports_color_temperature()}"
+
+            result = f"{result} supports_rgb="
+            result = f"{result}{self.supports_rgb()}"
 
             result = f"{result} controls={self._controls}"
 

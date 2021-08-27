@@ -3,6 +3,7 @@
 import logging
 import time
 
+from typing import Tuple
 from asyncio import TimeoutError, sleep
 from aiohttp import client_exceptions
 
@@ -504,6 +505,14 @@ class Controller:
         '''
         await self.units.turn_unit_off(unit_id=unit_id)
 
+    def unit_supports_rgb(self, *, unit_id: int):
+        '''
+        Check if unit supports color temperature
+        '''
+        result = self.units.supports_rgb(unit_id=unit_id)
+
+        return result
+
     def unit_supports_color_temperature(self, *, unit_id: int):
         '''
         Check if unit supports color temperature
@@ -528,6 +537,15 @@ class Controller:
         result = self.units.supports_brightness(unit_id=unit_id)
 
         return result
+
+    async def set_unit_rgb(self, *, unit_id: int, value: Tuple[int, int, int]):
+        '''
+        Set unit color temperature
+        '''
+        await self.units.set_unit_rgb(
+            unit_id=unit_id,
+            value=value
+        )
 
     async def set_unit_color_temperature(self, *,
                                          unit_id: int,

@@ -2,6 +2,7 @@
 
 import logging
 
+from typing import Tuple
 from pprint import pformat
 from .errors import AiocasambiException
 from .unit import Unit
@@ -163,16 +164,8 @@ class Units():
             self.units[key].online = unit_data['online']
             self.units[key].name = unit_data['name']
             if unit_data['online']:
-                if 'dimLevel' in unit_data:
-                    self.units[key].value = unit_data['dimLevel']
-                else:
-                    err_msg = "process_network_state dimLevel is missing"
-                    err_msg += f" unit_key: {unit_key}"
-                    err_msg += f"\nunit_data: {pformat(unit_data)}"
-                    err_msg += f"\ndata: {pformat(data)}"
-
-                    LOGGER.error(err_msg)
-                    raise AiocasambiException(err_msg)
+                # self.units[key].value = unit_data['dimLevel']
+                self.units[key].controls = unit_data['controls']
 
     def process_unit_event(self, msg):
         """
@@ -421,6 +414,15 @@ class Units():
 
         self.units[key].controls = data
 
+    def supports_rgb(self, *, unit_id: int):
+        '''
+        Check if unit supports RGB
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        result = self.units[key].supports_rgb()
+
+        return result
+
     def supports_color_temperature(self, *, unit_id: int):
         '''
         Check if unit supports color temperature
@@ -448,6 +450,13 @@ class Units():
             self.units[key].get_supported_color_temperature()
 
         return (cct_min, cct_max, current)
+
+    async def set_unit_rgb(self, *, unit_id: int, value: Tuple[int, int, int]):
+        '''
+        Set unit rgb
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        await self.units[key].set_unit_rgb(value=value)
 
     async def set_unit_color_temperature(self, *,
                                          unit_id: int,

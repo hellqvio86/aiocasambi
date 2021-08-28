@@ -4,6 +4,7 @@ import logging
 import time
 
 from typing import Tuple
+from pprint import pformat
 from asyncio import TimeoutError, sleep
 from aiohttp import client_exceptions
 
@@ -106,7 +107,7 @@ class Controller:
             'password': self.user_password,
         }
 
-        LOGGER.debug(f" headers: {headers} auth: {auth}")
+        LOGGER.debug(f" headers: {pformat(headers)} auth: {pformat(auth)}")
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
@@ -155,7 +156,7 @@ class Controller:
 
         response = await self.request("get", url=url, headers=self.headers)
 
-        LOGGER.debug(f"get_network_information response: {response}")
+        LOGGER.debug(f"get_network_information response: {pformat(response)}")
 
         return response
 
@@ -197,6 +198,12 @@ class Controller:
         Get specific unit
         '''
         return self.units.get_unit(unit_id=unit_id)
+
+    def get_unit_value(self, *, unit_id: int):
+        '''
+        Get the unit value
+        '''
+        return self.units.get_unit_value(unit_id=unit_id)
 
     async def get_unit_state(self, *, unit_id: int):
         '''
@@ -265,7 +272,7 @@ class Controller:
             wire_id=self.wire_id
         )
 
-        LOGGER.debug(f"network__information: {network_information}")
+        LOGGER.debug(f"network__information: {pformat(network_information)}")
 
         # Get initial network state
         self.get_network_state()
@@ -538,13 +545,14 @@ class Controller:
 
         return result
 
-    async def set_unit_rgb(self, *, unit_id: int, value: Tuple[int, int, int]):
+    async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
         '''
         Set unit color temperature
         '''
         await self.units.set_unit_rgb(
             unit_id=unit_id,
-            value=value
+            color_value=color_value,
+            send_rgb_format=send_rgb_format
         )
 
     async def set_unit_color_temperature(self, *,

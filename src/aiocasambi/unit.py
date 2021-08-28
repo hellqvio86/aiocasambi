@@ -5,6 +5,7 @@ import re
 
 from pprint import pformat
 from typing import Tuple
+from colorsys import rgb_to_hsv
 from .errors import AiocasambiException
 
 LOGGER = logging.getLogger(__name__)
@@ -292,15 +293,36 @@ class Unit():
 
         await self._controller.ws_send_message(message)
 
-    async def set_unit_rgb(self, value: Tuple[int, int, int]):
-        (red, green, blue) = value
+    async def set_unit_rgb(self, *, color_value: Tuple[int, int, int], send_rgb_format=False):
+        '''
+        Set RGB
+        '''
+        target_controls = None
+        (red, green, blue) = color_value
+        (hue, sat, value) = rgb_to_hsv(red, green, blue)
 
         unit_id = self._unit_id
 
-        target_controls = {
-            'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
-            'Colorsource': {'source': 'RGB'}
-        }
+        if isinstance(unit_id, int):
+            pass
+        elif isinstance(unit_id, str):
+            unit_id = int(unit_id)
+        elif isinstance(unit_id, float):
+            unit_id = int(unit_id)
+        else:
+            raise AiocasambiException(
+                "expected unit_id to be an integer, got: {}".format(unit_id))
+
+        if not send_rgb_format:
+            target_controls = {
+                'RGB': {'hue': round(hue, 1), 'sat': round(sat, 1)},
+                'Colorsource': {'source': 'RGB'}
+            }
+        else:
+            target_controls = {
+                'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
+                'Colorsource': {'source': 'RGB'}
+            }
 
         message = {
             "wire": self._wire_id,
@@ -309,7 +331,9 @@ class Unit():
             "targetControls": target_controls
         }
 
-        dbg_msg = f"Setting color to rgb({red}, {green}, {blue}) - "
+        dbg_msg = f"Setting color to rgb({red}, {green}, {blue}) "
+        dbg_msg += f"- (hue: {hue}, sat: {sat}, value: {value}) - "
+        dbg_msg += f"- send_rgb_format: {send_rgb_format} - "
         dbg_msg += f"sending: {pformat(message)}"
         LOGGER.debug(
             f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
@@ -544,7 +568,7 @@ class Unit():
         LOGGER.debug(f"unit_id={self._unit_id} - get_color_temp - {dbg_msg}")
 
         return result
-    
+
     def get_rgb_color(self):
         """
         Return rgb color
@@ -553,9 +577,10 @@ class Unit():
             'Color': {'sat': 1.0, 'name': 'rgb', 'hue': 1.0, 'rgb': 'rgb(255,  0,  4)'
         }
         """
-        regexp = re.compile(r'rgb\((?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
+        regexp = re.compile(
+            r'rgb\((?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
         rgb_value = self._controls['Color']['rgb']
-        
+
         match = regexp.match(rgb_value)
 
         red = int(match.group('red'))

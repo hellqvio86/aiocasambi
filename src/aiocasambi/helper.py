@@ -44,9 +44,9 @@ class Helper:
         }
 
     async def test_user_password(
-                self,
-                *,
-                password: str) -> bool:
+            self,
+            *,
+            password: str) -> bool:
         """ Test user session password """
         url = f"{self.rest_url}/users/session"
 

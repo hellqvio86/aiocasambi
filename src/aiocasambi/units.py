@@ -368,6 +368,14 @@ class Units():
 
         return self.units[key]
 
+    def get_unit_value(self, *, unit_id: int):
+        '''
+        Get unit
+        '''
+        key = f"{self._network_id}-{unit_id}"
+
+        return self.units[key].value
+
     def get_units(self):
         '''
         Getter for all units
@@ -451,12 +459,12 @@ class Units():
 
         return (cct_min, cct_max, current)
 
-    async def set_unit_rgb(self, *, unit_id: int, value: Tuple[int, int, int]):
+    async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
         '''
         Set unit rgb
         '''
         key = f"{self._network_id}-{unit_id}"
-        await self.units[key].set_unit_rgb(value=value)
+        await self.units[key].set_unit_rgb(color_value=color_value, send_rgb_format=send_rgb_format)
 
     async def set_unit_color_temperature(self, *,
                                          unit_id: int,

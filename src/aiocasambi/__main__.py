@@ -30,7 +30,7 @@ def signalling_callback(signal, data):
     '''
     Callback function
     '''
-    LOGGER.info(f"signalling_callback {signal}, {data}")
+    LOGGER.info(f"signalling_callback {signal}, {pformat(data)}")
 
 
 async def get_casambi_controller(
@@ -187,16 +187,17 @@ async def main(
             if controller.get_websocket_state() == 'disconnected':
                 await controller.reconnect()
 
+            send_rgb_format = False
             for unit_id in units:
                 print_unit_information(controller=controller, unit_id=unit_id)
 
-                LOGGER.info(f"Turn unit: {unit_id} on!")
+                LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
                 await controller.turn_unit_on(unit_id=unit_id)
                 await asyncio.sleep(60)
 
                 print_unit_information(controller=controller, unit_id=unit_id)
 
-                LOGGER.info(f"Turn unit: {unit_id} off!")
+                LOGGER.info(f"\n\n\nTurn unit: {unit_id} off!")
                 await controller.turn_unit_off(unit_id=unit_id)
                 await asyncio.sleep(60)
 
@@ -207,7 +208,7 @@ async def main(
 
                     color_temp = random.randint(min_color_temp, max_color_temp)
 
-                    info_msg = f"Setting unit: {unit_id} "
+                    info_msg = f"\n\n\nSetting unit: {unit_id} "
                     info_msg += f"to Color temperature: {color_temp}"
                     LOGGER.info(info_msg)
 
@@ -225,16 +226,24 @@ async def main(
                     await asyncio.sleep(60)
 
                 if controller.unit_supports_rgb(unit_id=unit_id):
+                    unit_value = controller.get_unit_value(unit_id=unit_id)
                     red = random.randint(0, 255)
                     green = random.randint(0, 255)
                     blue = random.randint(0, 255)
 
-                    info_msg = f"Setting unit: {unit_id} "
-                    info_msg += f"to Color to: ({red}, {green}, {blue})"
+                    info_msg = f"\n\n\nSetting unit: {unit_id} "
+                    info_msg += f"color to: ({red}, {green}, {blue}) "
+                    info_msg += f"current unit value: {unit_value}"
                     LOGGER.info(info_msg)
 
+                    if unit_value == 0:
+                        LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
+                        await controller.turn_unit_on(unit_id=unit_id)
+
                     await controller.set_unit_rgb(
-                        value=(red, green, blue)
+                        unit_id=unit_id,
+                        color_value=(red, green, blue),
+                        send_rgb_format=send_rgb_format
                     )
                     await asyncio.sleep(60)
 
@@ -244,6 +253,11 @@ async def main(
                     LOGGER.info(f"Turn unit: {unit_id} off!")
                     await controller.turn_unit_off(unit_id=unit_id)
                     await asyncio.sleep(60)
+
+                    if not send_rgb_format:
+                        send_rgb_format = True
+                    else:
+                        send_rgb_format = False
 
     except asyncio.CancelledError as err:
         LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")

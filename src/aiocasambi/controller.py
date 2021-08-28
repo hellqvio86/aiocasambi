@@ -496,8 +496,9 @@ class Controller:
             self._reconnecting = False
             break
 
-        await self.start_websocket()
-
+        # Set new ids for websocket
+        self.websocket.session_id = self._session_id
+        self.websocket.network_id = self._network_id
         LOGGER.debug("Controller is reconnected")
 
     async def turn_unit_on(self, *, unit_id: int):

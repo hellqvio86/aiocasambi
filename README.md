@@ -10,6 +10,8 @@ These modes are implemented:
 * on/off
 * brightness
 * color temperature
+* rgb
+* rgbw
 
 ## Getting Started
 1. Request developer api key from Casambi: https://developer.casambi.com/

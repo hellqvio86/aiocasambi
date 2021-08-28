@@ -34,7 +34,7 @@ class Unit():
     ):
         self._name = name
         self._address = address
-        self._unit_id = unit_id
+        self._unit_id = int(unit_id)
         self._network_id = network_id
         self._value = value
         self._state = state
@@ -63,7 +63,7 @@ class Unit():
             err_msg = f"unit_id={self._unit_id} - value - "
             err_msg += f"caught KeyError unit: {self} err: {err}"
 
-            LOGGER.debug(err_msg)
+            LOGGER.error(err_msg)
 
             raise AiocasambiException(err_msg)
 
@@ -577,15 +577,24 @@ class Unit():
             'Color': {'sat': 1.0, 'name': 'rgb', 'hue': 1.0, 'rgb': 'rgb(255,  0,  4)'
         }
         """
+        red = 0
+        green = 0
+        blue = 0
+
         regexp = re.compile(
             r'rgb\((?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
         rgb_value = self._controls['Color']['rgb']
 
         match = regexp.match(rgb_value)
 
-        red = int(match.group('red'))
-        green = int(match.group('green'))
-        blue = int(match.group('blue'))
+        if match:
+            red = int(match.group('red'))
+            green = int(match.group('green'))
+            blue = int(match.group('blue'))
+        else:
+            err_msg = f"failed to parse rgb_value: {rgb_value}"
+
+            LOGGER.error(f"unit_id={self._unit_id} - get_rgb_color - {err_msg}")
 
         dbg_msg = f"returning ({red}, {green}, {blue}) "
         dbg_msg += f"for name={self.name}"

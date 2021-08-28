@@ -514,9 +514,17 @@ class Controller:
 
     def unit_supports_rgb(self, *, unit_id: int):
         '''
-        Check if unit supports color temperature
+        Check if unit supports rgb
         '''
         result = self.units.supports_rgb(unit_id=unit_id)
+
+        return result
+
+    def unit_supports_rgbw(self, *, unit_id: int):
+        '''
+        Check if unit supports color rgbw
+        '''
+        result = self.units.supports_rgbw(unit_id=unit_id)
 
         return result
 
@@ -544,6 +552,15 @@ class Controller:
         result = self.units.supports_brightness(unit_id=unit_id)
 
         return result
+
+    async def set_unit_rgbw(self, *, unit_id: int, color_value: Tuple[int, int, int, int], send_rgb_format=False):
+        '''
+        Set unit color temperature
+        '''
+        await self.units.set_unit_rgbw(
+            unit_id=unit_id,
+            color_value=color_value,
+        )
 
     async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
         '''

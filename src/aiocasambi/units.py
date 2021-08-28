@@ -422,6 +422,15 @@ class Units():
 
         self.units[key].controls = data
 
+    def supports_rgbw(self, *, unit_id: int):
+        '''
+        Check if unit supports RGB
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        result = self.units[key].supports_rgbw()
+
+        return result
+
     def supports_rgb(self, *, unit_id: int):
         '''
         Check if unit supports RGB
@@ -459,9 +468,16 @@ class Units():
 
         return (cct_min, cct_max, current)
 
-    async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
+    async def set_unit_rgbw(self, *, unit_id: int, color_value: Tuple[int, int, int, int]):
         '''
         Set unit rgb
+        '''
+        key = f"{self._network_id}-{unit_id}"
+        await self.units[key].set_unit_rgbw(color_value=color_value)
+    
+    async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
+        '''
+        Set unit rgbw
         '''
         key = f"{self._network_id}-{unit_id}"
         await self.units[key].set_unit_rgb(color_value=color_value, send_rgb_format=send_rgb_format)

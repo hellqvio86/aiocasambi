@@ -293,6 +293,48 @@ class Unit():
 
         await self._controller.ws_send_message(message)
 
+    async def set_unit_rgbw(self, *, color_value: Tuple[int, int, int]):
+        '''
+        Set RGB
+        '''
+        target_controls = None
+        (red, green, blue, white) = color_value
+
+        unit_id = self._unit_id
+
+        if isinstance(unit_id, int):
+            pass
+        elif isinstance(unit_id, str):
+            unit_id = int(unit_id)
+        elif isinstance(unit_id, float):
+            unit_id = int(unit_id)
+        else:
+            raise AiocasambiException(
+                "expected unit_id to be an integer, got: {}".format(unit_id))
+
+        white_value = white / 255.0
+        # 'name': 'white', 'type': 'White', 'value': 0.0
+        target_controls = {
+            'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
+            'Colorsource': {'source': 'RGB'},
+            'White': {'value': white_value},
+        }
+
+        message = {
+            "wire": self._wire_id,
+            "method": 'controlUnit',
+            "id": unit_id,
+            "targetControls": target_controls
+        }
+
+        dbg_msg = f"Setting color to rgb({red}, {green}, {blue}, {white}) "
+        dbg_msg += f"sending: {pformat(message)}"
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
+
+        await self._controller.ws_send_message(message)
+        return
+
     async def set_unit_rgb(self, *, color_value: Tuple[int, int, int], send_rgb_format=False):
         '''
         Set RGB
@@ -582,7 +624,7 @@ class Unit():
         blue = 0
 
         regexp = re.compile(
-            r'rgb\((?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
+            r'rgb\(\s*(?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
         rgb_value = self._controls['Color']['rgb']
 
         match = regexp.match(rgb_value)
@@ -601,6 +643,55 @@ class Unit():
         LOGGER.debug(f"unit_id={self._unit_id} - get_rgb_color - {dbg_msg}")
 
         return (red, green, blue)
+    
+    def get_rgbw_color(self):
+        '''
+        Return rgbw color
+        '''
+        (red, green, blue) = self.get_rgb_color()
+
+        white = self._controls['White']['value']
+
+        return (red, green, blue, int(round(white * 255, 0)))
+
+    def supports_rgbw(self) -> bool:
+        '''
+        Returns true if unit supports color temperature
+
+        {
+            'activeSceneId': 0,
+            'address': 'ffffff',
+            'condition': 0,
+            'controls': [[{'name': 'dimmer0', 'type': 'Dimmer', 'value': 0.0},
+                        {'hue': 0.9882697947214076,
+                            'name': 'rgb',
+                            'rgb': 'rgb(255, 21, 40)',
+                            'sat': 0.9176470588235294,
+                            'type': 'Color'},
+                        {'name': 'white', 'type': 'White', 'value': 0.0}]],
+            'dimLevel': 0.0,
+            'firmwareVersion': '26.24',
+            'fixtureId': 4027,
+            'groupId': 0,
+            'id': 14,
+            'name': 'Test RGB',
+            'on': True,
+            'online': True,
+            'position': 10,
+            'priority': 3,
+            'status': 'ok',
+            'type': 'Luminaire'}
+
+        '''
+        if not self._controls:
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - supports_rgbw - controls is None")
+            return False
+
+        if 'Color' in self._controls and 'White' in self._controls:
+            return True
+        return False
+
 
     def supports_rgb(self) -> bool:
         '''
@@ -608,28 +699,27 @@ class Unit():
 
         {
             'activeSceneId': 0,
-            'address': 'ffffffffffff',
+            'address': 'ffffff',
             'condition': 0,
-            'controls': [[{'type': 'Dimmer', 'value': 0.0},
-                        {'level': 0.49736842105263157,
-                            'max': 6000,
-                            'min': 2200,
-                            'type': 'CCT',
-                            'value': 4090.0}]],
+            'controls': [[{'name': 'dimmer0', 'type': 'Dimmer', 'value': 0.0},
+                        {'hue': 0.9882697947214076,
+                            'name': 'rgb',
+                            'rgb': 'rgb(255, 21, 40)',
+                            'sat': 0.9176470588235294,
+                            'type': 'Color'},
+                        {'name': 'white', 'type': 'White', 'value': 0.0}]],
             'dimLevel': 0.0,
             'firmwareVersion': '26.24',
-            'fixtureId': 14235,
+            'fixtureId': 4027,
             'groupId': 0,
-            'id': 13,
-            'image': 'ffffffffffffffffffffffffffffffff',
-            'name': 'Arbetslampa',
+            'id': 14,
+            'name': 'Test RGB',
             'on': True,
             'online': True,
-            'position': 9,
+            'position': 10,
             'priority': 3,
             'status': 'ok',
-            'type': 'Luminaire'
-        }
+            'type': 'Luminaire'}
 
         '''
         if not self._controls:
@@ -761,6 +851,9 @@ class Unit():
 
             result = f"{result} supports_rgb="
             result = f"{result}{self.supports_rgb()}"
+
+            result = f"{result} supports_rgbw="
+            result = f"{result}{self.supports_rgbw()}"
 
             result = f"{result} controls={self._controls}"
 

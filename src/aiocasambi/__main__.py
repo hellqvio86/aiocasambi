@@ -199,7 +199,7 @@ async def main(
 
                 LOGGER.info(f"\n\n\nTurn unit: {unit_id} off!")
                 await controller.turn_unit_off(unit_id=unit_id)
-                await asyncio.sleep(60)
+                await asyncio.sleep(10)
 
                 if controller.unit_supports_color_temperature(unit_id=unit_id):
                     (min_color_temp, max_color_temp, _) = \
@@ -208,7 +208,7 @@ async def main(
 
                     color_temp = random.randint(min_color_temp, max_color_temp)
 
-                    info_msg = f"\n\n\nSetting unit: {unit_id} "
+                    info_msg = f"\n\n\Color Temperature Testing\n\n\nSetting unit: {unit_id} "
                     info_msg += f"to Color temperature: {color_temp}"
                     LOGGER.info(info_msg)
 
@@ -223,41 +223,62 @@ async def main(
 
                     LOGGER.info(f"Turn unit: {unit_id} off!")
                     await controller.turn_unit_off(unit_id=unit_id)
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(10)
 
-                if controller.unit_supports_rgb(unit_id=unit_id):
+                if controller.unit_supports_rgbw(unit_id=unit_id):
                     unit_value = controller.get_unit_value(unit_id=unit_id)
-                    red = random.randint(0, 255)
-                    green = random.randint(0, 255)
-                    blue = random.randint(0, 255)
+                    colors = {'red': (255, 0, 0, 0), 'green': (0, 255, 0, 0), 'blue': (0, 0, 255, 0)}
+                    for key in colors:
+                        color = colors[key]
+                        info_msg = f"\n\n\nRGBW Testing\n\n\nSetting unit: {unit_id} "
+                        info_msg += f"color {key} ({color}) "
+                        info_msg += f"current unit value: {unit_value}"
+                        LOGGER.info(info_msg)
 
-                    info_msg = f"\n\n\nSetting unit: {unit_id} "
-                    info_msg += f"color to: ({red}, {green}, {blue}) "
-                    info_msg += f"current unit value: {unit_value}"
-                    LOGGER.info(info_msg)
+                        if unit_value == 0:
+                            LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
+                            await controller.turn_unit_on(unit_id=unit_id)
 
-                    if unit_value == 0:
-                        LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
-                        await controller.turn_unit_on(unit_id=unit_id)
+                        await controller.set_unit_rgbw(
+                            unit_id=unit_id,
+                            color_value=color,
+                            send_rgb_format=True
+                        )
+                        await asyncio.sleep(60)
 
-                    await controller.set_unit_rgb(
-                        unit_id=unit_id,
-                        color_value=(red, green, blue),
-                        send_rgb_format=send_rgb_format
-                    )
-                    await asyncio.sleep(60)
+                        print_unit_information(
+                            controller=controller, unit_id=unit_id)
 
-                    print_unit_information(
-                        controller=controller, unit_id=unit_id)
+                        LOGGER.info(f"Turn unit: {unit_id} off!")
+                        await controller.turn_unit_off(unit_id=unit_id)
+                        await asyncio.sleep(10)
+                elif controller.unit_supports_rgb(unit_id=unit_id):
+                    unit_value = controller.get_unit_value(unit_id=unit_id)
+                    colors = {'red': (255, 0, 0), 'green': (0, 255, 0), 'blue': (0, 0, 255)}
+                    for key in colors:
+                        color = colors[key]
+                        info_msg = f"\n\n\nRGB Testing\n\n\nSetting unit: {unit_id} "
+                        info_msg += f"color {key} ({color}) "
+                        info_msg += f"current unit value: {unit_value}"
+                        LOGGER.info(info_msg)
 
-                    LOGGER.info(f"Turn unit: {unit_id} off!")
-                    await controller.turn_unit_off(unit_id=unit_id)
-                    await asyncio.sleep(60)
+                        if unit_value == 0:
+                            LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
+                            await controller.turn_unit_on(unit_id=unit_id)
 
-                    if not send_rgb_format:
-                        send_rgb_format = True
-                    else:
-                        send_rgb_format = False
+                        await controller.set_unit_rgb(
+                            unit_id=unit_id,
+                            color_value=color,
+                            send_rgb_format=True
+                        )
+                        await asyncio.sleep(60)
+
+                        print_unit_information(
+                            controller=controller, unit_id=unit_id)
+
+                        LOGGER.info(f"Turn unit: {unit_id} off!")
+                        await controller.turn_unit_off(unit_id=unit_id)
+                        await asyncio.sleep(10)
 
     except asyncio.CancelledError as err:
         LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")

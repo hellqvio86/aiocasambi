@@ -474,7 +474,7 @@ class Units():
         '''
         key = f"{self._network_id}-{unit_id}"
         await self.units[key].set_unit_rgbw(color_value=color_value)
-    
+
     async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
         '''
         Set unit rgbw

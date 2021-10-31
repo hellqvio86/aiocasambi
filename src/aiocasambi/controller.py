@@ -21,6 +21,7 @@ from .consts import (
 )
 
 from .units import Units
+from .unit import Unit
 from .scenes import Scenes
 
 LOGGER = logging.getLogger(__name__)
@@ -32,15 +33,15 @@ class Controller:
     def __init__(
         self,
         *,
-        email,
-        api_key,
+        email: str,
+        api_key: str,
         websession,
-        wire_id=1,
-        user_password=None,
-        network_password=None,
+        wire_id: int = 1,
+        user_password: str = None,
+        network_password: str = None,
         sslcontext=None,
         callback=None,
-        network_timeout=300,
+        network_timeout: int = 300,
     ):
         self.email = email
         self.user_password = user_password
@@ -72,15 +73,15 @@ class Controller:
         self._reconnecting = False
         self._last_websocket_ping = time.time()
 
-    def get_units(self):
+    def get_units(self) -> list:
         """ Getter for getting units. """
         return self.units.get_units()
 
-    def get_scenes(self):
+    def get_scenes(self) -> list:
         """ Getter for getting scenes. """
         return self.scenes.get_scenes()
 
-    async def create_session(self):
+    async def create_session(self) -> None:
         """ Create Casambi session. """
         if self.user_password:
             await self.create_user_session()
@@ -88,7 +89,7 @@ class Controller:
         if self.network_password:
             await self.create_network_session()
 
-    async def create_user_session(self):
+    async def create_user_session(self) -> None:
         """ Creating user session. """
         url = f"{self.rest_url}/users/session"
 
@@ -110,7 +111,7 @@ class Controller:
 
         LOGGER.debug(f"user_session_id: {self._session_id}")
 
-    async def create_network_session(self):
+    async def create_network_session(self) -> None:
         """ Creating network session. """
         url = f"{self.rest_url}/networks/session"
 
@@ -132,7 +133,7 @@ class Controller:
 
         LOGGER.debug(f"network_id: {self._network_id} session_id: {self._session_id}")
 
-    async def get_network_information(self):
+    async def get_network_information(self) -> dict:
         """ Creating network information. """
         # GET https://door.casambi.com/v1/networks/{id}
 
@@ -148,7 +149,7 @@ class Controller:
 
         return response
 
-    async def get_network_state(self):
+    async def get_network_state(self) -> dict:
         """ Get network state. """
         # GET https://door.casambi.com/v1/networks/{networkId}/state
         url = f"{self.rest_url}/networks/{self._network_id}/state"
@@ -165,7 +166,7 @@ class Controller:
 
         return response
 
-    async def init_unit_state_controls(self):
+    async def init_unit_state_controls(self) -> None:
         """
         Getter for getting the unit state from Casambis cloud api
         """
@@ -176,19 +177,19 @@ class Controller:
 
             self.units.set_controls(unit_id=unit_id, data=data)
 
-    def get_unit(self, *, unit_id: int):
+    def get_unit(self, *, unit_id: int) -> Unit:
         """
         Get specific unit
         """
         return self.units.get_unit(unit_id=unit_id)
 
-    def get_unit_value(self, *, unit_id: int):
+    def get_unit_value(self, *, unit_id: int) -> int:
         """
         Get the unit value
         """
         return self.units.get_unit_value(unit_id=unit_id)
 
-    async def get_unit_state(self, *, unit_id: int):
+    async def get_unit_state(self, *, unit_id: int) -> dict:
         """
         Getter for getting the unit state from Casambis cloud api
         """
@@ -201,7 +202,7 @@ class Controller:
 
         return response
 
-    async def get_unit_state_controls(self, *, unit_id: int):
+    async def get_unit_state_controls(self, *, unit_id: int) -> list:
         """
         Get unit controls for unit
 
@@ -237,7 +238,7 @@ class Controller:
 
         return []
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialiser"""
         network_information = await self.get_network_information()
 
@@ -264,7 +265,7 @@ class Controller:
 
         return
 
-    async def start_websocket(self):
+    async def start_websocket(self) -> None:
         """Start websession and websocket to Casambi."""
         dbg_msg = f"start_websocket: api_key: {self.api_key},"
         dbg_msg += f" network_id: {self._network_id},"
@@ -289,7 +290,7 @@ class Controller:
         # We don't want to ping right after we setup a websocket
         self._last_websocket_ping = time.time()
 
-    async def ws_ping(self):
+    async def ws_ping(self) -> None:
         """ Function for setting a ping over websocket"""
         current_time = time.time()
 
@@ -316,7 +317,7 @@ class Controller:
 
         self._last_websocket_ping = current_time
 
-    async def ws_send_message(self, msg):
+    async def ws_send_message(self, msg: dict) -> None:
         """ Send websocket message to casambi api"""
         await self.ws_ping()
 
@@ -328,7 +329,7 @@ class Controller:
             # Try to reconnect
             await self.reconnect()
 
-    def get_websocket_state(self):
+    def get_websocket_state(self) -> str:
         """ Getter for websocket state """
         return self.websocket.state
 
@@ -422,7 +423,7 @@ class Controller:
             raise err
         return changes
 
-    async def check_connection(self):
+    async def check_connection(self) -> None:
         """ async function for checking connection """
         if self.get_websocket_state() == STATE_RUNNING:
             return
@@ -430,7 +431,7 @@ class Controller:
         # Try to reconnect
         await self.reconnect()
 
-    async def reconnect(self):
+    async def reconnect(self) -> None:
         """ async function for reconnecting."""
         LOGGER.debug("Controller is reconnecting")
 
@@ -483,19 +484,19 @@ class Controller:
         self.websocket.network_id = self._network_id
         LOGGER.debug("Controller is reconnected")
 
-    async def turn_unit_on(self, *, unit_id: int):
+    async def turn_unit_on(self, *, unit_id: int) -> None:
         """
         Turn unit on
         """
         await self.units.turn_unit_on(unit_id=unit_id)
 
-    async def turn_unit_off(self, *, unit_id: int):
+    async def turn_unit_off(self, *, unit_id: int) -> None:
         """
         Turn unit off
         """
         await self.units.turn_unit_off(unit_id=unit_id)
 
-    def unit_supports_rgb(self, *, unit_id: int):
+    def unit_supports_rgb(self, *, unit_id: int) -> bool:
         """
         Check if unit supports rgb
         """
@@ -503,7 +504,7 @@ class Controller:
 
         return result
 
-    def unit_supports_rgbw(self, *, unit_id: int):
+    def unit_supports_rgbw(self, *, unit_id: int) -> bool:
         """
         Check if unit supports color rgbw
         """
@@ -511,7 +512,7 @@ class Controller:
 
         return result
 
-    def unit_supports_color_temperature(self, *, unit_id: int):
+    def unit_supports_color_temperature(self, *, unit_id: int) -> bool:
         """
         Check if unit supports color temperature
         """
@@ -519,7 +520,7 @@ class Controller:
 
         return result
 
-    def get_supported_color_temperature(self, *, unit_id: int):
+    def get_supported_color_temperature(self, *, unit_id: int) -> Tuple[int, int, int]:
         """
         Get supported color temperatures
         """
@@ -529,7 +530,7 @@ class Controller:
 
         return (cct_min, cct_max, current)
 
-    def unit_supports_brightness(self, *, unit_id: int):
+    def unit_supports_brightness(self, *, unit_id: int) -> bool:
         """
         Check if unit supports color temperature
         """
@@ -543,7 +544,7 @@ class Controller:
         unit_id: int,
         color_value: Tuple[int, int, int, int],
         send_rgb_format=False,
-    ):
+    ) -> None:
         """
         Set unit color temperature
         """
@@ -554,7 +555,7 @@ class Controller:
 
     async def set_unit_rgb(
         self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False
-    ):
+    ) -> None:
         """
         Set unit color temperature
         """
@@ -563,8 +564,8 @@ class Controller:
         )
 
     async def set_unit_color_temperature(
-        self, *, unit_id: int, value: int, source="TW"
-    ):
+        self, *, unit_id: int, value: int, source: str = "TW"
+    ) -> None:
         """
         Set unit color temperature
         """
@@ -572,7 +573,9 @@ class Controller:
             unit_id=unit_id, value=value, source=source
         )
 
-    async def request(self, method, json=None, url=None, headers=None, **kwargs):
+    async def request(
+        self, method, json=None, url=None, headers=None, **kwargs
+    ) -> dict:
         """Make a request to the API."""
         await self.ws_ping()
 

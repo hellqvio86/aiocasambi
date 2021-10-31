@@ -83,7 +83,9 @@ class Scenes:
     Class for representing Casambi Scenes
     """
 
-    def __init__(self, scenes: set, *, network_id, wire_id, controller) -> None:
+    def __init__(
+        self, scenes: set, *, network_id: int, wire_id: int, controller
+    ) -> None:
         """
         Constructor
         """
@@ -98,7 +100,7 @@ class Scenes:
 
         LOGGER.debug(f"Processing scenes {pformat(self.scenes)}")
 
-    def get_scenes(self):
+    def get_scenes(self) -> list:
         """
         Getter for scenes
         """
@@ -108,7 +110,7 @@ class Scenes:
 
         return result
 
-    def __process_scenes(self, scenes):
+    def __process_scenes(self, scenes: dict) -> None:
         """
         Function for processing units
         Units raw format:

@@ -66,28 +66,28 @@ class WSClient:
         return result
 
     @property
-    def data(self):
+    def data(self) -> dict:
         """Get data"""
         return self._data
 
-    def get_state(self):
+    def get_state(self) -> str:
         """Get state"""
         return self._state
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Get state"""
         return self._state
 
     @state.setter
-    def state(self, state_value):
+    def state(self, state_value) -> None:
         """Setter for state"""
         LOGGER.debug("websocket.state %s", state_value)
 
         self._state = state_value
         self.session_handler_callback(SIGNAL_CONNECTION_STATE)
 
-    def start(self):
+    def start(self) -> None:
         """Start the websocket connection"""
         LOGGER.debug(f"websocket.start state {self.state}")
 
@@ -95,11 +95,11 @@ class WSClient:
             self.state = STATE_STARTING
             self._loop.create_task(self.running())
 
-    def stop(self):
+    def stop(self) -> None:
         """Close websocket connection."""
         self.state = STATE_STOPPED
 
-    async def ws_open(self):
+    async def ws_open(self) -> None:
         """
         Send open message to Casambi Cloud api
         """
@@ -116,7 +116,7 @@ class WSClient:
 
         await self.web_sock.send_str(json.dumps(message))
 
-    async def send_message(self, message):
+    async def send_message(self, message: dict) -> bool:
         """
         Send websocket message
         """
@@ -149,7 +149,7 @@ class WSClient:
             self.state = STATE_DISCONNECTED
         return success
 
-    async def ws_loop(self):
+    async def ws_loop(self) -> None:
         """
         Main websocket loop
         """
@@ -204,7 +204,7 @@ class WSClient:
                     LOGGER.error("websocket recived AIOHTTP websocket error")
                     break
 
-    async def running(self):
+    async def running(self) -> None:
         """
         Start websocket connection.
         """

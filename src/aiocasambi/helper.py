@@ -19,8 +19,8 @@ class Helper:
     def __init__(
         self,
         *,
-        email,
-        api_key,
+        email: str,
+        api_key: str,
         websession=None,
     ):
         self.email = email
@@ -76,7 +76,9 @@ class Helper:
 
         return True
 
-    async def request(self, method, json=None, url=None, headers=None, **kwargs):
+    async def request(
+        self, method, json=None, url=None, headers=None, **kwargs
+    ) -> dict:
         """Make a request to the API."""
 
         LOGGER.debug(f"request url: {url}")

@@ -8,12 +8,7 @@ import logging
 import aiohttp
 
 
-from .errors import (
-    LoginRequired,
-    ResponseError,
-    RateLimit,
-    CasambiAPIServerError
-)
+from .errors import LoginRequired, ResponseError, RateLimit, CasambiAPIServerError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,11 +17,11 @@ class Helper:
     """Casambi helper."""
 
     def __init__(
-            self,
-            *,
-            email,
-            api_key,
-            websession=None,
+        self,
+        *,
+        email,
+        api_key,
+        websession=None,
     ):
         self.email = email
         self.api_key = api_key
@@ -36,28 +31,22 @@ class Helper:
         else:
             self.session = websession
 
-        self.rest_url = 'https://door.casambi.com/v1'
+        self.rest_url = "https://door.casambi.com/v1"
 
         self.headers = {
-            'Content-type': 'application/json',
-            'X-Casambi-Key': self.api_key
+            "Content-type": "application/json",
+            "X-Casambi-Key": self.api_key,
         }
 
-    async def test_user_password(
-            self,
-            *,
-            password: str) -> bool:
+    async def test_user_password(self, *, password: str) -> bool:
         """ Test user session password """
         url = f"{self.rest_url}/users/session"
 
-        headers = {
-            'Content-type': 'application/json',
-            'X-Casambi-Key': self.api_key
-        }
+        headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
         auth = {
-            'email': self.email,
-            'password': password,
+            "email": self.email,
+            "password": password,
         }
 
         LOGGER.debug(f" headers: {headers} auth: {auth}")
@@ -72,10 +61,7 @@ class Helper:
         """ Creating network session. """
         url = f"{self.rest_url}/networks/session"
 
-        headers = {
-            'Content-type': 'application/json',
-            'X-Casambi-Key': self.api_key
-        }
+        headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
         auth = {
             "email": self.email,
@@ -90,31 +76,23 @@ class Helper:
 
         return True
 
-    async def request(
-            self,
-            method,
-            json=None,
-            url=None,
-            headers=None,
-            **kwargs
-    ):
+    async def request(self, method, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""
 
         LOGGER.debug(f"request url: {url}")
 
         try:
             async with self.session.request(
-                    method,
-                    url,
-                    json=json,
-                    headers=headers,
-                    **kwargs,
+                method,
+                url,
+                json=json,
+                headers=headers,
+                **kwargs,
             ) as res:
                 LOGGER.debug(f"request: {res.status} {res.content_type} {res}")
 
                 if res.status == 401:
-                    raise LoginRequired(
-                        f"Call {url} received 401 Unauthorized")
+                    raise LoginRequired(f"Call {url} received 401 Unauthorized")
 
                 if res.status == 404:
                     raise ResponseError(f"Call {url} received 404 Not Found")
@@ -124,7 +102,8 @@ class Helper:
 
                 if res.status == 429:
                     raise RateLimit(
-                        f"Call {url} received 429 Server rate limit exceeded!")
+                        f"Call {url} received 429 Server rate limit exceeded!"
+                    )
 
                 if res.status == 500:
                     log_msg = f"Server Error: url: {url} "

@@ -1,6 +1,6 @@
-'''
+"""
 Websocket implementation of Casambi cloud api
-'''
+"""
 import asyncio
 import json
 import logging
@@ -14,32 +14,32 @@ from .consts import (
     STATE_RUNNING,
     STATE_DISCONNECTED,
     STATE_STARTING,
-    STATE_STOPPED
+    STATE_STOPPED,
 )
 
 LOGGER = logging.getLogger(__name__)
 
 
-class WSClient():
-    '''
+class WSClient:
+    """
     Web Socket Client
-    '''
+    """
 
     def __init__(
-            self,
-            *,
-            session,
-            ssl_context,
-            api_key,
-            network_id,
-            session_id,
-            callback,
-            controller,
-            wire_id=3
+        self,
+        *,
+        session,
+        ssl_context,
+        api_key,
+        network_id,
+        session_id,
+        callback,
+        controller,
+        wire_id=3,
     ):
-        '''
+        """
         Constructor for Web Socket Client
-        '''
+        """
         self.api_key = api_key
         self.network_id = network_id
         self.session_id = session_id
@@ -100,9 +100,9 @@ class WSClient():
         self.state = STATE_STOPPED
 
     async def ws_open(self):
-        '''
+        """
         Send open message to Casambi Cloud api
-        '''
+        """
         reference = "{}".format(uuid.uuid1())
 
         message = {
@@ -111,21 +111,21 @@ class WSClient():
             "session": self.session_id,
             "ref": reference,
             "wire": self.wire_id,  # wire id
-            "type": 1  # Client type, use value 1 (FRONTEND)
+            "type": 1,  # Client type, use value 1 (FRONTEND)
         }
 
         await self.web_sock.send_str(json.dumps(message))
 
     async def send_message(self, message):
-        '''
+        """
         Send websocket message
-        '''
+        """
         success = False
         LOGGER.debug(f"send_message message {message}")
 
         if not self.web_sock:
             # Websocket is none
-            LOGGER.error('websocket.send_message: websocket is None')
+            LOGGER.error("websocket.send_message: websocket is None")
             self.state = STATE_DISCONNECTED
 
             return success
@@ -134,14 +134,14 @@ class WSClient():
             await self.web_sock.send_str(json.dumps(message))
             success = True
         except ConnectionError as err:
-            error_msg = 'websocket caught ConnectionError in'
+            error_msg = "websocket caught ConnectionError in"
             error_msg += f"websocket.send_message {err}"
 
             LOGGER.error(error_msg)
 
             self.state = STATE_DISCONNECTED
         except AttributeError as err:
-            error_msg = 'websocket caught AttributeError in'
+            error_msg = "websocket caught AttributeError in"
             error_msg += f"websocket.send_message {err}"
 
             LOGGER.error(error_msg)
@@ -150,14 +150,11 @@ class WSClient():
         return success
 
     async def ws_loop(self):
-        '''
+        """
         Main websocket loop
-        '''
+        """
         async with self.session.ws_connect(
-                self.url,
-                ssl=self.ssl_context,
-                heartbeat=15,
-                protocols=(self.api_key,)
+            self.url, ssl=self.ssl_context, heartbeat=15, protocols=(self.api_key,)
         ) as web_sock:
             self.state = STATE_RUNNING
 
@@ -166,7 +163,7 @@ class WSClient():
             await self.ws_open()
 
             async for msg in self.web_sock:
-                dbg_msg = 'websocket running: '
+                dbg_msg = "websocket running: "
                 dbg_msg += f"wire_id: {self.wire_id} "
                 dbg_msg += f"msg: {msg}"
 
@@ -180,8 +177,8 @@ class WSClient():
                     self._data = json.loads(msg.data)
                     self.session_handler_callback(SIGNAL_DATA)
 
-                    dbg_msg = 'websocket recived '
-                    dbg_msg += 'msg.type: aiohttp.WSMsgType.TEXT '
+                    dbg_msg = "websocket recived "
+                    dbg_msg += "msg.type: aiohttp.WSMsgType.TEXT "
                     dbg_msg += f"data: {self._data}"
 
                     LOGGER.debug(dbg_msg)
@@ -189,14 +186,14 @@ class WSClient():
                     self._data = json.loads(msg.data)
                     self.session_handler_callback(SIGNAL_DATA)
 
-                    dbg_msg = 'websocket recived '
-                    dbg_msg += 'msg.type: aiohttp.WSMsgType.BINARY '
+                    dbg_msg = "websocket recived "
+                    dbg_msg += "msg.type: aiohttp.WSMsgType.BINARY "
                     dbg_msg += f"data: {self._data}"
 
                     LOGGER.debug(dbg_msg)
                 elif msg.type == aiohttp.WSMsgType.CLOSED:
-                    warning_msg = 'websocket recived '
-                    warning_msg += 'aiohttp.WSMsgType.CLOSED '
+                    warning_msg = "websocket recived "
+                    warning_msg += "aiohttp.WSMsgType.CLOSED "
                     warning_msg += "websocket connection closed"
 
                     LOGGER.warning(warning_msg)
@@ -204,15 +201,14 @@ class WSClient():
                     break
 
                 elif msg.type == aiohttp.WSMsgType.ERROR:
-                    LOGGER.error(
-                        "websocket recived AIOHTTP websocket error")
+                    LOGGER.error("websocket recived AIOHTTP websocket error")
                     break
 
     async def running(self):
         """
         Start websocket connection.
         """
-        while(True):
+        while True:
             LOGGER.debug("websocket opening session")
             try:
                 await self.ws_loop()
@@ -233,10 +229,10 @@ class WSClient():
             except Exception as err:
                 if self.state != STATE_STOPPED:
                     error_msg = f"websocket: Unexpected Exception: < {err} "
-                    error_msg += f"type=\"{type(err)}\">"
+                    error_msg += f'type="{type(err)}">'
 
                     LOGGER.error(error_msg)
-                    LOGGER.exception('An unknown exception was thrown!')
+                    LOGGER.exception("An unknown exception was thrown!")
                     self.state = STATE_DISCONNECTED
                     raise err
-            await asyncio.sleep(60)     
+            await asyncio.sleep(60)

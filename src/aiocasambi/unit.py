@@ -10,27 +10,27 @@ from .errors import AiocasambiException
 
 LOGGER = logging.getLogger(__name__)
 
-UNIT_STATE_OFF = 'off'
-UNIT_STATE_ON = 'on'
+UNIT_STATE_OFF = "off"
+UNIT_STATE_ON = "on"
 
 
-class Unit():
+class Unit:
     """Represents a client network device."""
 
     def __init__(
-            self,
-            *,
-            name,
-            address,
-            unit_id,
-            network_id,
-            wire_id,
-            controller,
-            controls,
-            value=0,
-            online=True,
-            enabled=True,
-            state=UNIT_STATE_OFF
+        self,
+        *,
+        name,
+        address,
+        unit_id,
+        network_id,
+        wire_id,
+        controller,
+        controls,
+        value=0,
+        online=True,
+        enabled=True,
+        state=UNIT_STATE_OFF,
     ):
         self._name = name
         self._address = address
@@ -48,18 +48,18 @@ class Unit():
 
         self._controls = {}
         for control in controls:
-            key = control['type']
+            key = control["type"]
             self._controls[key] = control
 
     @property
     def value(self):
-        '''
+        """
         Getter for value
-        '''
+        """
         value = 0
 
-        if 'Dimmer' in self._controls:
-            return self._controls['Dimmer']['value']
+        if "Dimmer" in self._controls:
+            return self._controls["Dimmer"]["value"]
         else:
             err_msg = f"unit_id={self._unit_id} - value - "
             err_msg += f"Dimmer is missing in controls: {self._controls}"
@@ -70,11 +70,10 @@ class Unit():
 
     @value.setter
     def value(self, value):
-        '''
+        """
         Setter for value
-        '''
-        LOGGER.debug(
-            f"unit_id={self._unit_id} - value - setting value to: {value}")
+        """
+        LOGGER.debug(f"unit_id={self._unit_id} - value - setting value to: {value}")
         if value == 0:
             self._state = UNIT_STATE_OFF
             self._value = value
@@ -86,159 +85,158 @@ class Unit():
 
     @property
     def name(self):
-        '''
+        """
         Getter for name
-        '''
+        """
         return self._name
 
     @name.setter
     def name(self, name):
-        '''
+        """
         Setter for name
-        '''
+        """
         self._name = name
 
     @property
     def fixture_model(self):
-        '''
+        """
         Getter for fixture model
-        '''
+        """
         return self._fixture_model
 
     @fixture_model.setter
     def fixture_model(self, fixture_model):
-        '''
+        """
         Setter for fixture model
-        '''
+        """
         self._fixture_model = fixture_model
 
     @property
     def online(self):
-        '''
+        """
         Getter for online
-        '''
+        """
         return self._online
 
     @online.setter
     def online(self, online):
-        '''
+        """
         Setter for online
-        '''
+        """
         if not self._online and online:
-            LOGGER.info(
-                f"unit_id={self._unit_id} - online - unit is back online")
+            LOGGER.info(f"unit_id={self._unit_id} - online - unit is back online")
         elif self._online and not online:
-            LOGGER.debug(
-                f"unit_id={self._unit_id} - online - Setting unit to offline")
+            LOGGER.debug(f"unit_id={self._unit_id} - online - Setting unit to offline")
         self._online = online
 
     @property
     def controls(self):
-        '''
+        """
         Getter for controls state
-        '''
+        """
         return self._controls
 
     @controls.setter
     def controls(self, controls):
-        '''
+        """
         Setter for controls
-        '''
+        """
         if isinstance(controls, list):
             for control in controls:
                 # Recusive call
                 self.controls = control
         elif isinstance(controls, dict):
             LOGGER.debug(
-                f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {controls}")
-            key = controls['type']
+                f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {controls}"
+            )
+            key = controls["type"]
             self._controls[key] = controls
 
     @property
     def oem(self):
-        '''
+        """
         Getter for oem
-        '''
+        """
         return self._oem
 
     @oem.setter
     def oem(self, oem):
-        '''
+        """
         Setter for oem
-        '''
+        """
         self._oem = oem
 
     @property
     def fixture(self):
-        '''
+        """
         Getter for fixture
-        '''
+        """
         return self._fixture
 
     @fixture.setter
     def fixture(self, fixture):
-        '''
+        """
         Setter for fixture
-        '''
+        """
         self._fixture = fixture
 
     @property
     def enabled(self):
-        '''
+        """
         Getter for enabled
-        '''
+        """
         return self._enabled
 
     @enabled.setter
     def enabled(self, enabled):
-        '''
+        """
         Setter for enabled
-        '''
+        """
         self._enabled = enabled
 
     @property
     def state(self):
-        '''
+        """
         Getter for state
-        '''
+        """
         return self._state
 
     @state.setter
     def state(self, state):
-        '''
+        """
         Setter for state
-        '''
+        """
         if state == UNIT_STATE_OFF:
             self.value = 0
         self._state = state
 
     @property
     def unique_id(self):
-        '''
+        """
         Getter for unique_id
-        '''
+        """
 
         return f"{self._network_id}-{self._unit_id}"
 
     @property
     def controller(self):
-        '''
+        """
         Getter for controller
-        '''
+        """
 
         return self._controller
 
     @controller.setter
     def controller(self, controller):
-        '''
+        """
         Setter for controller
-        '''
+        """
         self._controller = controller
 
     async def turn_unit_off(self):
-        '''
+        """
         Function for turning a unit off
-        '''
+        """
         # Unit_id needs to be an integer
         unit_id = self._unit_id
         if isinstance(unit_id, int):
@@ -249,26 +247,27 @@ class Unit():
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                f"expected unit_id to be an integer, got: {unit_id}")
+                f"expected unit_id to be an integer, got: {unit_id}"
+            )
 
-        target_controls = {'Dimmer': {'value': 0}}
+        target_controls = {"Dimmer": {"value": 0}}
 
         message = {
             "wire": self._wire_id,
-            "method": 'controlUnit',
+            "method": "controlUnit",
             "id": unit_id,
-            "targetControls": target_controls
+            "targetControls": target_controls,
         }
 
         await self._controller.ws_send_message(message)
 
     async def turn_unit_on(self):
-        '''
+        """
         Function for turning a unit on
 
         Response on ok:
         {'wire': 1, 'method': 'peerChanged', 'online': True}
-        '''
+        """
         unit_id = self._unit_id
 
         # Unit_id needs to be an integer
@@ -279,25 +278,25 @@ class Unit():
         elif isinstance(unit_id, float):
             unit_id = int(unit_id)
         else:
-            reason = 'expected unit_id to be an integer,'
+            reason = "expected unit_id to be an integer,"
             reason += f"got: {unit_id}"
             raise AiocasambiException(reason)
 
-        target_controls = {'Dimmer': {'value': 1}}
+        target_controls = {"Dimmer": {"value": 1}}
 
         message = {
             "wire": self._wire_id,
-            "method": 'controlUnit',
+            "method": "controlUnit",
             "id": unit_id,
-            "targetControls": target_controls
+            "targetControls": target_controls,
         }
 
         await self._controller.ws_send_message(message)
 
     async def set_unit_rgbw(self, *, color_value: Tuple[int, int, int]):
-        '''
+        """
         Set RGB
-        '''
+        """
         target_controls = None
         (red, green, blue, white) = color_value
 
@@ -311,35 +310,37 @@ class Unit():
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id))
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
 
         white_value = white / 255.0
         # 'name': 'white', 'type': 'White', 'value': 0.0
         target_controls = {
-            'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
-            'Colorsource': {'source': 'RGB'},
-            'White': {'value': white_value},
+            "RGB": {"rgb": f"rgb({red}, {green}, {blue})"},
+            "Colorsource": {"source": "RGB"},
+            "White": {"value": white_value},
         }
 
         message = {
             "wire": self._wire_id,
-            "method": 'controlUnit',
+            "method": "controlUnit",
             "id": unit_id,
-            "targetControls": target_controls
+            "targetControls": target_controls,
         }
 
         dbg_msg = f"Setting color to rgb({red}, {green}, {blue}, {white}) "
         dbg_msg += f"sending: {pformat(message)}"
-        LOGGER.debug(
-            f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
 
         await self._controller.ws_send_message(message)
         return
 
-    async def set_unit_rgb(self, *, color_value: Tuple[int, int, int], send_rgb_format=False):
-        '''
+    async def set_unit_rgb(
+        self, *, color_value: Tuple[int, int, int], send_rgb_format=False
+    ):
+        """
         Set RGB
-        '''
+        """
         target_controls = None
         (red, green, blue) = color_value
         (hue, sat, value) = rgb_to_hsv(red, green, blue)
@@ -354,77 +355,78 @@ class Unit():
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id))
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
 
         if not send_rgb_format:
             target_controls = {
-                'RGB': {'hue': round(hue, 1), 'sat': round(sat, 1)},
-                'Colorsource': {'source': 'RGB'}
+                "RGB": {"hue": round(hue, 1), "sat": round(sat, 1)},
+                "Colorsource": {"source": "RGB"},
             }
         else:
             target_controls = {
-                'RGB': {'rgb': f"rgb({red}, {green}, {blue})"},
-                'Colorsource': {'source': 'RGB'}
+                "RGB": {"rgb": f"rgb({red}, {green}, {blue})"},
+                "Colorsource": {"source": "RGB"},
             }
 
         message = {
             "wire": self._wire_id,
-            "method": 'controlUnit',
+            "method": "controlUnit",
             "id": unit_id,
-            "targetControls": target_controls
+            "targetControls": target_controls,
         }
 
         dbg_msg = f"Setting color to rgb({red}, {green}, {blue}) "
         dbg_msg += f"- (hue: {hue}, sat: {sat}, value: {value}) - "
         dbg_msg += f"- send_rgb_format: {send_rgb_format} - "
         dbg_msg += f"sending: {pformat(message)}"
-        LOGGER.debug(
-            f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
 
         await self._controller.ws_send_message(message)
         return
 
-    async def set_unit_color_temperature(self, *,
-                                         value: int,
-                                         source="TW"):
-        '''
+    async def set_unit_color_temperature(self, *, value: int, source="TW"):
+        """
         Setter for unit color temperature
-        '''
+        """
         # Unit_id needs to be an integer
         unit_id = self._unit_id
 
         target_value = value
-        if source == 'mired':
+        if source == "mired":
             # Convert to Kelvin
             target_value = round(1000000 / value)
 
         # Convert to nerest 50 in kelvin, like the gui is doing
         if target_value % 50 != 0:
-            target_value = int(target_value/50)*50+50
+            target_value = int(target_value / 50) * 50 + 50
 
             dbg_msg = f"converting target value to {target_value}"
-            dbg_msg += ' (nearest 50 kelvin like GUI)'
+            dbg_msg += " (nearest 50 kelvin like GUI)"
             LOGGER.debug(
-                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
+                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}"
+            )
 
         # Get min and max temperature color in kelvin
         (cct_min, cct_max, _) = self.get_supported_color_temperature()
         if target_value < cct_min:
             dbg_msg = f"target_value: {target_value}"
-            dbg_msg += ' smaller than min supported temperature,'
-            dbg_msg += ' setting to min supported color temperature:'
+            dbg_msg += " smaller than min supported temperature,"
+            dbg_msg += " setting to min supported color temperature:"
             dbg_msg += f" {cct_min}"
             LOGGER.debug(
-                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
+                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}"
+            )
 
             target_value = cct_min
         elif target_value > cct_max:
             dbg_msg = f"target_value: {target_value}"
-            dbg_msg += ' larger than max supported temperature,'
-            dbg_msg += ' setting to max supported color temperature:'
+            dbg_msg += " larger than max supported temperature,"
+            dbg_msg += " setting to max supported color temperature:"
             dbg_msg += f" {cct_max}"
             LOGGER.debug(
-                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
+                f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}"
+            )
 
             target_value = cct_max
 
@@ -436,34 +438,36 @@ class Unit():
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id))
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
 
         target_controls = {
-            'ColorTemperature': {'value': target_value},
-            'Colorsource': {'source': 'TW'}
+            "ColorTemperature": {"value": target_value},
+            "Colorsource": {"source": "TW"},
         }
 
         message = {
             "wire": self._wire_id,
-            "method": 'controlUnit',
+            "method": "controlUnit",
             "id": unit_id,
-            "targetControls": target_controls
+            "targetControls": target_controls,
         }
 
         dbg_msg = f"value: {value}, source: {source} "
         dbg_msg += f"sending: {message}"
         LOGGER.debug(
-            f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}")
+            f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}"
+        )
 
         await self._controller.ws_send_message(message)
 
     async def set_unit_value(self, *, value):
-        '''
+        """
         Function for setting an unit to a specific value
 
         Response on ok:
         {'wire': 1, 'method': 'peerChanged', 'online': True}
-        '''
+        """
         unit_id = self._unit_id
 
         # Unit_id needs to be an integer
@@ -475,32 +479,32 @@ class Unit():
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id))
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
 
-        if not(value >= 0 and value <= 1):
-            raise AiocasambiException('value needs to be between 0 and 1')
+        if not (value >= 0 and value <= 1):
+            raise AiocasambiException("value needs to be between 0 and 1")
 
-        target_controls = {'Dimmer': {'value': value}}
+        target_controls = {"Dimmer": {"value": value}}
 
         message = {
             "wire": self._wire_id,
-            "method": 'controlUnit',
+            "method": "controlUnit",
             "id": unit_id,
-            "targetControls": target_controls
+            "targetControls": target_controls,
         }
 
         self.value = value
 
-        LOGGER.debug(
-            f"unit_id={self._unit_id} - set_unit_value - value={value}")
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_value - value={value}")
 
         await self._controller.ws_send_message(message)
 
     def get_supported_color_temperature(self):
-        '''
+        """
         Return the supported color temperatures,
         (0, 0, 0) if nothing is supported
-        '''
+        """
         cct_min = 0
         cct_max = 0
         current = 0
@@ -509,21 +513,22 @@ class Unit():
             LOGGER.debug(f"unit_id={self._unit_id} control is None")
             return (min, max, current)
 
-        if 'CCT' in self._controls and self._controls['CCT']:
-            cct_min = self._controls['CCT']['min']
-            cct_max = self._controls['CCT']['max']
-            current = self._controls['CCT']['value']
+        if "CCT" in self._controls and self._controls["CCT"]:
+            cct_min = self._controls["CCT"]["min"]
+            cct_max = self._controls["CCT"]["max"]
+            current = self._controls["CCT"]["value"]
 
-        dbg_msg = 'returning '
+        dbg_msg = "returning "
         dbg_msg += f"min={cct_min} max={cct_max} current={current} "
         dbg_msg += f"for name={self.name}"
         LOGGER.debug(
-            f"unit_id={self._unit_id} - get_supported_color_temperature - {dbg_msg}")
+            f"unit_id={self._unit_id} - get_supported_color_temperature - {dbg_msg}"
+        )
 
         return (cct_min, cct_max, current)
 
     def get_max_mired(self) -> int:
-        '''
+        """
         M = 1000000 / T
 
         25000 K, has a mired value of M = 40 mireds
@@ -542,9 +547,9 @@ class Unit():
                 'value': 3960.0
                 }
         }
-        '''
-        cct_min = self._controls['CCT']['min']
-        result = round(1000000/cct_min)
+        """
+        cct_min = self._controls["CCT"]["min"]
+        result = round(1000000 / cct_min)
 
         dbg_msg = f"returning {result} (in kv {cct_min}) "
         dbg_msg += f"for name={self.name}"
@@ -553,7 +558,7 @@ class Unit():
         return result
 
     def get_min_mired(self) -> int:
-        '''
+        """
         M = 1000000 / T
 
         25000 K, has a mired value of M = 40 mireds
@@ -572,9 +577,9 @@ class Unit():
                 'value': 3960.0
                 }
         }
-        '''
-        cct_max = self._controls['CCT']['max']
-        result = round(1000000/cct_max)
+        """
+        cct_max = self._controls["CCT"]["max"]
+        result = round(1000000 / cct_max)
 
         dbg_msg = f"returning {result} (in kv {cct_max}) "
         dbg_msg += f"for name={self.name}"
@@ -603,8 +608,8 @@ class Unit():
                 }
         }
         """
-        cct_value = self._controls['CCT']['value']
-        result = round(1000000/cct_value)
+        cct_value = self._controls["CCT"]["value"]
+        result = round(1000000 / cct_value)
 
         dbg_msg = f"returning {result} (in kv {cct_value}) "
         dbg_msg += f"for name={self.name}"
@@ -625,15 +630,16 @@ class Unit():
         blue = 0
 
         regexp = re.compile(
-            r'rgb\(\s*(?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)')
-        rgb_value = self._controls['Color']['rgb']
+            r"rgb\(\s*(?P<red>\d+),\s+(?P<green>\d+),\s+(?P<blue>\d+)\)"
+        )
+        rgb_value = self._controls["Color"]["rgb"]
 
         match = regexp.match(rgb_value)
 
         if match:
-            red = int(match.group('red'))
-            green = int(match.group('green'))
-            blue = int(match.group('blue'))
+            red = int(match.group("red"))
+            green = int(match.group("green"))
+            blue = int(match.group("blue"))
         else:
             err_msg = f"failed to parse rgb_value: {rgb_value}"
 
@@ -644,19 +650,19 @@ class Unit():
         LOGGER.debug(f"unit_id={self._unit_id} - get_rgb_color - {dbg_msg}")
 
         return (red, green, blue)
-    
+
     def get_rgbw_color(self):
-        '''
+        """
         Return rgbw color
-        '''
+        """
         (red, green, blue) = self.get_rgb_color()
 
-        white = self._controls['White']['value']
+        white = self._controls["White"]["value"]
 
         return (red, green, blue, int(round(white * 255, 0)))
 
     def supports_rgbw(self) -> bool:
-        '''
+        """
         Returns true if unit supports color temperature
 
         {
@@ -683,19 +689,17 @@ class Unit():
             'status': 'ok',
             'type': 'Luminaire'}
 
-        '''
+        """
         if not self._controls:
-            LOGGER.debug(
-                f"unit_id={self._unit_id} - supports_rgbw - controls is None")
+            LOGGER.debug(f"unit_id={self._unit_id} - supports_rgbw - controls is None")
             return False
 
-        if 'Color' in self._controls and 'White' in self._controls:
+        if "Color" in self._controls and "White" in self._controls:
             return True
         return False
 
-
     def supports_rgb(self) -> bool:
-        '''
+        """
         Returns true if unit supports color temperature
 
         {
@@ -722,18 +726,17 @@ class Unit():
             'status': 'ok',
             'type': 'Luminaire'}
 
-        '''
+        """
         if not self._controls:
-            LOGGER.debug(
-                f"unit_id={self._unit_id} - supports_rgb - controls is None")
+            LOGGER.debug(f"unit_id={self._unit_id} - supports_rgb - controls is None")
             return False
 
-        if 'Color' in self._controls:
+        if "Color" in self._controls:
             return True
         return False
 
     def supports_color_temperature(self) -> bool:
-        '''
+        """
         Returns true if unit supports color temperature
 
         {
@@ -761,18 +764,19 @@ class Unit():
             'type': 'Luminaire'
         }
 
-        '''
+        """
         if not self._controls:
             LOGGER.debug(
-                f"unit_id={self._unit_id} - supports_color_temperature - controls is None")
+                f"unit_id={self._unit_id} - supports_color_temperature - controls is None"
+            )
             return False
 
-        if 'CCT' in self._controls:
+        if "CCT" in self._controls:
             return True
         return False
 
     def supports_brightness(self) -> bool:
-        '''
+        """
         Returns true if unit supports color temperature
 
         {
@@ -800,13 +804,14 @@ class Unit():
             'type': 'Luminaire'
         }
 
-        '''
+        """
         if not self._controls:
             LOGGER.debug(
-                f"unit_id={self._unit_id} - supports_brightness - controls is None")
+                f"unit_id={self._unit_id} - supports_brightness - controls is None"
+            )
             return False
 
-        if 'Dimmer' in self._controls:
+        if "Dimmer" in self._controls:
             return True
         return False
 

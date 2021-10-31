@@ -8,12 +8,7 @@ from pprint import pformat
 from asyncio import TimeoutError, sleep
 from aiohttp import client_exceptions
 
-from .errors import (
-    LoginRequired,
-    ResponseError,
-    RateLimit,
-    CasambiAPIServerError
-)
+from .errors import LoginRequired, ResponseError, RateLimit, CasambiAPIServerError
 
 from .websocket import (
     WSClient,
@@ -22,7 +17,7 @@ from .consts import (
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
     STATE_RUNNING,
-    SIGNAL_UNIT_PULL_UPDATE
+    SIGNAL_UNIT_PULL_UPDATE,
 )
 
 from .units import Units
@@ -35,17 +30,17 @@ class Controller:
     """Casambi controller."""
 
     def __init__(
-            self,
-            *,
-            email,
-            api_key,
-            websession,
-            wire_id=1,
-            user_password=None,
-            network_password=None,
-            sslcontext=None,
-            callback=None,
-            network_timeout=300
+        self,
+        *,
+        email,
+        api_key,
+        websession,
+        wire_id=1,
+        user_password=None,
+        network_password=None,
+        sslcontext=None,
+        callback=None,
+        network_timeout=300,
     ):
         self.email = email
         self.user_password = user_password
@@ -59,11 +54,11 @@ class Controller:
         self.sslcontext = sslcontext
         self.callback = callback
 
-        self.rest_url = 'https://door.casambi.com/v1'
+        self.rest_url = "https://door.casambi.com/v1"
 
         self.headers = {
-            'Content-type': 'application/json',
-            'X-Casambi-Key': self.api_key
+            "Content-type": "application/json",
+            "X-Casambi-Key": self.api_key,
         }
 
         self.websocket = None
@@ -97,14 +92,11 @@ class Controller:
         """ Creating user session. """
         url = f"{self.rest_url}/users/session"
 
-        headers = {
-            'Content-type': 'application/json',
-            'X-Casambi-Key': self.api_key
-        }
+        headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
         auth = {
-            'email': self.email,
-            'password': self.user_password,
+            "email": self.email,
+            "password": self.user_password,
         }
 
         LOGGER.debug(f" headers: {pformat(headers)} auth: {pformat(auth)}")
@@ -113,8 +105,8 @@ class Controller:
 
         LOGGER.debug(f"create_user_session data from request {data}")
 
-        self._session_id = data['sessionId']
-        self.headers['X-Casambi-Session'] = self._session_id
+        self._session_id = data["sessionId"]
+        self.headers["X-Casambi-Session"] = self._session_id
 
         LOGGER.debug(f"user_session_id: {self._session_id}")
 
@@ -122,10 +114,7 @@ class Controller:
         """ Creating network session. """
         url = f"{self.rest_url}/networks/session"
 
-        headers = {
-            'Content-type': 'application/json',
-            'X-Casambi-Key': self.api_key
-        }
+        headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
         auth = {
             "email": self.email,
@@ -139,10 +128,9 @@ class Controller:
         LOGGER.debug(f"create_network_session data from request {data}")
 
         self._network_id = list(data.keys())[0]
-        self._session_id = data[self._network_id]['sessionId']
+        self._session_id = data[self._network_id]["sessionId"]
 
-        LOGGER.debug(
-            f"network_id: {self._network_id} session_id: {self._session_id}")
+        LOGGER.debug(f"network_id: {self._network_id} session_id: {self._session_id}")
 
     async def get_network_information(self):
         """ Creating network information. """
@@ -165,8 +153,7 @@ class Controller:
         # GET https://door.casambi.com/v1/networks/{networkId}/state
         url = f"{self.rest_url}/networks/{self._network_id}/state"
 
-        LOGGER.debug(
-            f"get_network_state request url: {url} headers= {self.headers}")
+        LOGGER.debug(f"get_network_state request url: {url} headers= {self.headers}")
 
         response = await self.request("get", url=url, headers=self.headers)
 
@@ -174,44 +161,40 @@ class Controller:
 
         self.units.process_network_state(response)
 
-        self.callback(
-            SIGNAL_UNIT_PULL_UPDATE,
-            self.units.get_units_unique_ids())
+        self.callback(SIGNAL_UNIT_PULL_UPDATE, self.units.get_units_unique_ids())
 
         return response
 
     async def init_unit_state_controls(self):
-        '''
+        """
         Getter for getting the unit state from Casambis cloud api
-        '''
+        """
         # GET https://door.casambi.com/v1/networks/{id}
 
         for unit_id in self.units.get_units_unique_ids():
             data = await self.get_unit_state_controls(unit_id=unit_id)
 
-            self.units.set_controls(
-                unit_id=unit_id,
-                data=data)
+            self.units.set_controls(unit_id=unit_id, data=data)
 
     def get_unit(self, *, unit_id: int):
-        '''
+        """
         Get specific unit
-        '''
+        """
         return self.units.get_unit(unit_id=unit_id)
 
     def get_unit_value(self, *, unit_id: int):
-        '''
+        """
         Get the unit value
-        '''
+        """
         return self.units.get_unit_value(unit_id=unit_id)
 
     async def get_unit_state(self, *, unit_id: int):
-        '''
+        """
         Getter for getting the unit state from Casambis cloud api
-        '''
+        """
         # GET https://door.casambi.com/v1/networks/{id}
 
-        url = 'https://door.casambi.com/v1/networks/'
+        url = "https://door.casambi.com/v1/networks/"
         url += f"{self._network_id}/units/{unit_id}/state"
 
         response = await self.request("get", url=url, headers=self.headers)
@@ -219,7 +202,7 @@ class Controller:
         return response
 
     async def get_unit_state_controls(self, *, unit_id: int):
-        '''
+        """
         Get unit controls for unit
 
         {
@@ -246,11 +229,11 @@ class Controller:
             'status': 'ok',
             'type': 'Luminaire'
         }
-        '''
+        """
         data = await self.get_unit_state(unit_id=unit_id)
 
-        if 'controls' in data:
-            return data['controls']
+        if "controls" in data:
+            return data["controls"]
 
         return []
 
@@ -259,17 +242,17 @@ class Controller:
         network_information = await self.get_network_information()
 
         self.units = Units(
-            network_information['units'],
+            network_information["units"],
             controller=self,
             network_id=self._network_id,
-            wire_id=self.wire_id
+            wire_id=self.wire_id,
         )
 
         self.scenes = Scenes(
-            network_information['scenes'],
+            network_information["scenes"],
             controller=self,
             network_id=self._network_id,
-            wire_id=self.wire_id
+            wire_id=self.wire_id,
         )
 
         LOGGER.debug(f"network__information: {pformat(network_information)}")
@@ -312,7 +295,7 @@ class Controller:
 
         if current_time < (self._last_websocket_ping + 60 * 3 + 30):
             # Ping should be sent every 5 min
-            msg = 'Not sending websocket ping, '
+            msg = "Not sending websocket ping, "
             msg += f"current_time: {current_time}, "
             msg += f"last websocket ping: {self._last_websocket_ping}"
             LOGGER.debug(msg)
@@ -360,8 +343,8 @@ class Controller:
     def session_handler(self, signal: str) -> None:
         """Signalling from websocket.
 
-           data - new data available for processing.
-           state - network state has changed.
+        data - new data available for processing.
+        state - network state has changed.
         """
         if not self.websocket:
             return
@@ -374,7 +357,7 @@ class Controller:
                 self.callback(SIGNAL_DATA, new_items)
 
         elif signal == SIGNAL_CONNECTION_STATE and self.callback:
-            dbg_msg = 'session_handler is handling'
+            dbg_msg = "session_handler is handling"
             dbg_msg += f"SIGNAL_CONNECTION_STATE: {signal}"
             LOGGER.debug(dbg_msg)
 
@@ -427,9 +410,9 @@ class Controller:
         #    'status': 'ok'
         # }
         try:
-            if 'method' in message and message['method'] == 'unitChanged':
+            if "method" in message and message["method"] == "unitChanged":
                 changes = self.units.process_unit_event(message)
-            elif 'method' in message and message['method'] == 'peerChanged':
+            elif "method" in message and message["method"] == "peerChanged":
                 changes = self.units.handle_peer_changed(message)
         except TypeError as err:
             dbg_msg = "message_handler in controller caught TypeError"
@@ -469,16 +452,15 @@ class Controller:
 
                 await self.create_session()
             except RateLimit as err:
-                LOGGER.debug(
-                    f"caught RateLimit exception: {err}, trying again")
+                LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
 
                 await sleep(self.network_timeout)
 
                 continue
             except client_exceptions.ClientConnectorError:
-                dbg_msg = 'caught '
-                dbg_msg += 'aiohttp.client_exceptions.ClientConnectorError, '
-                dbg_msg += 'trying again'
+                dbg_msg = "caught "
+                dbg_msg += "aiohttp.client_exceptions.ClientConnectorError, "
+                dbg_msg += "trying again"
 
                 LOGGER.debug(dbg_msg)
 
@@ -486,7 +468,7 @@ class Controller:
 
                 continue
             except TimeoutError:
-                LOGGER.debug('caught asyncio.TimeoutError, trying again')
+                LOGGER.debug("caught asyncio.TimeoutError, trying again")
 
                 await sleep(self.network_timeout)
 
@@ -502,96 +484,95 @@ class Controller:
         LOGGER.debug("Controller is reconnected")
 
     async def turn_unit_on(self, *, unit_id: int):
-        '''
+        """
         Turn unit on
-        '''
+        """
         await self.units.turn_unit_on(unit_id=unit_id)
 
     async def turn_unit_off(self, *, unit_id: int):
-        '''
+        """
         Turn unit off
-        '''
+        """
         await self.units.turn_unit_off(unit_id=unit_id)
 
     def unit_supports_rgb(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports rgb
-        '''
+        """
         result = self.units.supports_rgb(unit_id=unit_id)
 
         return result
 
     def unit_supports_rgbw(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports color rgbw
-        '''
+        """
         result = self.units.supports_rgbw(unit_id=unit_id)
 
         return result
 
     def unit_supports_color_temperature(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports color temperature
-        '''
+        """
         result = self.units.supports_color_temperature(unit_id=unit_id)
 
         return result
 
     def get_supported_color_temperature(self, *, unit_id: int):
-        '''
+        """
         Get supported color temperatures
-        '''
-        (cct_min, cct_max, current) = \
-            self.units.get_supported_color_temperature(unit_id=unit_id)
+        """
+        (cct_min, cct_max, current) = self.units.get_supported_color_temperature(
+            unit_id=unit_id
+        )
 
         return (cct_min, cct_max, current)
 
     def unit_supports_brightness(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports color temperature
-        '''
+        """
         result = self.units.supports_brightness(unit_id=unit_id)
 
         return result
 
-    async def set_unit_rgbw(self, *, unit_id: int, color_value: Tuple[int, int, int, int], send_rgb_format=False):
-        '''
+    async def set_unit_rgbw(
+        self,
+        *,
+        unit_id: int,
+        color_value: Tuple[int, int, int, int],
+        send_rgb_format=False,
+    ):
+        """
         Set unit color temperature
-        '''
+        """
         await self.units.set_unit_rgbw(
             unit_id=unit_id,
             color_value=color_value,
         )
 
-    async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
-        '''
+    async def set_unit_rgb(
+        self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False
+    ):
+        """
         Set unit color temperature
-        '''
+        """
         await self.units.set_unit_rgb(
-            unit_id=unit_id,
-            color_value=color_value,
-            send_rgb_format=send_rgb_format
+            unit_id=unit_id, color_value=color_value, send_rgb_format=send_rgb_format
         )
 
-    async def set_unit_color_temperature(self, *,
-                                         unit_id: int,
-                                         value: int,
-                                         source="TW"):
-        '''
+    async def set_unit_color_temperature(
+        self, *, unit_id: int, value: int, source="TW"
+    ):
+        """
         Set unit color temperature
-        '''
+        """
         await self.units.set_unit_color_temperature(
-            unit_id=unit_id,
-            value=value,
-            source=source
+            unit_id=unit_id, value=value, source=source
         )
 
-    async def request(self,
-                      method,
-                      json=None,
-                      url=None,
-                      headers=None,
-                      **kwargs):
+    async def request(self, method, json=None, url=None, headers=None, **kwargs):
         """Make a request to the API."""
         await self.ws_ping()
 
@@ -599,18 +580,17 @@ class Controller:
 
         try:
             async with self.session.request(
-                    method,
-                    url,
-                    json=json,
-                    ssl=self.sslcontext,
-                    headers=headers,
-                    **kwargs,
+                method,
+                url,
+                json=json,
+                ssl=self.sslcontext,
+                headers=headers,
+                **kwargs,
             ) as res:
                 LOGGER.debug(f"request: {res.status} {res.content_type} {res}")
 
                 if res.status == 401:
-                    raise LoginRequired(
-                        f"Call {url} received 401 Unauthorized")
+                    raise LoginRequired(f"Call {url} received 401 Unauthorized")
 
                 if res.status == 404:
                     raise ResponseError(f"Call {url} received 404 Not Found")
@@ -620,7 +600,8 @@ class Controller:
 
                 if res.status == 429:
                     raise RateLimit(
-                        f"Call {url} received 429 Server rate limit exceeded!")
+                        f"Call {url} received 429 Server rate limit exceeded!"
+                    )
 
                 if res.status == 500:
                     log_msg = f"Server Error: url: {url} "

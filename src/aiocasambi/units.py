@@ -10,19 +10,13 @@ from .unit import Unit
 LOGGER = logging.getLogger(__name__)
 
 
-class Units():
-    '''
+class Units:
+    """
     Class for representing Casambi Units
-    '''
+    """
 
     def __init__(
-            self,
-            units: set,
-            *,
-            network_id,
-            wire_id,
-            controller,
-            online=True
+        self, units: set, *, network_id, wire_id, controller, online=True
     ) -> None:
         self._network_id = network_id
         self._wire_id = wire_id
@@ -33,12 +27,12 @@ class Units():
         self.__process_units(units)
 
     def handle_peer_changed(self, message: dict):
-        '''
+        """
         Function for handling peer change
-        '''
+        """
         changes = {}
-        if 'online' in message:
-            self.online = message['online']
+        if "online" in message:
+            self.online = message["online"]
 
         for key, unit in self.units.items():
             changes[key] = unit
@@ -145,27 +139,27 @@ class Units():
                }
         """
         try:
-            if 'units' not in data:
+            if "units" not in data:
                 # Safe guard
                 LOGGER.debug(
-                    f"process_network_state - units not in data: {pformat(data)}")
+                    f"process_network_state - units not in data: {pformat(data)}"
+                )
                 return
         except TypeError as err:
-            LOGGER.error(
-                f"process_network_state - unknown data: {pformat(data)}")
+            LOGGER.error(f"process_network_state - unknown data: {pformat(data)}")
             raise err
 
         LOGGER.debug(f"process_network_state - data={pformat(data)}")
 
-        for unit_key in data['units']:
-            unit_data = data['units'][unit_key]
+        for unit_key in data["units"]:
+            unit_data = data["units"][unit_key]
             key = f"{self._network_id}-{unit_key}"
 
-            self.units[key].online = unit_data['online']
-            self.units[key].name = unit_data['name']
-            if unit_data['online']:
+            self.units[key].online = unit_data["online"]
+            self.units[key].name = unit_data["name"]
+            if unit_data["online"]:
                 # self.units[key].value = unit_data['dimLevel']
-                self.units[key].controls = unit_data['controls']
+                self.units[key].controls = unit_data["controls"]
 
     def process_unit_event(self, msg):
         """
@@ -248,8 +242,8 @@ class Units():
 
         LOGGER.debug(f"process_unit_event - Processing msg: {pformat(msg)}")
 
-        if 'id' not in msg:
-            error_msg = 'processing_unit_event - discarding message, '
+        if "id" not in msg:
+            error_msg = "processing_unit_event - discarding message, "
             error_msg += f"id is missing in msg: {pformat(msg)}"
 
             LOGGER.error(error_msg)
@@ -258,45 +252,49 @@ class Units():
 
         key = f"{self._network_id}-{msg['id']}"
 
-        if 'online' in msg and not msg['online']:
+        if "online" in msg and not msg["online"]:
             LOGGER.debug(
-                f"processing_unit_event - Gateway is not online msg: {pformat(msg)}")
+                f"processing_unit_event - Gateway is not online msg: {pformat(msg)}"
+            )
 
-        if 'method' in msg and msg['method'] == 'unitChanged':
-            controls = msg['controls']
+        if "method" in msg and msg["method"] == "unitChanged":
+            controls = msg["controls"]
             for control in controls:
 
                 LOGGER.debug(
-                    f"processing_unit_event - method \"unitChanged\" control: {pformat(control)}")
+                    f'processing_unit_event - method "unitChanged" control: {pformat(control)}'
+                )
 
-                if 'type' in control and control['type'] == 'Dimmer':
-                    name = ''
-                    if 'details' in msg and 'name' in msg['details']:
-                        name = (msg['details']['name']).strip()
-                    elif 'name' in msg:
-                        name = (msg['name']).strip()
+                if "type" in control and control["type"] == "Dimmer":
+                    name = ""
+                    if "details" in msg and "name" in msg["details"]:
+                        name = (msg["details"]["name"]).strip()
+                    elif "name" in msg:
+                        name = (msg["name"]).strip()
 
-                    dbg_msg = f"processing_unit_event - key: {key} name: {name} msg: {msg} "
-                    dbg_msg += 'method unit changed control'
+                    dbg_msg = (
+                        f"processing_unit_event - key: {key} name: {name} msg: {msg} "
+                    )
+                    dbg_msg += "method unit changed control"
                     dbg_msg += f" value: {pformat(control['value'])}"
                     LOGGER.debug(dbg_msg)
 
                     if key not in self.units:
                         # New unit discovered
                         address = None
-                        if 'details' in msg and 'address' in msg['details']:
-                            address = msg['details']['address']
-                        elif 'address' in msg:
-                            address = msg['address']
+                        if "details" in msg and "address" in msg["details"]:
+                            address = msg["details"]["address"]
+                        elif "address" in msg:
+                            address = msg["address"]
                         online = False
-                        unit_id = msg['id']
+                        unit_id = msg["id"]
                         controls = []
 
-                        if 'online' in msg:
-                            online = msg['online']
+                        if "online" in msg:
+                            online = msg["online"]
 
-                        if 'controls' in msg:
-                            controls = msg['controls']
+                        if "controls" in msg:
+                            controls = msg["controls"]
 
                         unit = Unit(
                             name=name,
@@ -306,38 +304,36 @@ class Units():
                             wire_id=self._wire_id,
                             network_id=self._network_id,
                             controller=self._controller,
-                            controls=controls
+                            controls=controls,
                         )
 
                         self.units[key] = unit
 
                     # Update value
-                    self.units[key].value = control['value']
+                    self.units[key].value = control["value"]
 
-                    if 'details' in msg and 'fixture' in msg['details']:
-                        self.units[key].fixture = msg['details']['fixture']
-                    elif 'fixture' in msg:
-                        self.units[key].fixture = msg['fixture']
+                    if "details" in msg and "fixture" in msg["details"]:
+                        self.units[key].fixture = msg["details"]["fixture"]
+                    elif "fixture" in msg:
+                        self.units[key].fixture = msg["fixture"]
 
-                    if 'online' in msg:
-                        self.units[key].online = msg['online']
+                    if "online" in msg:
+                        self.units[key].online = msg["online"]
 
-                    if 'details' in msg and 'fixture_model' in msg['details']:
-                        self.units[key].fixture_model = \
-                            msg['details']['fixture_model']
-                    elif 'fixture_model' in msg:
-                        self.units[key].fixture_model = \
-                            msg['fixture_model']
+                    if "details" in msg and "fixture_model" in msg["details"]:
+                        self.units[key].fixture_model = msg["details"]["fixture_model"]
+                    elif "fixture_model" in msg:
+                        self.units[key].fixture_model = msg["fixture_model"]
 
-                    if 'details' in msg and 'OEM' in msg['details']:
-                        self.units[key].oem = msg['details']['OEM']
-                    elif 'OEM' in msg:
-                        self.units[key].oem = msg['OEM']
+                    if "details" in msg and "OEM" in msg["details"]:
+                        self.units[key].oem = msg["details"]["OEM"]
+                    elif "OEM" in msg:
+                        self.units[key].oem = msg["OEM"]
 
-                    if 'details' in msg and 'controls' in msg['details']:
-                        self.units[key].controls = msg['details']['controls']
-                    elif 'controls' in msg:
-                        self.units[key].controls = msg['controls']
+                    if "details" in msg and "controls" in msg["details"]:
+                        self.units[key].controls = msg["details"]["controls"]
+                    elif "controls" in msg:
+                        self.units[key].controls = msg["controls"]
 
                     changes[key] = self.units[key]
 
@@ -345,41 +341,41 @@ class Units():
 
     @property
     def online(self):
-        '''
+        """
         Getter for online
-        '''
+        """
         return self._online
 
     @online.setter
     def online(self, online):
-        '''
+        """
         Setter for online
-        '''
+        """
         self._online = online
 
         for _, unit in self.units.items():
             unit.online = online
 
     def get_unit(self, *, unit_id: int):
-        '''
+        """
         Get unit
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
 
         return self.units[key]
 
     def get_unit_value(self, *, unit_id: int):
-        '''
+        """
         Get unit
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
 
         return self.units[key].value
 
     def get_units(self):
-        '''
+        """
         Getter for all units
-        '''
+        """
         result = []
         for _, value in self.units.items():
             result.append(value)
@@ -387,9 +383,9 @@ class Units():
         return result
 
     def get_units_unique_ids(self):
-        '''
+        """
         Getter for getting all units uniq ids
-        '''
+        """
         result = []
         for _, value in self.units.items():
             result.append(value.unique_id)
@@ -397,134 +393,135 @@ class Units():
         return result
 
     async def turn_unit_on(self, *, unit_id: int):
-        '''
+        """
         Turn unit on
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
 
         await self.units[key].turn_unit_on()
 
     async def turn_unit_off(self, *, unit_id: int):
-        '''
+        """
         Turn unit off
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
 
         await self.units[key].turn_unit_off()
 
-    def set_controls(self, *,
-                     unit_id: int,
-                     data):
-        '''
+    def set_controls(self, *, unit_id: int, data):
+        """
         Setter for unit state
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
 
         self.units[key].controls = data
 
     def supports_rgbw(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports RGB
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
         result = self.units[key].supports_rgbw()
 
         return result
 
     def supports_rgb(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports RGB
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
         result = self.units[key].supports_rgb()
 
         return result
 
     def supports_color_temperature(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports color temperature
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
         result = self.units[key].supports_color_temperature()
 
         return result
 
     def supports_brightness(self, *, unit_id: int):
-        '''
+        """
         Check if unit supports brightness temperature
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
         result = self.units[key].supports_brightness()
 
         return result
 
     def get_supported_color_temperature(self, *, unit_id: int):
-        '''
+        """
         Get supported color temperatures
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
-        (cct_min, cct_max, current) = \
-            self.units[key].get_supported_color_temperature()
+        (cct_min, cct_max, current) = self.units[key].get_supported_color_temperature()
 
         return (cct_min, cct_max, current)
 
-    async def set_unit_rgbw(self, *, unit_id: int, color_value: Tuple[int, int, int, int]):
-        '''
+    async def set_unit_rgbw(
+        self, *, unit_id: int, color_value: Tuple[int, int, int, int]
+    ):
+        """
         Set unit rgb
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
         await self.units[key].set_unit_rgbw(color_value=color_value)
 
-    async def set_unit_rgb(self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False):
-        '''
+    async def set_unit_rgb(
+        self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False
+    ):
+        """
         Set unit rgbw
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
-        await self.units[key].set_unit_rgb(color_value=color_value, send_rgb_format=send_rgb_format)
+        await self.units[key].set_unit_rgb(
+            color_value=color_value, send_rgb_format=send_rgb_format
+        )
 
-    async def set_unit_color_temperature(self, *,
-                                         unit_id: int,
-                                         value: int,
-                                         source="TW"):
-        '''
+    async def set_unit_color_temperature(
+        self, *, unit_id: int, value: int, source="TW"
+    ):
+        """
         Set unit color temperature
-        '''
+        """
         key = f"{self._network_id}-{unit_id}"
-        await self.units[key].set_unit_color_temperature(value=value,
-                                                         source=source)
+        await self.units[key].set_unit_color_temperature(value=value, source=source)
 
     def __process_units(self, units):
         """
-            Function for processing units
-            Units raw format:
-            {'1': {
-                    'address': 'ffffffffffff',
-                    'fixtureId': 859,
-                    'groupId': 0,
-                    'id': 1,
-                    'image': 'FFFFFFFFF',
-                    'name': 'Foo',
-                    'position': 0,
-                    'type': 'Luminaire'},
-            '4': {
-                    'address': 'ffffffffffff',
-                    'fixtureId': 859,
-                    'groupId': 0,
-                    'id': 4,
-                    'image': 'FFFFFFFFF',
-                    'name': 'Foo/Baar',
-                    'position': 2,
-                    'type': 'Luminaire'},
-            '9': {
-                    'address': 'ffffffffffff',
-                    'fixtureId': 859,
-                    'groupId': 0,
-                    'id': 9,
-                    'image': 'FFFFFFFFF',
-                    'name': 'Foo',
-                    'position': 6,
-                    'type': 'Luminaire'}}
-            '''
+        Function for processing units
+        Units raw format:
+        {'1': {
+                'address': 'ffffffffffff',
+                'fixtureId': 859,
+                'groupId': 0,
+                'id': 1,
+                'image': 'FFFFFFFFF',
+                'name': 'Foo',
+                'position': 0,
+                'type': 'Luminaire'},
+        '4': {
+                'address': 'ffffffffffff',
+                'fixtureId': 859,
+                'groupId': 0,
+                'id': 4,
+                'image': 'FFFFFFFFF',
+                'name': 'Foo/Baar',
+                'position': 2,
+                'type': 'Luminaire'},
+        '9': {
+                'address': 'ffffffffffff',
+                'fixtureId': 859,
+                'groupId': 0,
+                'id': 9,
+                'image': 'FFFFFFFFF',
+                'name': 'Foo',
+                'position': 6,
+                'type': 'Luminaire'}}
+        '''
         """
         LOGGER.debug(f"__process_units - Processing units {pformat(units)}")
 
@@ -532,12 +529,12 @@ class Units():
             tmp = units[unit_id]
             key = f"{self._network_id}-{unit_id}"
             unit = Unit(
-                name=tmp['name'].strip(),
-                address=tmp['address'],
+                name=tmp["name"].strip(),
+                address=tmp["address"],
                 unit_id=unit_id,
                 wire_id=self._wire_id,
                 network_id=self._network_id,
                 controller=self._controller,
-                controls=[]
+                controls=[],
             )
             self.units[key] = unit

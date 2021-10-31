@@ -36,13 +36,13 @@ class CasambiAPIServerError(AiocasambiException):
 
 
 ERRORS = {
-    'api.err.LoginRequired': LoginRequired,
-    'api.err.Invalid': Unauthorized,
-    'api.err.NoPermission': NoPermission
+    "api.err.LoginRequired": LoginRequired,
+    "api.err.Invalid": Unauthorized,
+    "api.err.NoPermission": NoPermission,
 }
 
 
 def raise_error(error):
-    ''' Function for raise error'''
+    """ Function for raise error"""
     cls = ERRORS.get(error, AiocasambiException)
     raise cls("{}".format(error))

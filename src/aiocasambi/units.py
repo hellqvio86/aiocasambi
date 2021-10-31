@@ -2,7 +2,7 @@
 
 import logging
 
-from typing import Tuple
+from typing import Tuple, Union
 from pprint import pformat
 from .errors import AiocasambiException
 from .unit import Unit
@@ -26,7 +26,7 @@ class Units:
 
         self.__process_units(units)
 
-    def handle_peer_changed(self, message: dict):
+    def handle_peer_changed(self, message: dict) -> dict:
         """
         Function for handling peer change
         """
@@ -39,7 +39,7 @@ class Units:
 
         return changes
 
-    def process_network_state(self, data):
+    def process_network_state(self, data: dict) -> None:
         """
          'dimLevel': 1.0 is unit "ON"
 
@@ -161,7 +161,7 @@ class Units:
                 # self.units[key].value = unit_data['dimLevel']
                 self.units[key].controls = unit_data["controls"]
 
-    def process_unit_event(self, msg):
+    def process_unit_event(self, msg: dict) -> dict:
         """
         Event like:
         {
@@ -340,14 +340,14 @@ class Units:
         return changes
 
     @property
-    def online(self):
+    def online(self) -> bool:
         """
         Getter for online
         """
         return self._online
 
     @online.setter
-    def online(self, online):
+    def online(self, online: bool) -> None:
         """
         Setter for online
         """
@@ -356,7 +356,7 @@ class Units:
         for _, unit in self.units.items():
             unit.online = online
 
-    def get_unit(self, *, unit_id: int):
+    def get_unit(self, *, unit_id: int) -> Unit:
         """
         Get unit
         """
@@ -364,7 +364,7 @@ class Units:
 
         return self.units[key]
 
-    def get_unit_value(self, *, unit_id: int):
+    def get_unit_value(self, *, unit_id: int) -> int:
         """
         Get unit
         """
@@ -372,7 +372,7 @@ class Units:
 
         return self.units[key].value
 
-    def get_units(self):
+    def get_units(self) -> list:
         """
         Getter for all units
         """
@@ -382,7 +382,7 @@ class Units:
 
         return result
 
-    def get_units_unique_ids(self):
+    def get_units_unique_ids(self) -> list:
         """
         Getter for getting all units uniq ids
         """
@@ -392,7 +392,7 @@ class Units:
 
         return result
 
-    async def turn_unit_on(self, *, unit_id: int):
+    async def turn_unit_on(self, *, unit_id: int) -> None:
         """
         Turn unit on
         """
@@ -400,7 +400,7 @@ class Units:
 
         await self.units[key].turn_unit_on()
 
-    async def turn_unit_off(self, *, unit_id: int):
+    async def turn_unit_off(self, *, unit_id: int) -> None:
         """
         Turn unit off
         """
@@ -408,7 +408,7 @@ class Units:
 
         await self.units[key].turn_unit_off()
 
-    def set_controls(self, *, unit_id: int, data):
+    def set_controls(self, *, unit_id: int, data: Union[list, dict]) -> None:
         """
         Setter for unit state
         """
@@ -416,7 +416,7 @@ class Units:
 
         self.units[key].controls = data
 
-    def supports_rgbw(self, *, unit_id: int):
+    def supports_rgbw(self, *, unit_id: int) -> bool:
         """
         Check if unit supports RGB
         """
@@ -425,7 +425,7 @@ class Units:
 
         return result
 
-    def supports_rgb(self, *, unit_id: int):
+    def supports_rgb(self, *, unit_id: int) -> bool:
         """
         Check if unit supports RGB
         """
@@ -434,7 +434,7 @@ class Units:
 
         return result
 
-    def supports_color_temperature(self, *, unit_id: int):
+    def supports_color_temperature(self, *, unit_id: int) -> bool:
         """
         Check if unit supports color temperature
         """
@@ -443,7 +443,7 @@ class Units:
 
         return result
 
-    def supports_brightness(self, *, unit_id: int):
+    def supports_brightness(self, *, unit_id: int) -> bool:
         """
         Check if unit supports brightness temperature
         """
@@ -452,7 +452,7 @@ class Units:
 
         return result
 
-    def get_supported_color_temperature(self, *, unit_id: int):
+    def get_supported_color_temperature(self, *, unit_id: int) -> Tuple[int, int, int]:
         """
         Get supported color temperatures
         """
@@ -463,7 +463,7 @@ class Units:
 
     async def set_unit_rgbw(
         self, *, unit_id: int, color_value: Tuple[int, int, int, int]
-    ):
+    ) -> None:
         """
         Set unit rgb
         """
@@ -472,7 +472,7 @@ class Units:
 
     async def set_unit_rgb(
         self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False
-    ):
+    ) -> None:
         """
         Set unit rgbw
         """
@@ -483,14 +483,14 @@ class Units:
 
     async def set_unit_color_temperature(
         self, *, unit_id: int, value: int, source="TW"
-    ):
+    ) -> None:
         """
         Set unit color temperature
         """
         key = f"{self._network_id}-{unit_id}"
         await self.units[key].set_unit_color_temperature(value=value, source=source)
 
-    def __process_units(self, units):
+    def __process_units(self, units: list):
         """
         Function for processing units
         Units raw format:

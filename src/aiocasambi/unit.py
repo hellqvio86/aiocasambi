@@ -4,9 +4,11 @@ import logging
 import re
 
 from pprint import pformat
-from typing import Tuple
+from typing import Tuple, Union
 from colorsys import rgb_to_hsv
+
 from .errors import AiocasambiException
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,17 +22,17 @@ class Unit:
     def __init__(
         self,
         *,
-        name,
-        address,
-        unit_id,
-        network_id,
-        wire_id,
+        name: str,
+        address: str,
+        unit_id: int,
+        network_id: int,
+        wire_id: int,
         controller,
-        controls,
-        value=0,
-        online=True,
-        enabled=True,
-        state=UNIT_STATE_OFF,
+        controls: dict,
+        value: float = 0,
+        online: bool = True,
+        enabled: bool = True,
+        state: str = UNIT_STATE_OFF,
     ):
         self._name = name
         self._address = address
@@ -52,7 +54,7 @@ class Unit:
             self._controls[key] = control
 
     @property
-    def value(self):
+    def value(self) -> float:
         """
         Getter for value
         """
@@ -69,7 +71,7 @@ class Unit:
             return value
 
     @value.setter
-    def value(self, value):
+    def value(self, value: float) -> None:
         """
         Setter for value
         """
@@ -84,42 +86,42 @@ class Unit:
             raise AiocasambiException(f"invalid value {value} for {self}")
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Getter for name
         """
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         """
         Setter for name
         """
         self._name = name
 
     @property
-    def fixture_model(self):
+    def fixture_model(self) -> str:
         """
         Getter for fixture model
         """
         return self._fixture_model
 
     @fixture_model.setter
-    def fixture_model(self, fixture_model):
+    def fixture_model(self, fixture_model: str) -> None:
         """
         Setter for fixture model
         """
         self._fixture_model = fixture_model
 
     @property
-    def online(self):
+    def online(self) -> bool:
         """
         Getter for online
         """
         return self._online
 
     @online.setter
-    def online(self, online):
+    def online(self, online: bool) -> None:
         """
         Setter for online
         """
@@ -130,14 +132,14 @@ class Unit:
         self._online = online
 
     @property
-    def controls(self):
+    def controls(self) -> dict:
         """
         Getter for controls state
         """
         return self._controls
 
     @controls.setter
-    def controls(self, controls):
+    def controls(self, controls: Union[list, dict]) -> None:
         """
         Setter for controls
         """
@@ -153,56 +155,56 @@ class Unit:
             self._controls[key] = controls
 
     @property
-    def oem(self):
+    def oem(self) -> str:
         """
         Getter for oem
         """
         return self._oem
 
     @oem.setter
-    def oem(self, oem):
+    def oem(self, oem: str) -> None:
         """
         Setter for oem
         """
         self._oem = oem
 
     @property
-    def fixture(self):
+    def fixture(self) -> str:
         """
         Getter for fixture
         """
         return self._fixture
 
     @fixture.setter
-    def fixture(self, fixture):
+    def fixture(self, fixture: str) -> None:
         """
         Setter for fixture
         """
         self._fixture = fixture
 
     @property
-    def enabled(self):
+    def enabled(self) -> bool:
         """
         Getter for enabled
         """
         return self._enabled
 
     @enabled.setter
-    def enabled(self, enabled):
+    def enabled(self, enabled: bool) -> None:
         """
         Setter for enabled
         """
         self._enabled = enabled
 
     @property
-    def state(self):
+    def state(self) -> str:
         """
         Getter for state
         """
         return self._state
 
     @state.setter
-    def state(self, state):
+    def state(self, state: str) -> None:
         """
         Setter for state
         """
@@ -211,7 +213,7 @@ class Unit:
         self._state = state
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """
         Getter for unique_id
         """
@@ -233,7 +235,7 @@ class Unit:
         """
         self._controller = controller
 
-    async def turn_unit_off(self):
+    async def turn_unit_off(self) -> None:
         """
         Function for turning a unit off
         """
@@ -261,7 +263,7 @@ class Unit:
 
         await self._controller.ws_send_message(message)
 
-    async def turn_unit_on(self):
+    async def turn_unit_on(self) -> None:
         """
         Function for turning a unit on
 
@@ -293,7 +295,7 @@ class Unit:
 
         await self._controller.ws_send_message(message)
 
-    async def set_unit_rgbw(self, *, color_value: Tuple[int, int, int]):
+    async def set_unit_rgbw(self, *, color_value: Tuple[int, int, int]) -> None:
         """
         Set RGB
         """
@@ -337,7 +339,7 @@ class Unit:
 
     async def set_unit_rgb(
         self, *, color_value: Tuple[int, int, int], send_rgb_format=False
-    ):
+    ) -> None:
         """
         Set RGB
         """
@@ -385,7 +387,7 @@ class Unit:
         await self._controller.ws_send_message(message)
         return
 
-    async def set_unit_color_temperature(self, *, value: int, source="TW"):
+    async def set_unit_color_temperature(self, *, value: int, source="TW") -> None:
         """
         Setter for unit color temperature
         """
@@ -461,7 +463,7 @@ class Unit:
 
         await self._controller.ws_send_message(message)
 
-    async def set_unit_value(self, *, value):
+    async def set_unit_value(self, *, value: Union[float, int]) -> None:
         """
         Function for setting an unit to a specific value
 
@@ -500,7 +502,7 @@ class Unit:
 
         await self._controller.ws_send_message(message)
 
-    def get_supported_color_temperature(self):
+    def get_supported_color_temperature(self) -> Tuple[int, int, int]:
         """
         Return the supported color temperatures,
         (0, 0, 0) if nothing is supported
@@ -587,7 +589,7 @@ class Unit:
 
         return result
 
-    def get_color_temp(self):
+    def get_color_temp(self) -> int:
         """
         M = 1 000 000 / T
 
@@ -617,7 +619,7 @@ class Unit:
 
         return result
 
-    def get_rgb_color(self):
+    def get_rgb_color(self) -> Tuple[int, int, int]:
         """
         Return rgb color
 
@@ -651,7 +653,7 @@ class Unit:
 
         return (red, green, blue)
 
-    def get_rgbw_color(self):
+    def get_rgbw_color(self) -> Tuple[int, int, int, int]:
         """
         Return rgbw color
         """

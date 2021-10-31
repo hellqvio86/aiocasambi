@@ -43,7 +43,7 @@ async def get_casambi_controller(
     sslcontext,
     callback,
     wire_id,
-):
+) -> aiocasambi.Controller:
     """Setup Casambi controller and verify credentials."""
     controller = aiocasambi.Controller(
         email=email,
@@ -75,7 +75,7 @@ async def get_casambi_controller(
         LOGGER.exception("Unknown Casambi communication error occurred")
 
 
-def parse_config(config_file="casambi.yaml"):
+def parse_config(config_file="casambi.yaml") -> dict:
     """
     Function for parsing yaml configuration file
     """
@@ -90,7 +90,7 @@ def parse_config(config_file="casambi.yaml"):
     return result
 
 
-def setup_logger(*, debug=False):
+def setup_logger(*, debug=False) -> None:
     """
     Function for setting up the logging
     """
@@ -116,7 +116,7 @@ def setup_logger(*, debug=False):
         root.setLevel(logging.DEBUG)
 
 
-def print_unit_information(*, controller, unit_id):
+def print_unit_information(*, controller, unit_id) -> None:
     """
     Helper function for printing unit
     """
@@ -133,7 +133,7 @@ async def main(
     api_key,
     wire_id=1,
     sslcontext=False,
-):
+) -> None:
     """Main function."""
     LOGGER.info("Starting aioCasambi")
 
@@ -184,7 +184,6 @@ async def main(
             if controller.get_websocket_state() == "disconnected":
                 await controller.reconnect()
 
-            send_rgb_format = False
             for unit_id in units:
                 print_unit_information(controller=controller, unit_id=unit_id)
 

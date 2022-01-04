@@ -30,6 +30,7 @@ class Unit:
         controller,
         controls: dict,
         value: float = 0,
+        slider: float = 0,
         online: bool = True,
         enabled: bool = True,
         state: str = UNIT_STATE_OFF,
@@ -39,6 +40,7 @@ class Unit:
         self._unit_id = int(unit_id)
         self._network_id = network_id
         self._value = value
+        self._value = slider
         self._state = state
         self._fixture_model = None
         self._fixture = None
@@ -84,6 +86,34 @@ class Unit:
             self._value = value
         else:
             raise AiocasambiException(f"invalid value {value} for {self}")
+
+    @property
+    def slider(self) -> float:
+        """
+        Getter for slider
+        """
+        slider = 0
+
+        if "Vertical" in self._controls:
+            return self._controls["Vertical"]["value"]
+        else:
+            err_msg = f"unit_id={self._unit_id} - slider - "
+            err_msg += f"Vertical is missing in controls: {self._controls}"
+
+            LOGGER.debug(err_msg)
+
+            return slider
+
+    @slider.setter
+    def slider(self, slider: float) -> None:
+        """
+        Setter for slider
+        """
+        LOGGER.debug(f"unit_id={self._unit_id} - slider - setting slider to: {slider}")
+        if slider >= 0 and slider <= 1:
+            self._slider = slider
+        else:
+            raise AiocasambiException(f"invalid slider {slider} for {self}")
 
     @property
     def name(self) -> str:
@@ -499,6 +529,87 @@ class Unit:
         self.value = value
 
         LOGGER.debug(f"unit_id={self._unit_id} - set_unit_value - value={value}")
+
+        await self._controller.ws_send_message(message)
+
+    async def set_unit_slider(self, *, slider: Union[float, int]) -> None:
+        """
+        Function for setting an unit to a specific slider position
+
+        Response on ok:
+        {'wire': 1, 'method': 'peerChanged', 'online': True}
+        """
+        unit_id = self._unit_id
+
+        # Unit_id needs to be an integer
+        if isinstance(unit_id, int):
+            pass
+        elif isinstance(unit_id, str):
+            unit_id = int(unit_id)
+        elif isinstance(unit_id, float):
+            unit_id = int(unit_id)
+        else:
+            raise AiocasambiException(
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
+
+        if not (slider >= 0 and slider <= 1):
+            raise AiocasambiException("slider needs to be between 0 and 1")
+
+        target_controls = {"Vertical": {"value": slider}}
+
+        message = {
+            "wire": self._wire_id,
+            "method": "controlUnit",
+            "id": unit_id,
+            "targetControls": target_controls,
+        }
+
+        self.slider = slider
+
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_slider - slider={slider}")
+
+        await self._controller.ws_send_message(message)
+
+    async def set_unit_target_controls(self, *, target_controls) -> None:
+        """
+        Function for setting an unit to specific controls
+
+        Response on ok:
+        {'wire': 1, 'method': 'peerChanged', 'online': True}
+        """
+        value = None
+        slider = None
+        unit_id = self._unit_id
+
+        # Unit_id needs to be an integer
+        if isinstance(unit_id, int):
+            pass
+        elif isinstance(unit_id, str):
+            unit_id = int(unit_id)
+        elif isinstance(unit_id, float):
+            unit_id = int(unit_id)
+        else:
+            raise AiocasambiException(
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
+
+        message = {
+            "wire": self._wire_id,
+            "method": "controlUnit",
+            "id": unit_id,
+            "targetControls": target_controls,
+        }
+
+        if 'Dimmer' in target_controls:
+            value = target_controls['Dimmer']['value']
+            self.value = value
+
+        if 'Vertical' in target_controls:
+            slider = target_controls['Vertical']['value']
+            self.slider = slider
+
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_target controls - value={value}, slider={slider}")
 
         await self._controller.ws_send_message(message)
 

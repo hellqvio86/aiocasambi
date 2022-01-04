@@ -189,6 +189,12 @@ class Controller:
         """
         return self.units.get_unit_value(unit_id=unit_id)
 
+    def get_unit_slider(self, *, unit_id: int) -> int:
+        """
+        Get the unit slider
+        """
+        return self.units.get_unit_slider(unit_id=unit_id)
+
     async def get_unit_state(self, *, unit_id: int) -> dict:
         """
         Getter for getting the unit state from Casambis cloud api
@@ -535,6 +541,14 @@ class Controller:
         Check if unit supports color temperature
         """
         result = self.units.supports_brightness(unit_id=unit_id)
+
+        return result
+
+    def unit_supports_slider(self, *, unit_id: int) -> bool:
+        """
+        Check if unit supports slider
+        """
+        result = self.units.supports_slider(unit_id=unit_id)
 
         return result
 

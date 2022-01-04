@@ -337,6 +337,17 @@ class Units:
 
                     changes[key] = self.units[key]
 
+                if "type" in control and control["type"] == "Vertical":
+                    dbg_msg = (
+                        f"processing_unit_event - key: {key} name: {name} msg: {msg} "
+                    )
+                    dbg_msg += "method unit changed control"
+                    dbg_msg += f" slider: {pformat(control['value'])}"
+                    LOGGER.debug(dbg_msg)
+
+                    # Update slider
+                    self.units[key].slider = control["value"]
+
         return changes
 
     @property
@@ -371,6 +382,14 @@ class Units:
         key = f"{self._network_id}-{unit_id}"
 
         return self.units[key].value
+
+    def get_unit_slider(self, *, unit_id: int) -> int:
+        """
+        Get unit
+        """
+        key = f"{self._network_id}-{unit_id}"
+
+        return self.units[key].slider
 
     def get_units(self) -> list:
         """
@@ -449,6 +468,15 @@ class Units:
         """
         key = f"{self._network_id}-{unit_id}"
         result = self.units[key].supports_brightness()
+
+        return result
+
+    def supports_slider(self, *, unit_id: int) -> bool:
+        """
+        Check if unit supports slider
+        """
+        key = f"{self._network_id}-{unit_id}"
+        result = self.units[key].supports_slideer()
 
         return result
 

@@ -30,6 +30,7 @@ class Unit:
         controller,
         controls: dict,
         value: float = 0,
+        slider: float = 0,
         online: bool = True,
         enabled: bool = True,
         state: str = UNIT_STATE_OFF,
@@ -39,6 +40,7 @@ class Unit:
         self._unit_id = int(unit_id)
         self._network_id = network_id
         self._value = value
+        self._slider = slider
         self._state = state
         self._fixture_model = None
         self._fixture = None
@@ -84,6 +86,34 @@ class Unit:
             self._value = value
         else:
             raise AiocasambiException(f"invalid value {value} for {self}")
+
+    @property
+    def slider(self) -> float:
+        """
+        Getter for slider
+        """
+        slider = 0
+
+        if "Vertical" in self._controls:
+            return self._controls["Vertical"]["value"]
+        else:
+            err_msg = f"unit_id={self._unit_id} - slider - "
+            err_msg += f"Vertical is missing in controls: {self._controls}"
+
+            LOGGER.debug(err_msg)
+
+            return slider
+
+    @slider.setter
+    def slider(self, slider: float) -> None:
+        """
+        Setter for slider
+        """
+        LOGGER.debug(f"unit_id={self._unit_id} - slider - setting slider to: {slider}")
+        if slider >= 0 and slider <= 1:
+            self._slider = slider
+        else:
+            raise AiocasambiException(f"invalid slider {slider} for {self}")
 
     @property
     def name(self) -> str:
@@ -502,6 +532,87 @@ class Unit:
 
         await self._controller.ws_send_message(message)
 
+    async def set_unit_slider(self, *, slider: Union[float, int]) -> None:
+        """
+        Function for setting an unit to a specific slider position
+
+        Response on ok:
+        {'wire': 1, 'method': 'peerChanged', 'online': True}
+        """
+        unit_id = self._unit_id
+
+        # Unit_id needs to be an integer
+        if isinstance(unit_id, int):
+            pass
+        elif isinstance(unit_id, str):
+            unit_id = int(unit_id)
+        elif isinstance(unit_id, float):
+            unit_id = int(unit_id)
+        else:
+            raise AiocasambiException(
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
+
+        if not (slider >= 0 and slider <= 1):
+            raise AiocasambiException("slider needs to be between 0 and 1")
+
+        target_controls = {"Vertical": {"value": slider}}
+
+        message = {
+            "wire": self._wire_id,
+            "method": "controlUnit",
+            "id": unit_id,
+            "targetControls": target_controls,
+        }
+
+        self.slider = slider
+
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_slider - slider={slider}")
+
+        await self._controller.ws_send_message(message)
+
+    async def set_unit_target_controls(self, *, target_controls) -> None:
+        """
+        Function for setting an unit to specific controls
+
+        Response on ok:
+        {'wire': 1, 'method': 'peerChanged', 'online': True}
+        """
+        value = None
+        slider = None
+        unit_id = self._unit_id
+
+        # Unit_id needs to be an integer
+        if isinstance(unit_id, int):
+            pass
+        elif isinstance(unit_id, str):
+            unit_id = int(unit_id)
+        elif isinstance(unit_id, float):
+            unit_id = int(unit_id)
+        else:
+            raise AiocasambiException(
+                "expected unit_id to be an integer, got: {}".format(unit_id)
+            )
+
+        message = {
+            "wire": self._wire_id,
+            "method": "controlUnit",
+            "id": unit_id,
+            "targetControls": target_controls,
+        }
+
+        if 'Dimmer' in target_controls:
+            value = target_controls['Dimmer']['value']
+            self.value = value
+
+        if 'Vertical' in target_controls:
+            slider = target_controls['Vertical']['value']
+            self.slider = slider
+
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_target controls - value={value}, slider={slider}")
+
+        await self._controller.ws_send_message(message)
+
     def get_supported_color_temperature(self) -> Tuple[int, int, int]:
         """
         Return the supported color temperatures,
@@ -817,6 +928,46 @@ class Unit:
             return True
         return False
 
+    def supports_slider(self) -> bool:
+        """
+        Returns true if unit supports slider
+
+        {
+            'activeSceneId': 0,
+            'address': 'ffffffffffff',
+            'condition': 0,
+            'controls': [[{'type': 'Dimmer', 'value': 0.0},
+                        {'level': 0.49736842105263157,
+                            'max': 6000,
+                            'min': 2200,
+                            'type': 'CCT',
+                            'value': 4090.0}]],
+            'dimLevel': 0.0,
+            'firmwareVersion': '26.24',
+            'fixtureId': 14235,
+            'groupId': 0,
+            'id': 13,
+            'image': 'ffffffffffffffffffffffffffffffff',
+            'name': 'Arbetslampa',
+            'on': True,
+            'online': True,
+            'position': 9,
+            'priority': 3,
+            'status': 'ok',
+            'type': 'Luminaire'
+        }
+
+        """
+        if not self._controls:
+            LOGGER.debug(
+                f"unit_id={self._unit_id} - supports_slider - controls is None"
+            )
+            return False
+
+        if "Vertical" in self._controls:
+            return True
+        return False
+
     def __repr__(self) -> str:
         """Return the representation."""
         name = self._name
@@ -827,6 +978,7 @@ class Unit:
         network_id = self._network_id
 
         value = self._value
+        slider = self._slider
         state = self._state
 
         wire_id = self._wire_id
@@ -835,6 +987,7 @@ class Unit:
         result += f"unit_id={unit_id} "
         result += f"address={address} "
         result += f"value={value} "
+        result += f"slider={slider} "
         result += f"state={state} "
         result += f"online={self._online} "
         result += f"network_id={network_id} "
@@ -853,6 +1006,9 @@ class Unit:
             # Controls state is set, not None
             result = f"{result} supports_brightness="
             result = f"{result}{self.supports_brightness()}"
+
+            result = f"{result} supports_slider="
+            result = f"{result}{self.supports_slider()}"
 
             result = f"{result} supports_color_temperature="
             result = f"{result}{self.supports_color_temperature()}"

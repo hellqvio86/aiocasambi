@@ -594,11 +594,6 @@ class Unit:
                 "expected unit_id to be an integer, got: {}".format(unit_id)
             )
 
-<<<<<<< HEAD
-=======
-        # plausibility checks and exceptions will be added here later
-
->>>>>>> 0a4570318ef7c50bf2266c251933df67e3bcc6d3
         message = {
             "wire": self._wire_id,
             "method": "controlUnit",

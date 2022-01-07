@@ -189,11 +189,11 @@ class Controller:
         """
         return self.units.get_unit_value(unit_id=unit_id)
 
-    def get_unit_slider(self, *, unit_id: int) -> int:
+    def get_unit_distribution(self, *, unit_id: int) -> int:
         """
-        Get the unit slider
+        Get the unit distribution
         """
-        return self.units.get_unit_slider(unit_id=unit_id)
+        return self.units.get_unit_distribution(unit_id=unit_id)
 
     async def get_unit_state(self, *, unit_id: int) -> dict:
         """
@@ -544,11 +544,11 @@ class Controller:
 
         return result
 
-    def unit_supports_slider(self, *, unit_id: int) -> bool:
+    def unit_supports_distribution(self, *, unit_id: int) -> bool:
         """
-        Check if unit supports slider
+        Check if unit supports distribution
         """
-        result = self.units.supports_slider(unit_id=unit_id)
+        result = self.units.supports_distribution(unit_id=unit_id)
 
         return result
 

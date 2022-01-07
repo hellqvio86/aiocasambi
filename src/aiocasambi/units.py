@@ -342,11 +342,11 @@ class Units:
                         f"processing_unit_event - key: {key} name: {name} msg: {msg} "
                     )
                     dbg_msg += "method unit changed control"
-                    dbg_msg += f" slider: {pformat(control['value'])}"
+                    dbg_msg += f" distribution: {pformat(control['value'])}"
                     LOGGER.debug(dbg_msg)
 
-                    # Update slider
-                    self.units[key].slider = control["value"]
+                    # Update distribution
+                    self.units[key].distribution = control["value"]
 
         return changes
 
@@ -383,13 +383,13 @@ class Units:
 
         return self.units[key].value
 
-    def get_unit_slider(self, *, unit_id: int) -> int:
+    def get_unit_distribution(self, *, unit_id: int) -> int:
         """
-        Get unit
+        Get unit distribution
         """
         key = f"{self._network_id}-{unit_id}"
 
-        return self.units[key].slider
+        return self.units[key].distribution
 
     def get_units(self) -> list:
         """
@@ -471,12 +471,12 @@ class Units:
 
         return result
 
-    def supports_slider(self, *, unit_id: int) -> bool:
+    def supports_distribution(self, *, unit_id: int) -> bool:
         """
-        Check if unit supports slider
+        Check if unit supports distribution
         """
         key = f"{self._network_id}-{unit_id}"
-        result = self.units[key].supports_slideer()
+        result = self.units[key].supports_distribution()
 
         return result
 

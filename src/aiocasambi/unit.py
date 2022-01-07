@@ -30,7 +30,7 @@ class Unit:
         controller,
         controls: dict,
         value: float = 0,
-        slider: float = 0,
+        distribution: float = 0,
         online: bool = True,
         enabled: bool = True,
         state: str = UNIT_STATE_OFF,
@@ -40,7 +40,7 @@ class Unit:
         self._unit_id = int(unit_id)
         self._network_id = network_id
         self._value = value
-        self._slider = slider
+        self._distribution = distribution
         self._state = state
         self._fixture_model = None
         self._fixture = None
@@ -88,32 +88,32 @@ class Unit:
             raise AiocasambiException(f"invalid value {value} for {self}")
 
     @property
-    def slider(self) -> float:
+    def distribution(self) -> float:
         """
-        Getter for slider
+        Getter for distribution
         """
-        slider = 0
+        distribution = 0
 
         if "Vertical" in self._controls:
             return self._controls["Vertical"]["value"]
         else:
-            err_msg = f"unit_id={self._unit_id} - slider - "
+            err_msg = f"unit_id={self._unit_id} - distribution - "
             err_msg += f"Vertical is missing in controls: {self._controls}"
 
             LOGGER.debug(err_msg)
 
-            return slider
+            return distribution
 
-    @slider.setter
-    def slider(self, slider: float) -> None:
+    @distribution.setter
+    def distribution(self, distribution: float) -> None:
         """
-        Setter for slider
+        Setter for distribution
         """
-        LOGGER.debug(f"unit_id={self._unit_id} - slider - setting slider to: {slider}")
-        if slider >= 0 and slider <= 1:
-            self._slider = slider
+        LOGGER.debug(f"unit_id={self._unit_id} - distribution - setting distribution to: {distribution}")
+        if distribution >= 0 and distribution <= 1:
+            self._distribution = distribution
         else:
-            raise AiocasambiException(f"invalid slider {slider} for {self}")
+            raise AiocasambiException(f"invalid distribution {distribution} for {self}")
 
     @property
     def name(self) -> str:
@@ -532,9 +532,9 @@ class Unit:
 
         await self._controller.ws_send_message(message)
 
-    async def set_unit_slider(self, *, slider: Union[float, int]) -> None:
+    async def set_unit_distribution(self, *, distribution: Union[float, int]) -> None:
         """
-        Function for setting an unit to a specific slider position
+        Function for setting an unit to a specific distribution position
 
         Response on ok:
         {'wire': 1, 'method': 'peerChanged', 'online': True}
@@ -553,10 +553,10 @@ class Unit:
                 "expected unit_id to be an integer, got: {}".format(unit_id)
             )
 
-        if not (slider >= 0 and slider <= 1):
-            raise AiocasambiException("slider needs to be between 0 and 1")
+        if not (distribution >= 0 and distribution <= 1):
+            raise AiocasambiException("distribution needs to be between 0 and 1")
 
-        target_controls = {"Vertical": {"value": slider}}
+        target_controls = {"Vertical": {"value": distribution}}
 
         message = {
             "wire": self._wire_id,
@@ -565,9 +565,9 @@ class Unit:
             "targetControls": target_controls,
         }
 
-        self.slider = slider
+        self.distribution = distribution
 
-        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_slider - slider={slider}")
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_distribution - distribution={distribution}")
 
         await self._controller.ws_send_message(message)
 
@@ -579,7 +579,7 @@ class Unit:
         {'wire': 1, 'method': 'peerChanged', 'online': True}
         """
         value = None
-        slider = None
+        distribution = None
         unit_id = self._unit_id
 
         # Unit_id needs to be an integer
@@ -606,10 +606,10 @@ class Unit:
             self.value = value
 
         if 'Vertical' in target_controls:
-            slider = target_controls['Vertical']['value']
-            self.slider = slider
+            distribution = target_controls['Vertical']['value']
+            self.distribution = distribution
 
-        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_target controls - value={value}, slider={slider}")
+        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_target controls - value={value}, distribution={distribution}")
 
         await self._controller.ws_send_message(message)
 
@@ -928,9 +928,9 @@ class Unit:
             return True
         return False
 
-    def supports_slider(self) -> bool:
+    def supports_distribution(self) -> bool:
         """
-        Returns true if unit supports slider
+        Returns true if unit supports distribution
 
         {
             'activeSceneId': 0,
@@ -960,7 +960,7 @@ class Unit:
         """
         if not self._controls:
             LOGGER.debug(
-                f"unit_id={self._unit_id} - supports_slider - controls is None"
+                f"unit_id={self._unit_id} - supports_distribution - controls is None"
             )
             return False
 
@@ -978,7 +978,7 @@ class Unit:
         network_id = self._network_id
 
         value = self._value
-        slider = self._slider
+        distribution = self._distribution
         state = self._state
 
         wire_id = self._wire_id
@@ -987,7 +987,7 @@ class Unit:
         result += f"unit_id={unit_id} "
         result += f"address={address} "
         result += f"value={value} "
-        result += f"slider={slider} "
+        result += f"distribution={distribution} "
         result += f"state={state} "
         result += f"online={self._online} "
         result += f"network_id={network_id} "
@@ -1007,8 +1007,8 @@ class Unit:
             result = f"{result} supports_brightness="
             result = f"{result}{self.supports_brightness()}"
 
-            result = f"{result} supports_slider="
-            result = f"{result}{self.supports_slider()}"
+            result = f"{result} supports_distribution="
+            result = f"{result}{self.supports_distribution()}"
 
             result = f"{result} supports_color_temperature="
             result = f"{result}{self.supports_color_temperature()}"

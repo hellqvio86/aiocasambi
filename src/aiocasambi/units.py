@@ -4,7 +4,6 @@ import logging
 
 from typing import Tuple, Union
 from pprint import pformat
-from .errors import AiocasambiException
 from .unit import Unit
 
 LOGGER = logging.getLogger(__name__)

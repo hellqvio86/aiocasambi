@@ -100,7 +100,7 @@ def setup_logger(*, debug=False) -> None:
     )
 
     if debug:
-        max_bytes = 3 * 10 ** 7
+        max_bytes = 3 * 10**7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler(
             "casambi.log", "a", max_bytes, backup_count
@@ -207,7 +207,7 @@ async def main(
                     color_temp = random.randint(min_color_temp, max_color_temp)
 
                     info_msg = (
-                        f"\n\n\Color Temperature Testing\n\n\nSetting unit: {unit_id} "
+                        f"\n\nColor Temperature Testing\n\n\nSetting unit: {unit_id} "
                     )
                     info_msg += f"to Color temperature: {color_temp}"
                     LOGGER.info(info_msg)

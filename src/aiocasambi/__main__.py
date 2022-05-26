@@ -58,8 +58,7 @@ async def get_casambi_controller(
 
     try:
         with async_timeout.timeout(10):
-            await controller.create_user_session()
-            await controller.create_network_session()
+            await controller.create_session()
         return controller
 
     except aiocasambi.LoginRequired:
@@ -339,6 +338,7 @@ if __name__ == "__main__":
     UNITS = sorted(UNITS)
 
     if not UNITS:
+        UNITS = set()
         # Empty set adding unit_id 1 to it
         UNITS.add(1)
 

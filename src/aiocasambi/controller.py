@@ -8,7 +8,13 @@ from pprint import pformat
 from asyncio import TimeoutError, sleep
 from aiohttp import client_exceptions
 
-from .errors import LoginRequired, ResponseError, RateLimit, CasambiAPIServerError
+from .errors import (
+    AiocasambiException,
+    LoginRequired,
+    ResponseError,
+    RateLimit,
+    CasambiAPIServerError,
+)
 
 from .websocket import (
     WSClient,
@@ -74,23 +80,27 @@ class Controller:
         self._last_websocket_ping = time.time()
 
     def get_units(self) -> list:
-        """ Getter for getting units. """
+        """Getter for getting units."""
         return self.units.get_units()
 
     def get_scenes(self) -> list:
-        """ Getter for getting scenes. """
+        """Getter for getting scenes."""
         return self.scenes.get_scenes()
 
     async def create_session(self) -> None:
-        """ Create Casambi session. """
+        LOGGER.debug("Create session called!")
+
+        """Create Casambi session."""
         if self.user_password:
+            LOGGER.debug(f"Creating user session")
             await self.create_user_session()
 
         if self.network_password:
+            LOGGER.debug("Creating network session")
             await self.create_network_session()
 
     async def create_user_session(self) -> None:
-        """ Creating user session. """
+        """Creating user session."""
         url = f"{self.rest_url}/users/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
@@ -111,8 +121,10 @@ class Controller:
 
         LOGGER.debug(f"user_session_id: {self._session_id}")
 
+        self._network_id = data["networks"][list(data["networks"].keys())[0]]["id"]
+
     async def create_network_session(self) -> None:
-        """ Creating network session. """
+        """Creating network session."""
         url = f"{self.rest_url}/networks/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
@@ -126,7 +138,7 @@ class Controller:
 
         data = await self.request("post", url=url, json=auth, headers=headers)
 
-        LOGGER.debug(f"create_network_session data from request {data}")
+        LOGGER.debug(f"create_network_session data from request {pformat(data)}")
 
         self._network_id = list(data.keys())[0]
         self._session_id = data[self._network_id]["sessionId"]
@@ -134,8 +146,11 @@ class Controller:
         LOGGER.debug(f"network_id: {self._network_id} session_id: {self._session_id}")
 
     async def get_network_information(self) -> dict:
-        """ Creating network information. """
+        """Creating network information."""
         # GET https://door.casambi.com/v1/networks/{id}
+
+        if not self._network_id:
+            raise AiocasambiException("Network id not set")
 
         url = f"{self.rest_url}/networks/{self._network_id}"
 
@@ -150,8 +165,12 @@ class Controller:
         return response
 
     async def get_network_state(self) -> dict:
-        """ Get network state. """
+        """Get network state."""
         # GET https://door.casambi.com/v1/networks/{networkId}/state
+
+        if not self._network_id:
+            raise AiocasambiException("Network id not set")
+
         url = f"{self.rest_url}/networks/{self._network_id}/state"
 
         LOGGER.debug(f"get_network_state request url: {url} headers= {self.headers}")
@@ -200,6 +219,9 @@ class Controller:
         Getter for getting the unit state from Casambis cloud api
         """
         # GET https://door.casambi.com/v1/networks/{id}
+
+        if not self._network_id:
+            raise AiocasambiException("Network id not set")
 
         url = "https://door.casambi.com/v1/networks/"
         url += f"{self._network_id}/units/{unit_id}/state"
@@ -297,7 +319,7 @@ class Controller:
         self._last_websocket_ping = time.time()
 
     async def ws_ping(self) -> None:
-        """ Function for setting a ping over websocket"""
+        """Function for setting a ping over websocket"""
         current_time = time.time()
 
         if current_time < (self._last_websocket_ping + 60 * 3 + 30):
@@ -324,7 +346,7 @@ class Controller:
         self._last_websocket_ping = current_time
 
     async def ws_send_message(self, msg: dict) -> None:
-        """ Send websocket message to casambi api"""
+        """Send websocket message to casambi api"""
         await self.ws_ping()
 
         LOGGER.debug(f"Sending websocket message: msg {msg}")
@@ -336,7 +358,7 @@ class Controller:
             await self.reconnect()
 
     def get_websocket_state(self) -> str:
-        """ Getter for websocket state """
+        """Getter for websocket state"""
         return self.websocket.state
 
     def stop_websocket(self) -> None:
@@ -430,7 +452,7 @@ class Controller:
         return changes
 
     async def check_connection(self) -> None:
-        """ async function for checking connection """
+        """async function for checking connection"""
         if self.get_websocket_state() == STATE_RUNNING:
             return
 
@@ -438,7 +460,7 @@ class Controller:
         await self.reconnect()
 
     async def reconnect(self) -> None:
-        """ async function for reconnecting."""
+        """async function for reconnecting."""
         LOGGER.debug("Controller is reconnecting")
 
         if self._reconnecting:

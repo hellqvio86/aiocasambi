@@ -112,7 +112,12 @@ class Controller:
 
         LOGGER.debug(f" headers: {pformat(headers)} auth: {pformat(auth)}")
 
-        data = await self.request("post", url=url, json=auth, headers=headers)
+        data = None
+        try:
+            data = await self.request("post", url=url, json=auth, headers=headers)
+        except LoginRequired as err:
+            LOGGER.error("create_user_session caught LoginRequired exception")
+            raise err
 
         LOGGER.debug(f"create_user_session data from request {data}")
 
@@ -136,7 +141,12 @@ class Controller:
 
         LOGGER.debug(f"headers: {headers} auth: {auth}")
 
-        data = await self.request("post", url=url, json=auth, headers=headers)
+        data = None
+        try:
+            data = await self.request("post", url=url, json=auth, headers=headers)
+        except LoginRequired as err:
+            LOGGER.error("create_network_session caught LoginRequired exception")
+            raise err
 
         LOGGER.debug(f"create_network_session data from request {pformat(data)}")
 
@@ -158,11 +168,16 @@ class Controller:
         dbg_msg += f"headers= {self.headers}>"
         LOGGER.debug(dbg_msg)
 
-        response = await self.request("get", url=url, headers=self.headers)
+        data = None
+        try:
+            data = await self.request("get", url=url, headers=self.headers)
+        except LoginRequired as err:
+            LOGGER.error("get_network_information caught LoginRequired exception")
+            raise err
 
-        LOGGER.debug(f"get_network_information response: {pformat(response)}")
+        LOGGER.debug(f"get_network_information response: {pformat(data)}")
 
-        return response
+        return data
 
     async def get_network_state(self) -> dict:
         """Get network state."""
@@ -177,9 +192,16 @@ class Controller:
 
         response = await self.request("get", url=url, headers=self.headers)
 
-        LOGGER.debug(f"get_network_state response: {response}")
+        data = None
+        try:
+            data = await self.request("get", url=url, headers=self.headers)
+        except LoginRequired as err:
+            LOGGER.error("get_network_state caught LoginRequired exception")
+            raise err
 
-        self.units.process_network_state(response)
+        LOGGER.debug(f"get_network_state response: {data}")
+
+        self.units.process_network_state(data)
 
         self.callback(SIGNAL_UNIT_PULL_UPDATE, self.units.get_units_unique_ids())
 
@@ -226,9 +248,14 @@ class Controller:
         url = "https://door.casambi.com/v1/networks/"
         url += f"{self._network_id}/units/{unit_id}/state"
 
-        response = await self.request("get", url=url, headers=self.headers)
+        data = None
+        try:
+            data = await self.request("get", url=url, headers=self.headers)
+        except LoginRequired as err:
+            LOGGER.error("get_unit_state caught LoginRequired exception")
+            raise err
 
-        return response
+        return data
 
     async def get_unit_state_controls(self, *, unit_id: int) -> list:
         """

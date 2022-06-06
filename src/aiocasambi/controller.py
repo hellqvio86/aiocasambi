@@ -389,14 +389,14 @@ class Controller:
         network_information = await self.get_network_information()
 
         for network_id, data in network_information.items():
-            self.units = Units(
+            self.units[network_id] = Units(
                 data["units"],
                 controller=self,
                 network_id=network_id,
                 wire_id=0,
             )
 
-            self.scenes = Scenes(
+            self.scenes[network_id] = Scenes(
                 data["scenes"],
                 controller=self,
                 network_id=network_id,

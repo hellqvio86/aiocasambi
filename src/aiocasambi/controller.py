@@ -234,6 +234,7 @@ class Controller:
         """Creating network information."""
         # GET https://door.casambi.com/v1/networks/{id}
         result = {}
+        failed_network_ids = []
 
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
@@ -249,12 +250,23 @@ class Controller:
             data = None
             try:
                 data = await self.request("get", url=url, headers=self.headers)
-            except LoginRequired as err:
-                LOGGER.error("get_network_information caught LoginRequired exception")
-                raise err
+            except LoginRequired:
+                LOGGER.error(
+                    f"get_network_information caught LoginRequired exception for network_id: {network_id}"
+                )
+                failed_network_ids.append(network_id)
+                continue
 
             LOGGER.debug(f"get_network_information response: {pformat(data)}")
             result[network_id] = data
+
+        if len(result) == 0:
+            raise AiocasambiException(
+                "get_network_information Failed to get any network information!"
+            )
+
+        for failed_network_id in failed_network_ids:
+            self.__remove_network_id(network_id=failed_network_id)
 
         return result
 
@@ -262,6 +274,7 @@ class Controller:
         """Get network state."""
         # GET https://door.casambi.com/v1/networks/{networkId}/state
         result = []
+        failed_network_ids = []
 
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
@@ -279,9 +292,12 @@ class Controller:
             data = None
             try:
                 data = await self.request("get", url=url, headers=self.headers)
-            except LoginRequired as err:
-                LOGGER.error("get_network_state caught LoginRequired exception")
-                raise err
+            except LoginRequired:
+                LOGGER.error(
+                    f"get_network_state caught LoginRequired exception for network_id: {network_id}"
+                )
+                failed_network_ids.append(network_id)
+                continue
 
             LOGGER.debug(f"get_network_state response: {data}")
 
@@ -292,6 +308,12 @@ class Controller:
             )
 
             result.append(data)
+
+        if len(result) == 0:
+            raise AiocasambiException("get_network_state failed to get any state!")
+
+        for failed_network_id in failed_network_ids:
+            self.__remove_network_id(network_id=failed_network_id)
 
         return result
 
@@ -781,6 +803,35 @@ class Controller:
         await self.units[network_id].set_unit_color_temperature(
             unit_id=unit_id, value=value, source=source
         )
+
+    async def __remove_network_id(self, *, network_id: str) -> None:
+        """
+        Private function for removing network_id
+        """
+        wire_ids_to_remove = []
+        if network_id in self.websocket:
+            # Stopping websocket
+            await self.websocket.stop_websocket(network_id=network_id)
+            self.websocket.pop(network_id)
+
+        if network_id in self._network_ids:
+            self._network_ids.pop(network_id)
+
+        if network_id in self._session_ids:
+            self.set_session_id.pop(network_id)
+
+        for wire_id, wire_network_id in self._wire_id_to_network_id.items():
+            if wire_network_id == network_id:
+                wire_ids_to_remove.append(wire_id)
+
+        for wire_id in wire_ids_to_remove:
+            self._wire_id_to_network_id.pop(wire_id)
+
+        if network_id in self.units:
+            self.units.pop(network_id)
+
+        if network_id in self.scenes:
+            self.scenes.pop(network_id)
 
     async def request(
         self, method, json=None, url=None, headers=None, **kwargs

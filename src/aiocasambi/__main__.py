@@ -42,7 +42,6 @@ async def get_casambi_controller(
     session,
     sslcontext,
     callback,
-    wire_id,
 ) -> aiocasambi.Controller:
     """Setup Casambi controller and verify credentials."""
     controller = aiocasambi.Controller(
@@ -52,7 +51,6 @@ async def get_casambi_controller(
         api_key=api_key,
         websession=session,
         sslcontext=sslcontext,
-        wire_id=wire_id,
         callback=callback,
     )
 
@@ -99,7 +97,7 @@ def setup_logger(*, debug=False) -> None:
     )
 
     if debug:
-        max_bytes = 3 * 10 ** 7
+        max_bytes = 3 * 10**7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler(
             "casambi.log", "a", max_bytes, backup_count
@@ -145,7 +143,6 @@ async def main(
         user_password=user_password,
         network_password=network_password,
         api_key=api_key,
-        wire_id=wire_id,
         sslcontext=sslcontext,
         session=websession,
         callback=signalling_callback,
@@ -158,7 +155,7 @@ async def main(
 
     await controller.initialize()
 
-    await controller.start_websocket()
+    await controller.start_websockets()
 
     try:
         while True:

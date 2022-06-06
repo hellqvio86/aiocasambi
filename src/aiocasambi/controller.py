@@ -2,6 +2,7 @@
 
 import logging
 import time
+import random
 
 from typing import Tuple
 from pprint import pformat
@@ -24,6 +25,7 @@ from .consts import (
     SIGNAL_DATA,
     STATE_RUNNING,
     SIGNAL_UNIT_PULL_UPDATE,
+    MAX_NETWORK_IDS,
 )
 
 from .units import Units
@@ -42,7 +44,6 @@ class Controller:
         email: str,
         api_key: str,
         websession,
-        wire_id: int = 1,
         user_password: str = None,
         network_password: str = None,
         sslcontext=None,
@@ -53,7 +54,6 @@ class Controller:
         self.user_password = user_password
         self.network_password = network_password
         self.api_key = api_key
-        self.wire_id = wire_id
         self.network_timeout = network_timeout
 
         self.session = websession
@@ -68,13 +68,14 @@ class Controller:
             "X-Casambi-Key": self.api_key,
         }
 
-        self.websocket = None
+        self.websocket = {}
 
         self._session_ids = {}
         self._network_ids = set()
 
         self.units = {}
         self.scenes = {}
+        self._wire_id_to_network_id = {}
 
         self._reconnecting = False
         self._last_websocket_ping = time.time()
@@ -96,7 +97,7 @@ class Controller:
 
         """Create Casambi session."""
         if self.user_password:
-            LOGGER.debug(f"Creating user session")
+            LOGGER.debug("Creating user session")
             await self.create_user_session()
 
         if self.network_password:
@@ -231,7 +232,7 @@ class Controller:
     async def get_network_information(self) -> dict:
         """Creating network information."""
         # GET https://door.casambi.com/v1/networks/{id}
-        result = []
+        result = {}
 
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
@@ -252,7 +253,7 @@ class Controller:
                 raise err
 
             LOGGER.debug(f"get_network_information response: {pformat(data)}")
-            result.append(data)
+            result[network_id] = data
 
         return result
 
@@ -263,6 +264,8 @@ class Controller:
 
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
+
+        LOGGER.debug(f"get_network_state units: {pformat(self.units)}")
 
         for network_id in self._network_ids:
             self.set_session_id(session_id=self._session_ids[network_id])
@@ -281,38 +284,42 @@ class Controller:
 
             LOGGER.debug(f"get_network_state response: {data}")
 
-            self.units.process_network_state(data)
+            self.units[network_id].process_network_state(data)
 
-            self.callback(SIGNAL_UNIT_PULL_UPDATE, self.units.get_units_unique_ids())
+            self.callback(
+                SIGNAL_UNIT_PULL_UPDATE, self.units[network_id].get_units_unique_ids()
+            )
 
             result.append(data)
 
         return result
 
-    async def init_unit_state_controls(self) -> None:
+    async def init_unit_state_controls(self, *, network_id: str) -> None:
         """
         Getter for getting the unit state from Casambis cloud api
         """
         # GET https://door.casambi.com/v1/networks/{id}
 
-        for unit_id in self.units.get_units_unique_ids():
-            data = await self.get_unit_state_controls(unit_id=unit_id)
+        for unit_id in self.units[network_id].get_units_unique_ids():
+            data = await self.get_unit_state_controls(
+                unit_id=unit_id, network_id=network_id
+            )
 
-            self.units.set_controls(unit_id=unit_id, data=data)
+            self.self.units[network_id].set_controls(unit_id=unit_id, data=data)
 
-    def get_unit(self, *, unit_id: int) -> Unit:
+    def get_unit(self, *, unit_id: int, network_id: str) -> Unit:
         """
         Get specific unit
         """
         return self.units.get_unit(unit_id=unit_id)
 
-    def get_unit_value(self, *, unit_id: int) -> int:
+    def get_unit_value(self, *, unit_id: int, network_id: str) -> int:
         """
         Get the unit value
         """
         return self.units.get_unit_value(unit_id=unit_id)
 
-    def get_unit_distribution(self, *, unit_id: int) -> int:
+    def get_unit_distribution(self, *, unit_id: int, network_id: str) -> int:
         """
         Get the unit distribution
         """
@@ -341,7 +348,7 @@ class Controller:
 
         return data
 
-    async def get_unit_state_controls(self, *, unit_id: int) -> list:
+    async def get_unit_state_controls(self, *, unit_id: int, network_id: str) -> list:
         """
         Get unit controls for unit
 
@@ -370,7 +377,7 @@ class Controller:
             'type': 'Luminaire'
         }
         """
-        data = await self.get_unit_state(unit_id=unit_id)
+        data = await self.get_unit_state(unit_id=unit_id, network_id=network_id)
 
         if "controls" in data:
             return data["controls"]
@@ -381,53 +388,76 @@ class Controller:
         """Initialiser"""
         network_information = await self.get_network_information()
 
-        self.units = Units(
-            network_information["units"],
-            controller=self,
-            network_id=self._network_id,
-            wire_id=self.wire_id,
-        )
+        for network_id, data in network_information.items():
+            self.units = Units(
+                data["units"],
+                controller=self,
+                network_id=network_id,
+                wire_id=0,
+            )
 
-        self.scenes = Scenes(
-            network_information["scenes"],
-            controller=self,
-            network_id=self._network_id,
-            wire_id=self.wire_id,
-        )
+            self.scenes = Scenes(
+                data["scenes"],
+                controller=self,
+                network_id=network_id,
+                wire_id=0,
+            )
 
         LOGGER.debug(f"network__information: {pformat(network_information)}")
 
         # Get initial network state
-        self.get_network_state()
+        await self.get_network_state()
 
-        self.init_unit_state_controls()
+        for network_id, _ in network_information.items():
+            await self.init_unit_state_controls(network_id=network_id)
 
         return
 
-    async def start_websocket(self) -> None:
-        """Start websession and websocket to Casambi."""
+    async def start_websockets(self) -> None:
+        """
+        Start websocket for all networks
+        """
+        for network_id in self._network_ids:
+            await self.start_websocket(network_id=network_id)
+
+    async def start_websocket(self, *, network_id: str) -> None:
+        """
+        Start websession and websocket to Casambi.
+        """
+        wire_id = random.randint(1, MAX_NETWORK_IDS)
+
+        while wire_id not in self._wire_id_to_network_id:
+            wire_id = random.randint(1, MAX_NETWORK_IDS)
+
+        self._wire_id_to_network_id[wire_id] = network_id
+
+        session_id = self._session_ids[network_id]
+
         dbg_msg = f"start_websocket: api_key: {self.api_key},"
-        dbg_msg += f" network_id: {self._network_id},"
-        dbg_msg += f" user_session_id: {self._session_id},"
-        dbg_msg += f" wire_id: {self.wire_id}"
+        dbg_msg += f" network_id: {network_id},"
+        dbg_msg += f" user_session_id: {session_id},"
+        dbg_msg += f" wire_id: {wire_id}"
 
         LOGGER.debug(dbg_msg)
 
-        self.websocket = WSClient(
+        self.websocket[network_id] = WSClient(
             session=self.session,
             ssl_context=self.sslcontext,
             api_key=self.api_key,
-            network_id=self._network_id,
-            session_id=self._session_id,
-            wire_id=self.wire_id,
+            network_id=network_id,
+            session_id=session_id,
+            wire_id=wire_id,
             controller=self,
             callback=self.session_handler,
         )
 
-        self.websocket.start()
+        self.websocket[network_id].start()
 
         # We don't want to ping right after we setup a websocket
         self._last_websocket_ping = time.time()
+
+        # Set wire_id
+        self.set_wire_id(wire_id=wire_id, network_id=network_id)
 
     async def ws_ping(self) -> None:
         """Function for setting a ping over websocket"""
@@ -441,44 +471,53 @@ class Controller:
             LOGGER.debug(msg)
             return
 
-        message = {
-            "method": "ping",
-            "wire": self.wire_id,
-        }
+        for wire_id, network_id in self._wire_id_to_network_id.items():
+            message = {
+                "method": "ping",
+                "wire": wire_id,
+            }
 
-        LOGGER.debug(f"Sending websocket ping: {message}")
+            LOGGER.debug(f"Sending websocket ping: {message}")
 
-        succcess = await self.websocket.send_message(message)
+            succcess = await self.websocket[network_id].send_message(message)
 
-        if not succcess:
-            # Try to reconnect
-            await self.reconnect()
+            if not succcess:
+                # Try to reconnect
+                await self.reconnect()
 
         self._last_websocket_ping = current_time
 
-    async def ws_send_message(self, msg: dict) -> None:
+    async def ws_send_message(self, msg: dict, network_id: str) -> None:
         """Send websocket message to casambi api"""
         await self.ws_ping()
 
         LOGGER.debug(f"Sending websocket message: msg {msg}")
 
-        succcess = await self.websocket.send_message(msg)
+        succcess = await self.websocket[network_id].send_message(msg)
 
         if not succcess:
             # Try to reconnect
             await self.reconnect()
 
-    def get_websocket_state(self) -> str:
+    def get_websocket_state(self, *, network_id: str) -> str:
         """Getter for websocket state"""
-        return self.websocket.state
+        return self.websocket[network_id].state
 
-    def stop_websocket(self) -> None:
+    async def stop_websockets(self) -> None:
         """Close websession and websocket to Casambi."""
 
         LOGGER.info("Shutting down connections to Casambi.")
 
-        if self.websocket:
-            self.websocket.stop()
+        for network_id, _ in self.websocket.items():
+            await self.stop_websocket(network_id=network_id)
+
+    async def stop_websocket(self, *, network_id: str) -> None:
+        """Close websession and websocket to Casambi."""
+
+        LOGGER.info("Shutting down connections to Casambi.")
+
+        if network_id in self.websocket:
+            self.websocket[network_id].stop()
 
     def session_handler(self, signal: str) -> None:
         """Signalling from websocket.
@@ -495,15 +534,8 @@ class Controller:
 
             if new_items and self.callback:
                 self.callback(SIGNAL_DATA, new_items)
-
-        elif signal == SIGNAL_CONNECTION_STATE and self.callback:
-            dbg_msg = "session_handler is handling"
-            dbg_msg += f"SIGNAL_CONNECTION_STATE: {signal}"
-            LOGGER.debug(dbg_msg)
-
-            self.callback(SIGNAL_CONNECTION_STATE, self.websocket.state)
         else:
-            LOGGER.debug(f"session_handler is handling signal: {signal}")
+            LOGGER.debug(f"session_handler is NOT handling signal: {signal}")
 
     def message_handler(self, message: dict) -> dict:
         """
@@ -549,11 +581,14 @@ class Controller:
         #    'on': True,
         #    'status': 'ok'
         # }
+        wire_id = message["wire"]
+        network_id = self._wire_id_to_network_id[wire_id]
+
         try:
             if "method" in message and message["method"] == "unitChanged":
-                changes = self.units.process_unit_event(message)
+                changes = self.units[network_id].process_unit_event(message)
             elif "method" in message and message["method"] == "peerChanged":
-                changes = self.units.handle_peer_changed(message)
+                changes = self.units[network_id].handle_peer_changed(message)
         except TypeError as err:
             dbg_msg = "message_handler in controller caught TypeError"
             dbg_msg += f" for message: {message} error: {err}"
@@ -618,105 +653,117 @@ class Controller:
             self._reconnecting = False
             break
 
-        # Set new ids for websocket
-        self.websocket.session_id = self._session_id
-        self.websocket.network_id = self._network_id
+        # Set new session ids for websocket
+        for network_id in self.websocket.keys():
+            self.websocket[network_id].session_id = self._session_ids[network_id]
         LOGGER.debug("Controller is reconnected")
 
-    async def turn_unit_on(self, *, unit_id: int) -> None:
+    async def turn_unit_on(self, *, unit_id: int, network_id: str) -> None:
         """
         Turn unit on
         """
-        await self.units.turn_unit_on(unit_id=unit_id)
+        await self.units[network_id].turn_unit_on(unit_id=unit_id)
 
-    async def turn_unit_off(self, *, unit_id: int) -> None:
+    async def turn_unit_off(self, *, unit_id: int, network_id: str) -> None:
         """
         Turn unit off
         """
-        await self.units.turn_unit_off(unit_id=unit_id)
+        await self.units[network_id].turn_unit_off(unit_id=unit_id)
 
-    def unit_supports_rgb(self, *, unit_id: int) -> bool:
+    def unit_supports_rgb(self, *, unit_id: int, network_id: str) -> bool:
         """
         Check if unit supports rgb
         """
-        result = self.units.supports_rgb(unit_id=unit_id)
+        result = self.units[network_id].supports_rgb(unit_id=unit_id)
 
         return result
 
-    def unit_supports_rgbw(self, *, unit_id: int) -> bool:
+    def unit_supports_rgbw(self, *, unit_id: int, network_id: str) -> bool:
         """
         Check if unit supports color rgbw
         """
-        result = self.units.supports_rgbw(unit_id=unit_id)
+        result = self.units[network_id].supports_rgbw(unit_id=unit_id)
 
         return result
 
-    def unit_supports_color_temperature(self, *, unit_id: int) -> bool:
+    def unit_supports_color_temperature(self, *, unit_id: int, network_id: str) -> bool:
         """
         Check if unit supports color temperature
         """
-        result = self.units.supports_color_temperature(unit_id=unit_id)
+        result = self.units[network_id].supports_color_temperature(unit_id=unit_id)
 
         return result
 
-    def get_supported_color_temperature(self, *, unit_id: int) -> Tuple[int, int, int]:
+    def get_supported_color_temperature(
+        self, *, unit_id: int, network_id: str
+    ) -> Tuple[int, int, int]:
         """
         Get supported color temperatures
         """
-        (cct_min, cct_max, current) = self.units.get_supported_color_temperature(
-            unit_id=unit_id
-        )
+        (cct_min, cct_max, current) = self.units[
+            network_id
+        ].get_supported_color_temperature(unit_id=unit_id)
 
         return (cct_min, cct_max, current)
 
-    def unit_supports_brightness(self, *, unit_id: int) -> bool:
+    def unit_supports_brightness(self, *, unit_id: int, network_id: str) -> bool:
         """
         Check if unit supports color temperature
         """
-        result = self.units.supports_brightness(unit_id=unit_id)
+        result = self.units[network_id].supports_brightness(unit_id=unit_id)
 
         return result
 
-    def unit_supports_distribution(self, *, unit_id: int) -> bool:
+    def unit_supports_distribution(self, *, unit_id: int, network_id: str) -> bool:
         """
         Check if unit supports distribution
         """
-        result = self.units.supports_distribution(unit_id=unit_id)
+        result = self.units[network_id].supports_distribution(unit_id=unit_id)
 
         return result
+
+    def set_wire_id(self, *, wire_id: int, network_id: str) -> None:
+        self.units[network_id].set_wire_id(wire_id=wire_id)
+        self.scenes[network_id].set_wire_id(wire_id=wire_id)
 
     async def set_unit_rgbw(
         self,
         *,
         unit_id: int,
+        network_id: str,
         color_value: Tuple[int, int, int, int],
         send_rgb_format=False,
     ) -> None:
         """
         Set unit color temperature
         """
-        await self.units.set_unit_rgbw(
+        await self.units[network_id].set_unit_rgbw(
             unit_id=unit_id,
             color_value=color_value,
         )
 
     async def set_unit_rgb(
-        self, *, unit_id: int, color_value: Tuple[int, int, int], send_rgb_format=False
+        self,
+        *,
+        unit_id: int,
+        network_id: str,
+        color_value: Tuple[int, int, int],
+        send_rgb_format=False,
     ) -> None:
         """
         Set unit color temperature
         """
-        await self.units.set_unit_rgb(
+        await self.units[network_id].set_unit_rgb(
             unit_id=unit_id, color_value=color_value, send_rgb_format=send_rgb_format
         )
 
     async def set_unit_color_temperature(
-        self, *, unit_id: int, value: int, source: str = "TW"
+        self, *, unit_id: int, network_id: str, value: int, source: str = "TW"
     ) -> None:
         """
         Set unit color temperature
         """
-        await self.units.set_unit_color_temperature(
+        await self.units[network_id].set_unit_color_temperature(
             unit_id=unit_id, value=value, source=source
         )
 

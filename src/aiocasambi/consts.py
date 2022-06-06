@@ -9,3 +9,5 @@ STATE_DISCONNECTED = "disconnected"
 STATE_RUNNING = "running"
 STATE_STARTING = "starting"
 STATE_STOPPED = "stopped"
+
+MAX_NETWORK_IDS = 100

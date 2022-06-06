@@ -42,7 +42,6 @@ async def get_casambi_controller(
     session,
     sslcontext,
     callback,
-    wire_id,
 ) -> aiocasambi.Controller:
     """Setup Casambi controller and verify credentials."""
     controller = aiocasambi.Controller(
@@ -52,7 +51,6 @@ async def get_casambi_controller(
         api_key=api_key,
         websession=session,
         sslcontext=sslcontext,
-        wire_id=wire_id,
         callback=callback,
     )
 
@@ -99,7 +97,7 @@ def setup_logger(*, debug=False) -> None:
     )
 
     if debug:
-        max_bytes = 3 * 10**7
+        max_bytes = 3 * 10 ** 7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler(
             "casambi.log", "a", max_bytes, backup_count
@@ -115,21 +113,11 @@ def setup_logger(*, debug=False) -> None:
         root.setLevel(logging.DEBUG)
 
 
-def print_unit_information(*, controller, unit_id) -> None:
-    """
-    Helper function for printing unit
-    """
-    unit = controller.get_unit(unit_id=unit_id)
-    LOGGER.info(f"unit: {unit}")
-
-
 async def main(
     *,
     email,
     network_password,
-    units,
     api_key,
-    wire_id=1,
     sslcontext=False,
 ) -> None:
     """Main function."""
@@ -146,7 +134,6 @@ async def main(
         user_password=None,
         network_password=network_password,
         api_key=api_key,
-        wire_id=wire_id,
         sslcontext=sslcontext,
         session=websession,
         callback=signalling_callback,
@@ -161,14 +148,13 @@ async def main(
 
     await controller.initialize()
 
-    await controller.start_websocket()
+    await controller.start_websockets()
 
-    controller.stop_websocket()
+    await controller.stop_websockets()
     await websession.close()
 
 
 if __name__ == "__main__":
-    UNITS = set()
     PARSER = argparse.ArgumentParser()
     PARSER.add_argument("--email", type=str, required=False)
     PARSER.add_argument("--api_key", type=str, required=False)
@@ -202,23 +188,6 @@ if __name__ == "__main__":
     if "debug" not in CONFIG:
         CONFIG["debug"] = False
 
-    if "wire_id" not in CONFIG:
-        CONFIG["wire_id"] = random.randint(10, 60)
-
-    if "unit" in CONFIG:
-        UNITS.add(CONFIG["unit"])
-
-    if "units" in CONFIG:
-        for elem in CONFIG["units"]:
-            UNITS.add(elem)
-
-    UNITS = sorted(UNITS)
-
-    if not UNITS:
-        # Empty set adding unit_id 1 to it
-        UNITS = set()
-        UNITS.add(1)
-
     setup_logger(debug=CONFIG["debug"])
 
     LOGGER.debug(f"Configuration: {pformat(CONFIG)}")
@@ -229,8 +198,6 @@ if __name__ == "__main__":
                 email=CONFIG["email"],
                 network_password=CONFIG["network_password"],
                 api_key=CONFIG["api_key"],
-                wire_id=CONFIG["wire_id"],
-                units=UNITS,
             )
         )
     except KeyboardInterrupt:

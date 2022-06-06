@@ -109,7 +109,9 @@ class Unit:
         """
         Setter for distribution
         """
-        LOGGER.debug(f"unit_id={self._unit_id} - distribution - setting distribution to: {distribution}")
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - distribution - setting distribution to: {distribution}"
+        )
         if distribution >= 0 and distribution <= 1:
             self._distribution = distribution
         else:
@@ -324,6 +326,12 @@ class Unit:
         }
 
         await self._controller.ws_send_message(message)
+
+    def set_wire_id(self, *, wire_id: str) -> None:
+        """
+        Setter for wire_id
+        """
+        self._wire_id = wire_id
 
     async def set_unit_rgbw(self, *, color_value: Tuple[int, int, int]) -> None:
         """
@@ -567,7 +575,9 @@ class Unit:
 
         self.distribution = distribution
 
-        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_distribution - distribution={distribution}")
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_distribution - distribution={distribution}"
+        )
 
         await self._controller.ws_send_message(message)
 
@@ -601,15 +611,17 @@ class Unit:
             "targetControls": target_controls,
         }
 
-        if 'Dimmer' in target_controls:
-            value = target_controls['Dimmer']['value']
+        if "Dimmer" in target_controls:
+            value = target_controls["Dimmer"]["value"]
             self.value = value
 
-        if 'Vertical' in target_controls:
-            distribution = target_controls['Vertical']['value']
+        if "Vertical" in target_controls:
+            distribution = target_controls["Vertical"]["value"]
             self.distribution = distribution
 
-        LOGGER.debug(f"unit_id={self._unit_id} - set_unit_target controls - value={value}, distribution={distribution}")
+        LOGGER.debug(
+            f"unit_id={self._unit_id} - set_unit_target controls - value={value}, distribution={distribution}"
+        )
 
         await self._controller.ws_send_message(message)
 

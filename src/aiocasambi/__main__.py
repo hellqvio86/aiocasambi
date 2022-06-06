@@ -99,7 +99,7 @@ def setup_logger(*, debug=False) -> None:
     )
 
     if debug:
-        max_bytes = 3 * 10**7
+        max_bytes = 3 * 10 ** 7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler(
             "casambi.log", "a", max_bytes, backup_count
@@ -130,7 +130,6 @@ async def main(
     network_password,
     units,
     api_key,
-    wire_id=1,
     sslcontext=False,
 ) -> None:
     """Main function."""
@@ -325,9 +324,6 @@ if __name__ == "__main__":
     if "debug" not in CONFIG:
         CONFIG["debug"] = False
 
-    if "wire_id" not in CONFIG:
-        CONFIG["wire_id"] = random.randint(10, 60)
-
     if "unit" in CONFIG:
         UNITS.add(CONFIG["unit"])
 
@@ -353,7 +349,6 @@ if __name__ == "__main__":
                 user_password=CONFIG["user_password"],
                 network_password=CONFIG["network_password"],
                 api_key=CONFIG["api_key"],
-                wire_id=CONFIG["wire_id"],
                 units=UNITS,
             )
         )

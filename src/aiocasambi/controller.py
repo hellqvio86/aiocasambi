@@ -432,17 +432,26 @@ class Controller:
         """
         Start websocket for all networks
         """
+        LOGGER.debug("start_websockets: called")
+
         for network_id in self._network_ids:
+            LOGGER.debug(
+                f"start_websockets: Starting websocket for network_id: {network_id}"
+            )
             await self.start_websocket(network_id=network_id)
 
     async def start_websocket(self, *, network_id: str) -> None:
         """
         Start websession and websocket to Casambi.
         """
+        LOGGER.debug(f"start_websocket: called network_id: {network_id}")
+
         wire_id = random.randint(1, MAX_NETWORK_IDS)
 
         while wire_id not in self._wire_id_to_network_id:
             wire_id = random.randint(1, MAX_NETWORK_IDS)
+
+        LOGGER.debug(f"start_websocket: generated random wire_id: {wire_id}")
 
         self._wire_id_to_network_id[wire_id] = network_id
 

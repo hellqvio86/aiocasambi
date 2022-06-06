@@ -13,6 +13,21 @@ from .errors import LoginRequired, ResponseError, RateLimit, CasambiAPIServerErr
 LOGGER = logging.getLogger(__name__)
 
 
+def merge_result(source: dict, destination: dict):
+    """
+    Merge dicts
+    """
+    for key, value in source.items():
+        if isinstance(value, dict):
+            # get node or create one
+            node = destination.setdefault(key, {})
+            merge_result(value, node)
+        else:
+            destination[key] = value
+
+    return destination
+
+
 class Helper:
     """Casambi helper."""
 
@@ -39,7 +54,7 @@ class Helper:
         }
 
     async def test_user_password(self, *, password: str) -> bool:
-        """ Test user session password """
+        """Test user session password"""
         url = f"{self.rest_url}/users/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
@@ -58,7 +73,7 @@ class Helper:
         return True
 
     async def test_network_password(self, *, password: str) -> bool:
-        """ Creating network session. """
+        """Creating network session."""
         url = f"{self.rest_url}/networks/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}

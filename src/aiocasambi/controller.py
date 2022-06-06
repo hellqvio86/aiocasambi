@@ -70,14 +70,18 @@ class Controller:
 
         self.websocket = None
 
-        self._session_id = None
-        self._network_id = None
+        self._session_ids = {}
+        self._network_ids = set()
 
         self.units = None
         self.scenes = None
 
         self._reconnecting = False
         self._last_websocket_ping = time.time()
+
+    def set_session_id(self, *, session_id: str) -> None:
+        """Set session id"""
+        self.headers["X-Casambi-Session"] = session_id
 
     def get_units(self) -> list:
         """Getter for getting units."""
@@ -100,7 +104,41 @@ class Controller:
             await self.create_network_session()
 
     async def create_user_session(self) -> None:
-        """Creating user session."""
+        """
+        Creating user session.
+
+        Expected response:
+        {
+            "sessionId": "hJK65SenmlL2354y.P822D76HufewNSloo780PvU-78DwdmnMA8exzIo9.mmNWD23whEqbPOsl11hjjWo03___",
+            "sites": {
+                "Rg5alx4BF41lSU2jK4r7T0Q7X0i00mQ": {
+                    "name": "Playground",
+                    "address": "",
+                    "role": "ADMIN",
+                    "networks": {
+                        "VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa": {
+                            "id": "VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa",
+                            "address": "a00f251f77cc",
+                            "name": "Dev Network",
+                            "type": "OPEN",
+                            "grade": "EVOLUTION",
+                            "role": "ADMIN"
+                        }
+                    }
+                }
+            },
+            "networks": {
+                "VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa": {
+                    "id": "VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa",
+                    "address": "a00f251f77cc",
+                    "name": "Dev Network",
+                    "type": "OPEN",
+                    "grade": "EVOLUTION",
+                    "role": "ADMIN"
+                }
+            }
+        }
+        """
         url = f"{self.rest_url}/users/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
@@ -121,15 +159,49 @@ class Controller:
 
         LOGGER.debug(f"create_user_session data from request {data}")
 
-        self._session_id = data["sessionId"]
-        self.headers["X-Casambi-Session"] = self._session_id
+        self.set_session_id(session_id=data["sessionId"])
 
         LOGGER.debug(f"user_session_id: {self._session_id}")
 
-        self._network_id = data["networks"][list(data["networks"].keys())[0]]["id"]
+        for network_key in data["networks"].keys():
+            self._network_ids.add(data["networks"][network_key]["id"])
+
+            if "sessionId" in data["networks"][network_key]:
+                self._session_ids[network_key] = data["networks"][network_key][
+                    "sessionId"
+                ]
+            else:
+                self._session_ids[network_key] = data["sessionId"]
+
+        LOGGER.debug(
+            f"network_ids: {pformat(self._network_ids)} session_ids: {pformat(self._session_ids)}"
+        )
 
     async def create_network_session(self) -> None:
-        """Creating network session."""
+        """
+        Creating network session.
+
+        Expected response:
+        {
+            'VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa': {
+                'address': 'ff69cc2fdf00',
+                'grade': 'CLASSIC',
+                'id': 'VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa',
+                'mac': 'ff69cc2fdf00',
+                'name': 'Dev Network',
+                'sessionId': '5ARffxyrpwJYy7Hf1xxx-HmF18Agmff39kSKDxxBxxxWkUg59SU9pii.9jBVi6PEyfq9Y9gokiel0yfljGmJQg__',
+                'type': 'PROTECTED'
+                },
+            'TYqGffRLwKrArqkOQVtXcw1ffgdLIjkU': {
+                'address': 'ffcaaaacbb51',
+                'grade': 'EVOLUTION',
+                'id': 'TYqGffRLwKrArqkOQVtXcw1ffgdLIjkU',
+                'mac': 'ffcaaaacbb51',
+                'name': 'Dev Network',
+                'sessionId': 'KDRmwOqerOsTyrr0x9HLrGFe1nknEk3oRoT-Kz3DJ.wx97MTXQXC.ZbWwqt9ze0KwC6h3GCTlPsUemX8uvK5Ow__',
+                'type': 'PROTECTED'}
+        }
+        """
         url = f"{self.rest_url}/networks/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
@@ -150,62 +222,74 @@ class Controller:
 
         LOGGER.debug(f"create_network_session data from request {pformat(data)}")
 
-        self._network_id = list(data.keys())[0]
-        self._session_id = data[self._network_id]["sessionId"]
+        for network_id in data.keys():
+            self._network_ids.add(data[network_id]["id"])
+            self._session_ids[network_id] = data[network_id]["sessionId"]
 
-        LOGGER.debug(f"network_id: {self._network_id} session_id: {self._session_id}")
+        LOGGER.debug(
+            f"network_ids: {pformat(self._network_ids)} session_ids: {pformat(self._session_ids)}"
+        )
 
     async def get_network_information(self) -> dict:
         """Creating network information."""
         # GET https://door.casambi.com/v1/networks/{id}
+        result = []
 
-        if not self._network_id:
-            raise AiocasambiException("Network id not set")
+        if not self._network_ids or len(self._network_ids) == 0:
+            raise AiocasambiException("Network ids not set")
 
-        url = f"{self.rest_url}/networks/{self._network_id}"
+        for network_id in self._network_ids:
+            self.set_session_id(session_id=self._session_ids[network_id])
+            url = f"{self.rest_url}/networks/{self._network_id}"
 
-        dbg_msg = f"get_network_information request <url: {url} "
-        dbg_msg += f"headers= {self.headers}>"
-        LOGGER.debug(dbg_msg)
+            dbg_msg = f"get_network_information request <url: {url} "
+            dbg_msg += f"headers= {self.headers}>"
+            LOGGER.debug(dbg_msg)
 
-        data = None
-        try:
-            data = await self.request("get", url=url, headers=self.headers)
-        except LoginRequired as err:
-            LOGGER.error("get_network_information caught LoginRequired exception")
-            raise err
+            data = None
+            try:
+                data = await self.request("get", url=url, headers=self.headers)
+            except LoginRequired as err:
+                LOGGER.error("get_network_information caught LoginRequired exception")
+                raise err
 
-        LOGGER.debug(f"get_network_information response: {pformat(data)}")
+            LOGGER.debug(f"get_network_information response: {pformat(data)}")
+            result.append(data)
 
-        return data
+        return result
 
     async def get_network_state(self) -> dict:
         """Get network state."""
         # GET https://door.casambi.com/v1/networks/{networkId}/state
+        result = []
 
-        if not self._network_id:
-            raise AiocasambiException("Network id not set")
+        if not self._network_ids or len(self._network_ids) == 0:
+            raise AiocasambiException("Network ids not set")
 
-        url = f"{self.rest_url}/networks/{self._network_id}/state"
+        for network_id in self._network_ids:
+            self.set_session_id(session_id=self._session_ids[network_id])
+            url = f"{self.rest_url}/networks/{network_id}/state"
 
-        LOGGER.debug(f"get_network_state request url: {url} headers= {self.headers}")
+            LOGGER.debug(
+                f"get_network_state request url: {url} headers= {self.headers}"
+            )
 
-        response = await self.request("get", url=url, headers=self.headers)
+            data = None
+            try:
+                data = await self.request("get", url=url, headers=self.headers)
+            except LoginRequired as err:
+                LOGGER.error("get_network_state caught LoginRequired exception")
+                raise err
 
-        data = None
-        try:
-            data = await self.request("get", url=url, headers=self.headers)
-        except LoginRequired as err:
-            LOGGER.error("get_network_state caught LoginRequired exception")
-            raise err
+            LOGGER.debug(f"get_network_state response: {data}")
 
-        LOGGER.debug(f"get_network_state response: {data}")
+            self.units.process_network_state(data)
 
-        self.units.process_network_state(data)
+            self.callback(SIGNAL_UNIT_PULL_UPDATE, self.units.get_units_unique_ids())
 
-        self.callback(SIGNAL_UNIT_PULL_UPDATE, self.units.get_units_unique_ids())
+            result.append(data)
 
-        return response
+        return result
 
     async def init_unit_state_controls(self) -> None:
         """
@@ -236,17 +320,19 @@ class Controller:
         """
         return self.units.get_unit_distribution(unit_id=unit_id)
 
-    async def get_unit_state(self, *, unit_id: int) -> dict:
+    async def get_unit_state(self, *, unit_id: int, network_id: str) -> dict:
         """
         Getter for getting the unit state from Casambis cloud api
         """
         # GET https://door.casambi.com/v1/networks/{id}
 
-        if not self._network_id:
-            raise AiocasambiException("Network id not set")
+        if not self._network_ids or len(self._network_ids) == 0:
+            raise AiocasambiException("Network ids not set")
+
+        self.set_session_id(session_id=self._session_ids[network_id])
 
         url = "https://door.casambi.com/v1/networks/"
-        url += f"{self._network_id}/units/{unit_id}/state"
+        url += f"{network_id}/units/{unit_id}/state"
 
         data = None
         try:

@@ -3,6 +3,7 @@
 import logging
 import time
 import random
+import re
 
 from typing import Tuple
 from pprint import pformat
@@ -299,13 +300,21 @@ class Controller:
         Getter for getting the unit state from Casambis cloud api
         """
         # GET https://door.casambi.com/v1/networks/{id}
+        unit_regexp = re.compile(r"(?P<network_id>[a-zA-Z0-9]+)-(?P<unit_id>\d+)$")
+        unique_ids = self.units[network_id].get_units_unique_ids()
 
-        for unit_id in self.units[network_id].get_units_unique_ids():
+        LOGGER.debug(f"init_unit_state_controls unique_ids: {pformat(unique_ids)}")
+
+        for unique_unit_id in unique_ids:
+            match = unit_regexp.match(unique_unit_id)
+            network_id = match.group("network_id")
+            unit_id = match.group("unit_id")
+
             data = await self.get_unit_state_controls(
                 unit_id=unit_id, network_id=network_id
             )
 
-            self.self.units[network_id].set_controls(unit_id=unit_id, data=data)
+            self.units[network_id].set_controls(unit_id=unit_id, data=data)
 
     def get_unit(self, *, unit_id: int, network_id: str) -> Unit:
         """
@@ -334,10 +343,16 @@ class Controller:
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
 
-        self.set_session_id(session_id=self._session_ids[network_id])
+        session_id = self._session_ids[network_id]
+
+        self.set_session_id(session_id=session_id)
 
         url = "https://door.casambi.com/v1/networks/"
         url += f"{network_id}/units/{unit_id}/state"
+
+        LOGGER.debug(
+            f"get_unit_state called, unit_id: {unit_id}, network_id: {network_id} session_id: {session_id}"
+        )
 
         data = None
         try:

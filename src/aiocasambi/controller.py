@@ -547,9 +547,13 @@ class Controller:
             # Try to reconnect
             await self.reconnect()
 
-    def get_websocket_state(self, *, network_id: str) -> str:
+    def get_websocket_states(self) -> str:
         """Getter for websocket state"""
-        return self.websocket[network_id].state
+        result = []
+        for network_id, _ in self.websocket.items():
+            result.append(self.websocket[network_id].state)
+
+        return result
 
     async def stop_websockets(self) -> None:
         """Close websession and websocket to Casambi."""
@@ -649,7 +653,14 @@ class Controller:
 
     async def check_connection(self) -> None:
         """async function for checking connection"""
-        if self.get_websocket_state() == STATE_RUNNING:
+        all_running = True
+
+        states = self.get_websocket_states()
+        for state in states:
+            if state != STATE_RUNNING:
+                all_running = False
+
+        if all_running:
             return
 
         # Try to reconnect

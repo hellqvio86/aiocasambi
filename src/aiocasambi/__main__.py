@@ -42,7 +42,6 @@ async def get_casambi_controller(
     session,
     sslcontext,
     callback,
-    wire_id,
 ) -> aiocasambi.Controller:
     """Setup Casambi controller and verify credentials."""
     controller = aiocasambi.Controller(
@@ -52,7 +51,6 @@ async def get_casambi_controller(
         api_key=api_key,
         websession=session,
         sslcontext=sslcontext,
-        wire_id=wire_id,
         callback=callback,
     )
 
@@ -130,7 +128,6 @@ async def main(
     network_password,
     units,
     api_key,
-    wire_id=1,
     sslcontext=False,
 ) -> None:
     """Main function."""
@@ -146,7 +143,6 @@ async def main(
         user_password=user_password,
         network_password=network_password,
         api_key=api_key,
-        wire_id=wire_id,
         sslcontext=sslcontext,
         session=websession,
         callback=signalling_callback,
@@ -159,7 +155,7 @@ async def main(
 
     await controller.initialize()
 
-    await controller.start_websocket()
+    await controller.start_websockets()
 
     try:
         while True:
@@ -325,9 +321,6 @@ if __name__ == "__main__":
     if "debug" not in CONFIG:
         CONFIG["debug"] = False
 
-    if "wire_id" not in CONFIG:
-        CONFIG["wire_id"] = random.randint(10, 60)
-
     if "unit" in CONFIG:
         UNITS.add(CONFIG["unit"])
 
@@ -353,7 +346,6 @@ if __name__ == "__main__":
                 user_password=CONFIG["user_password"],
                 network_password=CONFIG["network_password"],
                 api_key=CONFIG["api_key"],
-                wire_id=CONFIG["wire_id"],
                 units=UNITS,
             )
         )

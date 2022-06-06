@@ -70,6 +70,13 @@ class Scene:
 
         return result
 
+
+    def set_wire_id(self, *, wire_id : int) -> None:
+        """
+        Setter for wire_id
+        """
+        self._wire_id = wire_id
+
     @property
     def name(self):
         """
@@ -109,6 +116,15 @@ class Scenes:
             result.append(value)
 
         return result
+
+    def set_wire_id(self, *, wire_id: int) -> None:
+        """
+        Setter for wire_id
+        """
+        self._wire_id = wire_id
+
+        for _, value in self.scenes.items():
+            value.set_wire_id(wire_id=wire_id)
 
     def __process_scenes(self, scenes: dict) -> None:
         """

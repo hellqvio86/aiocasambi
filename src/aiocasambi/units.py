@@ -426,6 +426,15 @@ class Units:
 
         await self.units[key].turn_unit_off()
 
+    def set_wire_id(self, *, wire_id: int) -> None:
+        """
+        Setter for wire id
+        """
+        self._wire_id = wire_id
+
+        for unit in self.units:
+            unit.set_wire_id(wire_id=wire_id)
+
     def set_controls(self, *, unit_id: int, data: Union[list, dict]) -> None:
         """
         Setter for unit state

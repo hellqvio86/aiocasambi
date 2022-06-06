@@ -432,7 +432,7 @@ class Units:
         """
         self._wire_id = wire_id
 
-        for unit in self.units:
+        for _, unit in self.units.items():
             unit.set_wire_id(wire_id=wire_id)
 
     def set_controls(self, *, unit_id: int, data: Union[list, dict]) -> None:

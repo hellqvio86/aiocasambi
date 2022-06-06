@@ -293,7 +293,7 @@ class Unit:
             "targetControls": target_controls,
         }
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
 
     async def turn_unit_on(self) -> None:
         """
@@ -325,7 +325,7 @@ class Unit:
             "targetControls": target_controls,
         }
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
 
     def set_wire_id(self, *, wire_id: str) -> None:
         """
@@ -372,7 +372,7 @@ class Unit:
         dbg_msg += f"sending: {pformat(message)}"
         LOGGER.debug(f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
         return
 
     async def set_unit_rgb(
@@ -422,7 +422,7 @@ class Unit:
         dbg_msg += f"sending: {pformat(message)}"
         LOGGER.debug(f"unit_id={self._unit_id} - set_unit_rgb - {dbg_msg}")
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
         return
 
     async def set_unit_color_temperature(self, *, value: int, source="TW") -> None:
@@ -499,7 +499,7 @@ class Unit:
             f"unit_id={self._unit_id} - set_unit_color_temperature - {dbg_msg}"
         )
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
 
     async def set_unit_value(self, *, value: Union[float, int]) -> None:
         """
@@ -538,7 +538,7 @@ class Unit:
 
         LOGGER.debug(f"unit_id={self._unit_id} - set_unit_value - value={value}")
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
 
     async def set_unit_distribution(self, *, distribution: Union[float, int]) -> None:
         """
@@ -579,7 +579,7 @@ class Unit:
             f"unit_id={self._unit_id} - set_unit_distribution - distribution={distribution}"
         )
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
 
     async def set_unit_target_controls(self, *, target_controls) -> None:
         """
@@ -623,7 +623,7 @@ class Unit:
             f"unit_id={self._unit_id} - set_unit_target controls - value={value}, distribution={distribution}"
         )
 
-        await self._controller.ws_send_message(message)
+        await self._controller.ws_send_message(message, network_id=self._network_id)
 
     def get_supported_color_temperature(self) -> Tuple[int, int, int]:
         """

@@ -85,9 +85,14 @@ class Controller:
         """Set session id"""
         self.headers["X-Casambi-Session"] = session_id
 
-    def get_units(self, *, network_id: str) -> list:
+    def get_units(self) -> list:
+        result = []
         """Getter for getting units."""
-        return self.units[network_id].get_units()
+        for network_id in self._network_ids:
+            for unit in self.units[network_id].get_units():
+                result.append(unit)
+
+        return result
 
     def get_scenes(self) -> list:
         """Getter for getting scenes."""
@@ -342,19 +347,19 @@ class Controller:
         """
         Get specific unit
         """
-        return self.units.get_unit(unit_id=unit_id)
+        return self.units[network_id].get_unit(unit_id=unit_id)
 
     def get_unit_value(self, *, unit_id: int, network_id: str) -> int:
         """
         Get the unit value
         """
-        return self.units.get_unit_value(unit_id=unit_id)
+        return self.units[network_id].get_unit_value(unit_id=unit_id)
 
     def get_unit_distribution(self, *, unit_id: int, network_id: str) -> int:
         """
         Get the unit distribution
         """
-        return self.units.get_unit_distribution(unit_id=unit_id)
+        return self.units[network_id].get_unit_distribution(unit_id=unit_id)
 
     async def get_unit_state(self, *, unit_id: int, network_id: str) -> dict:
         """
@@ -562,25 +567,28 @@ class Controller:
         if network_id in self.websocket:
             self.websocket[network_id].stop()
 
-    def session_handler(self, signal: str) -> None:
+    def session_handler(self, signal: str, wire_id: str) -> None:
         """Signalling from websocket.
 
         data - new data available for processing.
         state - network state has changed.
         """
-        if not self.websocket:
+        if len(self.websocket) == 0:
             return
+
+        LOGGER.debug(f"session_handler: websockets {self.websocket}")
 
         if signal == SIGNAL_DATA:
             LOGGER.debug(f"session_handler is handling SIGNAL_DATA: {signal}")
-            new_items = self.message_handler(self.websocket.data)
+            network_id = self._wire_id_to_network_id[wire_id]
+            new_items = self.message_handler(self.websocket[network_id].data, wire_id)
 
             if new_items and self.callback:
                 self.callback(SIGNAL_DATA, new_items)
         else:
             LOGGER.debug(f"session_handler is NOT handling signal: {signal}")
 
-    def message_handler(self, message: dict) -> dict:
+    def message_handler(self, message: dict, wire_id: str) -> dict:
         """
         Receive event from websocket and identifies where the event belong.
         """
@@ -624,7 +632,6 @@ class Controller:
         #    'on': True,
         #    'status': 'ok'
         # }
-        wire_id = message["wire"]
         network_id = self._wire_id_to_network_id[wire_id]
 
         try:

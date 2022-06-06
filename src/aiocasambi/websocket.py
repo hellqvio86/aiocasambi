@@ -85,7 +85,7 @@ class WSClient:
         LOGGER.debug("websocket.state %s", state_value)
 
         self._state = state_value
-        self.session_handler_callback(SIGNAL_CONNECTION_STATE)
+        self.session_handler_callback(SIGNAL_CONNECTION_STATE, self.wire_id)
 
     def start(self) -> None:
         """Start the websocket connection"""
@@ -175,7 +175,7 @@ class WSClient:
 
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     self._data = json.loads(msg.data)
-                    self.session_handler_callback(SIGNAL_DATA)
+                    self.session_handler_callback(SIGNAL_DATA, self.wire_id)
 
                     dbg_msg = "websocket recived "
                     dbg_msg += "msg.type: aiohttp.WSMsgType.TEXT "
@@ -184,7 +184,7 @@ class WSClient:
                     LOGGER.debug(dbg_msg)
                 elif msg.type == aiohttp.WSMsgType.BINARY:
                     self._data = json.loads(msg.data)
-                    self.session_handler_callback(SIGNAL_DATA)
+                    self.session_handler_callback(SIGNAL_DATA, self.wire_id)
 
                     dbg_msg = "websocket recived "
                     dbg_msg += "msg.type: aiohttp.WSMsgType.BINARY "

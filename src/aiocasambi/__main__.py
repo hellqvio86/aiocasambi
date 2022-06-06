@@ -97,7 +97,7 @@ def setup_logger(*, debug=False) -> None:
     )
 
     if debug:
-        max_bytes = 3 * 10**7
+        max_bytes = 3 * 10 ** 7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler(
             "casambi.log", "a", max_bytes, backup_count
@@ -113,11 +113,11 @@ def setup_logger(*, debug=False) -> None:
         root.setLevel(logging.DEBUG)
 
 
-def print_unit_information(*, controller, unit_id) -> None:
+def print_unit_information(*, controller, unit_id, network_id) -> None:
     """
     Helper function for printing unit
     """
-    unit = controller.get_unit(unit_id=unit_id)
+    unit = controller.get_unit(unit_id=unit_id, network_id=network_id)
     LOGGER.info(f"unit: {unit}")
 
 
@@ -128,6 +128,7 @@ async def main(
     network_password,
     units,
     api_key,
+    network_id,
     sslcontext=False,
 ) -> None:
     """Main function."""
@@ -170,34 +171,37 @@ async def main(
                 LOGGER.error(error_msg)
                 raise err
 
-            msg = f"Current Units state: {pformat(controller.get_units())}\n"
-            msg += f"websocket: {pformat(controller.get_websocket_state())}\n"
-            msg += f"network_state: {pformat(network_state_data)}"
+            msg = f"Current Units state: {pformat(controller.get_units())}"
 
             LOGGER.info(msg)
 
-            if controller.get_websocket_state() == "disconnected":
-                await controller.reconnect()
-
             for unit_id in units:
-                print_unit_information(controller=controller, unit_id=unit_id)
+                print_unit_information(
+                    controller=controller, unit_id=unit_id, network_id=network_id
+                )
 
                 LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
-                await controller.turn_unit_on(unit_id=unit_id)
+                await controller.turn_unit_on(unit_id=unit_id, network_id=network_id)
                 await asyncio.sleep(60)
 
-                print_unit_information(controller=controller, unit_id=unit_id)
+                print_unit_information(
+                    controller=controller, unit_id=unit_id, network_id=network_id
+                )
 
                 LOGGER.info(f"\n\n\nTurn unit: {unit_id} off!")
-                await controller.turn_unit_off(unit_id=unit_id)
+                await controller.turn_unit_off(unit_id=unit_id, network_id=network_id)
                 await asyncio.sleep(10)
 
-                if controller.unit_supports_color_temperature(unit_id=unit_id):
+                if controller.unit_supports_color_temperature(
+                    unit_id=unit_id, network_id=network_id
+                ):
                     (
                         min_color_temp,
                         max_color_temp,
                         _,
-                    ) = controller.get_supported_color_temperature(unit_id=unit_id)
+                    ) = controller.get_supported_color_temperature(
+                        unit_id=unit_id, network_id=network_id
+                    )
 
                     color_temp = random.randint(min_color_temp, max_color_temp)
 
@@ -208,18 +212,26 @@ async def main(
                     LOGGER.info(info_msg)
 
                     await controller.set_unit_color_temperature(
-                        unit_id=unit_id, value=color_temp
+                        unit_id=unit_id, value=color_temp, network_id=network_id
                     )
                     await asyncio.sleep(60)
 
-                    print_unit_information(controller=controller, unit_id=unit_id)
+                    print_unit_information(
+                        controller=controller, unit_id=unit_id, network_id=network_id
+                    )
 
                     LOGGER.info(f"Turn unit: {unit_id} off!")
-                    await controller.turn_unit_off(unit_id=unit_id)
+                    await controller.turn_unit_off(
+                        unit_id=unit_id, network_id=network_id
+                    )
                     await asyncio.sleep(10)
 
-                if controller.unit_supports_rgbw(unit_id=unit_id):
-                    unit_value = controller.get_unit_value(unit_id=unit_id)
+                if controller.unit_supports_rgbw(
+                    unit_id=unit_id, network_id=network_id
+                ):
+                    unit_value = controller.get_unit_value(
+                        unit_id=unit_id, network_id=network_id
+                    )
                     colors = {
                         "red": (255, 0, 0, 0),
                         "green": (0, 255, 0, 0),
@@ -234,20 +246,35 @@ async def main(
 
                         if unit_value == 0:
                             LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
-                            await controller.turn_unit_on(unit_id=unit_id)
+                            await controller.turn_unit_on(
+                                unit_id=unit_id, network_id=network_id
+                            )
 
                         await controller.set_unit_rgbw(
-                            unit_id=unit_id, color_value=color, send_rgb_format=True
+                            unit_id=unit_id,
+                            color_value=color,
+                            send_rgb_format=True,
+                            network_id=network_id,
                         )
                         await asyncio.sleep(60)
 
-                        print_unit_information(controller=controller, unit_id=unit_id)
+                        print_unit_information(
+                            controller=controller,
+                            unit_id=unit_id,
+                            network_id=network_id,
+                        )
 
                         LOGGER.info(f"Turn unit: {unit_id} off!")
-                        await controller.turn_unit_off(unit_id=unit_id)
+                        await controller.turn_unit_off(
+                            unit_id=unit_id, network_id=network_id
+                        )
                         await asyncio.sleep(10)
-                elif controller.unit_supports_rgb(unit_id=unit_id):
-                    unit_value = controller.get_unit_value(unit_id=unit_id)
+                elif controller.unit_supports_rgb(
+                    unit_id=unit_id, network_id=network_id
+                ):
+                    unit_value = controller.get_unit_value(
+                        unit_id=unit_id, network_id=network_id
+                    )
                     colors = {
                         "red": (255, 0, 0),
                         "green": (0, 255, 0),
@@ -262,17 +289,28 @@ async def main(
 
                         if unit_value == 0:
                             LOGGER.info(f"\n\n\nTurn unit: {unit_id} on!")
-                            await controller.turn_unit_on(unit_id=unit_id)
+                            await controller.turn_unit_on(
+                                unit_id=unit_id, network_id=network_id
+                            )
 
                         await controller.set_unit_rgb(
-                            unit_id=unit_id, color_value=color, send_rgb_format=True
+                            unit_id=unit_id,
+                            color_value=color,
+                            send_rgb_format=True,
+                            network_id=network_id,
                         )
                         await asyncio.sleep(60)
 
-                        print_unit_information(controller=controller, unit_id=unit_id)
+                        print_unit_information(
+                            controller=controller,
+                            unit_id=unit_id,
+                            network_id=network_id,
+                        )
 
                         LOGGER.info(f"Turn unit: {unit_id} off!")
-                        await controller.turn_unit_off(unit_id=unit_id)
+                        await controller.turn_unit_off(
+                            unit_id=unit_id, network_id=network_id
+                        )
                         await asyncio.sleep(10)
 
     except asyncio.CancelledError as err:
@@ -282,7 +320,7 @@ async def main(
         LOGGER.debug(f"Caught Exception in main loop: {err}")
         raise err
     finally:
-        controller.stop_websocket()
+        controller.stop_websockets()
         await websession.close()
 
 
@@ -346,6 +384,7 @@ if __name__ == "__main__":
                 user_password=CONFIG["user_password"],
                 network_password=CONFIG["network_password"],
                 api_key=CONFIG["api_key"],
+                network_id=CONFIG["network_id"],
                 units=UNITS,
             )
         )

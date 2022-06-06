@@ -73,8 +73,8 @@ class Controller:
         self._session_ids = {}
         self._network_ids = set()
 
-        self.units = None
-        self.scenes = None
+        self.units = {}
+        self.scenes = {}
 
         self._reconnecting = False
         self._last_websocket_ping = time.time()
@@ -83,9 +83,9 @@ class Controller:
         """Set session id"""
         self.headers["X-Casambi-Session"] = session_id
 
-    def get_units(self) -> list:
+    def get_units(self, *, network_id: str) -> list:
         """Getter for getting units."""
-        return self.units.get_units()
+        return self.units[network_id].get_units()
 
     def get_scenes(self) -> list:
         """Getter for getting scenes."""
@@ -160,8 +160,6 @@ class Controller:
         LOGGER.debug(f"create_user_session data from request {data}")
 
         self.set_session_id(session_id=data["sessionId"])
-
-        LOGGER.debug(f"user_session_id: {self._session_id}")
 
         for network_key in data["networks"].keys():
             self._network_ids.add(data["networks"][network_key]["id"])
@@ -240,7 +238,7 @@ class Controller:
 
         for network_id in self._network_ids:
             self.set_session_id(session_id=self._session_ids[network_id])
-            url = f"{self.rest_url}/networks/{self._network_id}"
+            url = f"{self.rest_url}/networks/{network_id}"
 
             dbg_msg = f"get_network_information request <url: {url} "
             dbg_msg += f"headers= {self.headers}>"

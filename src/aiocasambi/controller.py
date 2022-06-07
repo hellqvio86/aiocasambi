@@ -589,6 +589,12 @@ class Controller:
 
             if new_items and self.callback:
                 self.callback(SIGNAL_DATA, new_items)
+        elif signal == SIGNAL_CONNECTION_STATE and self.callback:
+            dbg_msg = "session_handler is handling"
+            dbg_msg += f"SIGNAL_CONNECTION_STATE: {signal}"
+            LOGGER.debug(dbg_msg)
+
+            self.callback(SIGNAL_CONNECTION_STATE, self.websocket[wire_id].state)
         else:
             LOGGER.debug(f"session_handler is NOT handling signal: {signal}")
 

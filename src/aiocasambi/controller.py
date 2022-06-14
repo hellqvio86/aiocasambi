@@ -148,6 +148,8 @@ class Controller:
         """
         url = f"{self.rest_url}/users/session"
 
+        LOGGER.debug("create_user_session called")
+
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
         auth = {
@@ -155,7 +157,9 @@ class Controller:
             "password": self.user_password,
         }
 
-        LOGGER.debug(f" headers: {pformat(headers)} auth: {pformat(auth)}")
+        LOGGER.debug(
+            f"create_user_session headers: {pformat(headers)} auth: {pformat(auth)}"
+        )
 
         data = None
         try:
@@ -207,6 +211,8 @@ class Controller:
                 'type': 'PROTECTED'}
         }
         """
+        LOGGER.debug("create_network_session called")
+
         url = f"{self.rest_url}/networks/session"
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
@@ -216,23 +222,23 @@ class Controller:
             "password": self.network_password,
         }
 
-        LOGGER.debug(f"headers: {headers} auth: {auth}")
+        LOGGER.debug(f"create_network_session headers: {headers} auth: {auth}")
 
         data = None
         try:
             data = await self.request("post", url=url, json=auth, headers=headers)
         except LoginRequired as err:
-            LOGGER.error("create_network_session caught LoginRequired exception")
+            LOGGER.error("create_network_session: caught LoginRequired exception")
             raise err
 
-        LOGGER.debug(f"create_network_session data from request {pformat(data)}")
+        LOGGER.debug(f"create_network_session: data from request {pformat(data)}")
 
         for network_id in data.keys():
             self._network_ids.add(data[network_id]["id"])
             self._session_ids[network_id] = data[network_id]["sessionId"]
 
         LOGGER.debug(
-            f"network_ids: {pformat(self._network_ids)} session_ids: {pformat(self._session_ids)}"
+            f"create_network_session: network_ids: {pformat(self._network_ids)} session_ids: {pformat(self._session_ids)}"
         )
 
     async def get_network_information(self) -> dict:
@@ -240,6 +246,8 @@ class Controller:
         # GET https://door.casambi.com/v1/networks/{id}
         result = {}
         failed_network_ids = []
+
+        LOGGER.debug("get_network_information called")
 
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
@@ -284,7 +292,7 @@ class Controller:
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
 
-        LOGGER.debug(f"get_network_state units: {pformat(self.units)}")
+        LOGGER.debug(f"get_network_state called units: {pformat(self.units)}")
 
         for network_id in self._network_ids:
             self.set_session_id(session_id=self._session_ids[network_id])
@@ -428,6 +436,9 @@ class Controller:
 
     async def initialize(self) -> None:
         """Initialiser"""
+
+        LOGGER.debug("initialize called")
+
         network_information = await self.get_network_information()
 
         for network_id, data in network_information.items():
@@ -445,12 +456,16 @@ class Controller:
                 wire_id=0,
             )
 
-        LOGGER.debug(f"network__information: {pformat(network_information)}")
+        LOGGER.debug(f"initialize network__information: {pformat(network_information)}")
 
         # Get initial network state
         await self.get_network_state()
 
-        for network_id, _ in network_information.items():
+        LOGGER.debug(
+            f"initialize getting unit state for all units in network_ids: {pformat(self._network_ids)}"
+        )
+
+        for network_id in self._network_ids:
             await self.init_unit_state_controls(network_id=network_id)
 
         return

@@ -27,6 +27,7 @@ from .consts import (
     STATE_RUNNING,
     SIGNAL_UNIT_PULL_UPDATE,
     MAX_NETWORK_IDS,
+    RETRIES,
 )
 
 from .units import Units
@@ -101,14 +102,41 @@ class Controller:
     async def create_session(self) -> None:
         LOGGER.debug("Create session called!")
 
-        """Create Casambi session."""
-        if self.user_password:
-            LOGGER.debug("Creating user session")
-            await self.create_user_session()
+        for i in range(0, RETRIES):
+            """Create Casambi session."""
+            try:
+                if self.user_password:
+                    LOGGER.debug("Creating user session")
 
-        if self.network_password:
-            LOGGER.debug("Creating network session")
-            await self.create_network_session()
+                    await self.create_user_session()
+
+                    return
+            except TimeoutError:
+                LOGGER.debug(
+                    "caught asyncio.TimeoutError when trying to create user session, trying again"
+                )
+
+                await sleep(self.network_timeout)
+
+            try:
+                if self.network_password:
+                    LOGGER.debug("Creating network session")
+
+                    await self.create_network_session()
+
+                    return
+            except TimeoutError:
+                LOGGER.debug(
+                    "caught asyncio.TimeoutError when trying to create network session, trying again"
+                )
+
+                await sleep(self.network_timeout)
+
+        err_msg = "create_session failed to setup session!"
+
+        LOGGER.error(err_msg)
+
+        raise AiocasambiException(err_msg)
 
     async def create_user_session(self) -> None:
         """
@@ -729,7 +757,9 @@ class Controller:
 
                 continue
             except TimeoutError:
-                LOGGER.debug("caught asyncio.TimeoutError, trying again")
+                LOGGER.debug(
+                    "caught asyncio.TimeoutError during reconnection, trying again"
+                )
 
                 await sleep(self.network_timeout)
 

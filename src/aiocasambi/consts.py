@@ -11,3 +11,4 @@ STATE_STARTING = "starting"
 STATE_STOPPED = "stopped"
 
 MAX_NETWORK_IDS = 100
+RETRIES = 10

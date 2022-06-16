@@ -357,6 +357,9 @@ class Controller:
 
                     continue
 
+                # Success!
+                break
+
             if failed_network_request:
                 continue
 
@@ -414,6 +417,9 @@ class Controller:
                     await sleep(self.network_timeout)
 
                     continue
+
+                # Success!
+                break
 
             if not data:
                 error_msg = f"init_unit_state_controls failed to get unit state for unit: {unique_unit_id}"
@@ -526,6 +532,9 @@ class Controller:
                 await sleep(self.network_timeout)
 
                 continue
+
+            # Success!
+            break
 
         if not network_information:
             error_msg = "initialize failed to fetch network information"

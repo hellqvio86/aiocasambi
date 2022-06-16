@@ -27,7 +27,7 @@ from .consts import (
     STATE_RUNNING,
     SIGNAL_UNIT_PULL_UPDATE,
     MAX_NETWORK_IDS,
-    RETRIES,
+    MAX_RETRIES,
 )
 
 from .units import Units
@@ -102,7 +102,7 @@ class Controller:
     async def create_session(self) -> None:
         LOGGER.debug("Create session called!")
 
-        for i in range(0, RETRIES):
+        for i in range(0, MAX_RETRIES):
             """Create Casambi session."""
             try:
                 if self.user_password:
@@ -118,6 +118,8 @@ class Controller:
 
                 await sleep(self.network_timeout)
 
+                continue
+
             try:
                 if self.network_password:
                     LOGGER.debug("Creating network session")
@@ -131,6 +133,8 @@ class Controller:
                 )
 
                 await sleep(self.network_timeout)
+
+                continue
 
         err_msg = "create_session failed to setup session!"
 
@@ -323,6 +327,7 @@ class Controller:
         LOGGER.debug(f"get_network_state called units: {pformat(self.units)}")
 
         for network_id in self._network_ids:
+            failed_network_request = False
             self.set_session_id(session_id=self._session_ids[network_id])
             url = f"{self.rest_url}/networks/{network_id}/state"
 
@@ -331,14 +336,35 @@ class Controller:
             )
 
             data = None
-            try:
-                data = await self.request("get", url=url, headers=self.headers)
-            except LoginRequired:
-                LOGGER.error(
-                    f"get_network_state caught LoginRequired exception for network_id: {network_id}"
-                )
-                failed_network_ids.append(network_id)
+
+            for i in range(0, MAX_RETRIES):
+                try:
+                    data = await self.request("get", url=url, headers=self.headers)
+                except LoginRequired:
+                    LOGGER.error(
+                        f"get_network_state caught LoginRequired exception for network_id: {network_id}"
+                    )
+                    failed_network_ids.append(network_id)
+                    failed_network_request = True
+
+                    break
+                except TimeoutError:
+                    LOGGER.debug(
+                        "caught asyncio.TimeoutError when initialize tried to fetch network information, trying again"
+                    )
+
+                    await sleep(self.network_timeout)
+
+                    continue
+
+            if failed_network_request:
                 continue
+
+            if not data:
+                error_msg = "get_network_state failed to get network state!"
+                LOGGER.error(error_msg)
+
+                raise AiocasambiException(error_msg)
 
             LOGGER.debug(f"get_network_state response: {data}")
 
@@ -373,9 +399,28 @@ class Controller:
             network_id = match.group("network_id")
             unit_id = match.group("unit_id")
 
-            data = await self.get_unit_state_controls(
-                unit_id=unit_id, network_id=network_id
-            )
+            data = None
+
+            for i in range(0, MAX_RETRIES):
+                try:
+                    data = await self.get_unit_state_controls(
+                        unit_id=unit_id, network_id=network_id
+                    )
+                except TimeoutError:
+                    LOGGER.debug(
+                        "caught asyncio.TimeoutError when initialize tried to fetch network information, trying again"
+                    )
+
+                    await sleep(self.network_timeout)
+
+                    continue
+
+            if not data:
+                error_msg = f"init_unit_state_controls failed to get unit state for unit: {unique_unit_id}"
+
+                LOGGER.error(error_msg)
+
+                raise AiocasambiException(error_msg)
 
             self.units[network_id].set_controls(unit_id=unit_id, data=data)
 
@@ -467,7 +512,27 @@ class Controller:
 
         LOGGER.debug("initialize called")
 
-        network_information = await self.get_network_information()
+        network_information = None
+
+        for i in range(0, MAX_RETRIES):
+            try:
+                network_information = await self.get_network_information()
+                break
+            except TimeoutError:
+                LOGGER.debug(
+                    "caught asyncio.TimeoutError when initialize tried to fetch network information, trying again"
+                )
+
+                await sleep(self.network_timeout)
+
+                continue
+
+        if not network_information:
+            error_msg = "initialize failed to fetch network information"
+
+            LOGGER.error(error_msg)
+
+            raise AiocasambiException(error_msg)
 
         for network_id, data in network_information.items():
             self.units[network_id] = Units(

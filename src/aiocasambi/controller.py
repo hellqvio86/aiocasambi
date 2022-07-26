@@ -508,6 +508,8 @@ class Controller:
         """
         data = await self.get_unit_state(unit_id=unit_id, network_id=network_id)
 
+        LOGGER.debug(f"get_unit_state_controls data: {pformat(data)}")
+
         if "controls" in data:
             return data["controls"]
 

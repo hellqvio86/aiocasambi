@@ -424,9 +424,9 @@ class Controller:
             if not data:
                 error_msg = f"init_unit_state_controls failed to get unit state for unit: {unique_unit_id} data: {pformat(data)}"
 
-                LOGGER.error(error_msg)
+                LOGGER.warning(error_msg)
 
-                raise AiocasambiException(error_msg)
+                return
 
             self.units[network_id].set_controls(unit_id=unit_id, data=data)
 

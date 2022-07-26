@@ -422,9 +422,9 @@ class Controller:
                 break
 
             if not data:
-                error_msg = f"init_unit_state_controls failed to get unit state for unit: {unique_unit_id} data: {pformat(data)}"
+                debug_msg = f"init_unit_state_controls failed to get unit state for unit: {unique_unit_id} data: {pformat(data)}"
 
-                LOGGER.warning(error_msg)
+                LOGGER.debug(debug_msg)
 
                 return
 

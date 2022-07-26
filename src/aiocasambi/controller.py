@@ -411,7 +411,7 @@ class Controller:
                     )
                 except TimeoutError:
                     LOGGER.debug(
-                        "caught asyncio.TimeoutError when initialize tried to fetch network information, trying again"
+                        f"caught asyncio.TimeoutError when initialize tried to fetch network information, trying again, try: {i}"
                     )
 
                     await sleep(self.network_timeout)

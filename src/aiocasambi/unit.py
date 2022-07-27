@@ -996,6 +996,14 @@ class Unit:
             return True
         return False
 
+    def is_light(self) -> bool:
+        """Check if the unit is a light fixture"""
+        if self._type == "Luminaire":
+            return True
+        elif self._type == "BatterySwitch":
+            return False
+        return False
+
     def __repr__(self) -> str:
         """Return the representation."""
         name = self._name

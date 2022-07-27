@@ -24,6 +24,7 @@ class Unit:
         *,
         name: str,
         address: str,
+        type: str,
         unit_id: int,
         network_id: int,
         wire_id: int,
@@ -42,6 +43,7 @@ class Unit:
         self._value = value
         self._distribution = distribution
         self._state = state
+        self._type = type
         self._fixture_model = None
         self._fixture = None
         self._wire_id = wire_id
@@ -130,6 +132,20 @@ class Unit:
         Setter for name
         """
         self._name = name
+
+    @property
+    def type(self) -> str:
+        """
+        Getter for type
+        """
+        return self._type
+
+    @type.setter
+    def type(self, type: str) -> None:
+        """
+        Setter for name
+        """
+        self._type = type
 
     @property
     def fixture_model(self) -> str:
@@ -998,6 +1014,10 @@ class Unit:
         result = f"<Unit {name}:"
         result += f"unit_id={unit_id} "
         result += f"address={address} "
+
+        if self._type:
+            result += f"type={self._type} "
+
         result += f"value={value} "
         result += f"distribution={distribution} "
         result += f"state={state} "

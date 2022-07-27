@@ -286,6 +286,11 @@ class Units:
                         elif "address" in msg:
                             address = msg["address"]
                         online = False
+                        type = None
+                        if "details" in msg and "type" in msg["details"]:
+                            type = msg["details"]["type"]
+                        elif "type" in msg:
+                            type = msg["type"]
                         unit_id = msg["id"]
                         controls = []
 
@@ -298,6 +303,7 @@ class Units:
                         unit = Unit(
                             name=name,
                             address=address,
+                            type=type,
                             unit_id=unit_id,
                             online=online,
                             wire_id=self._wire_id,
@@ -564,9 +570,16 @@ class Units:
         for unit_id in units:
             tmp = units[unit_id]
             key = f"{self._network_id}-{unit_id}"
+
+            type = None
+
+            if "type" in tmp:
+                type = tmp["type"]
+
             unit = Unit(
                 name=tmp["name"].strip(),
                 address=tmp["address"],
+                type=type,
                 unit_id=unit_id,
                 wire_id=self._wire_id,
                 network_id=self._network_id,

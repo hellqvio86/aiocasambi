@@ -1000,6 +1000,8 @@ class Unit:
         """Check if the unit is a light fixture"""
         if self._type == "Luminaire":
             return True
+        elif self._type == "Driver":
+            return True
         elif self._type == "BatterySwitch":
             return False
         return False

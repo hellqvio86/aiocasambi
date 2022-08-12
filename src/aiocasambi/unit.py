@@ -1042,6 +1042,8 @@ class Unit:
         if self._oem:
             result = f"{result} oem={self._oem}"
 
+        result = f"{result} is_light={self.is_light()}"
+
         if self._controls:
             # Controls state is set, not None
             result = f"{result} supports_brightness="

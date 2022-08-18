@@ -70,8 +70,7 @@ class Scene:
 
         return result
 
-
-    def set_wire_id(self, *, wire_id : int) -> None:
+    def set_wire_id(self, *, wire_id: int) -> None:
         """
         Setter for wire_id
         """

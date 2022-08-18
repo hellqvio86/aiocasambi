@@ -97,7 +97,7 @@ def setup_logger(*, debug=False) -> None:
     )
 
     if debug:
-        max_bytes = 3 * 10 ** 7
+        max_bytes = 3 * 10**7
         backup_count = 10
         file_handler = logging.handlers.RotatingFileHandler(
             "casambi.log", "a", max_bytes, backup_count
@@ -161,10 +161,9 @@ async def main(
     try:
         while True:
             await asyncio.sleep(60)
-            network_state_data = None
 
             try:
-                network_state_data = await controller.get_network_state()
+                await controller.get_network_state()
             except AttributeError as err:
                 error_msg = f"Caught AttributeError: {err} "
                 error_msg += f"dir(controller): {dir(controller)}"

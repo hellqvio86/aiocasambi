@@ -464,16 +464,16 @@ class Controller:
         url = "https://door.casambi.com/v1/networks/"
         url += f"{network_id}/units/{unit_id}/state"
 
-        LOGGER.debug(
-            f"get_unit_state called, unit_id: {unit_id}, network_id: {network_id} session_id: {session_id}"
-        )
-
         data = None
         try:
             data = await self.request("get", url=url, headers=self.headers)
         except LoginRequired as err:
             LOGGER.error("get_unit_state caught LoginRequired exception")
             raise err
+
+        LOGGER.debug(
+            f"get_unit_state called, unit_id: {unit_id}, network_id: {network_id} session_id: {session_id} data: {pformat(data)}"
+        )
 
         return data
 

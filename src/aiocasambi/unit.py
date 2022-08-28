@@ -1016,7 +1016,6 @@ class Unit:
         network_id = self._network_id
 
         value = self._value
-        distribution = self._distribution
         state = self._state
 
         wire_id = self._wire_id
@@ -1029,7 +1028,8 @@ class Unit:
             result += f"type={self._type} "
 
         result += f"value={value} "
-        result += f"distribution={distribution} "
+        if self.supports_distribution():
+            result += f"distribution={self._distribution} "
         result += f"state={state} "
         result += f"online={self._online} "
         result += f"network_id={network_id} "

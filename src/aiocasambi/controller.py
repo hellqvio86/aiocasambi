@@ -274,7 +274,7 @@ class Controller:
         )
 
     async def get_network_information(self) -> dict:
-        """Creating network information."""
+        """Get network information."""
         # GET https://door.casambi.com/v1/networks/{id}
         result = {}
         failed_network_ids = []

@@ -51,6 +51,7 @@ class Unit:
         self._oem = None
         self._online = online
         self._enabled = enabled
+        self._firmware_version = None
 
         self._controls = {}
         for control in controls:
@@ -282,6 +283,21 @@ class Unit:
         Setter for controller
         """
         self._controller = controller
+
+    @property
+    def firmware_version(self):
+        """
+        Getter for firmware_version
+        """
+
+        return self._firmware_version
+
+    @firmware_version.setter
+    def firmware_version(self, firmware_version):
+        """
+        Setter for firmware_version
+        """
+        self._firmware_version = firmware_version
 
     async def turn_unit_off(self) -> None:
         """

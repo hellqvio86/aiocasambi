@@ -340,6 +340,11 @@ class Units:
                     elif "controls" in msg:
                         self.units[key].controls = msg["controls"]
 
+                    if "details" in msg and "firmware_version" in msg["details"]:
+                        self.units[key].firmware_version = msg["details"]["firmware_version"]
+                    elif "firmware_version" in msg:
+                        self.units[key].firmware_version = msg["firmware_version"]
+
                     changes[key] = self.units[key]
 
                 if "type" in control and control["type"] == "Vertical":

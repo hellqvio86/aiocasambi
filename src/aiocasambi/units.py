@@ -156,6 +156,10 @@ class Units:
 
             self.units[key].online = unit_data["online"]
             self.units[key].name = unit_data["name"]
+
+            if "firmwareVersion" in unit_data:
+                self.units[key].firmware_version = unit_data["firmwareVersion"]
+
             if unit_data["online"]:
                 # self.units[key].value = unit_data['dimLevel']
                 self.units[key].controls = unit_data["controls"]

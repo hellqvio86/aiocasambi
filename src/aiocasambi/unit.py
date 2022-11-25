@@ -51,6 +51,7 @@ class Unit:
         self._oem = None
         self._online = online
         self._enabled = enabled
+        self._firmware_version = None
 
         self._controls = {}
         for control in controls:
@@ -201,6 +202,21 @@ class Unit:
             )
             key = controls["type"]
             self._controls[key] = controls
+
+    @property
+    def firmware_version(self) -> str:
+        """
+        Getter for firmware_version
+        """
+
+        return self._firmware_version
+
+    @firmware_version.setter
+    def firmware_version(self, firmware_version) -> None:
+        """
+        Setter for firmware_version
+        """
+        self._firmware_version = firmware_version
 
     @property
     def oem(self) -> str:
@@ -1043,6 +1059,9 @@ class Unit:
 
         if self._oem:
             result = f"{result} oem={self._oem}"
+
+        if self._firmware_version:
+            result = f"{result} firmware_version={self._firmware_version}"
 
         result = f"{result} is_light={self.is_light()}"
 

@@ -43,6 +43,6 @@ ERRORS = {
 
 
 def raise_error(error):
-    """ Function for raise error"""
+    """Function for raise error"""
     cls = ERRORS.get(error, AiocasambiException)
     raise cls("{}".format(error))

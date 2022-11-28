@@ -6,4 +6,5 @@ unit_id: 14
 units:
   - 13
   - 14
+network_id: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 debug: True

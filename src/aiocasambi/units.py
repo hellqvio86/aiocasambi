@@ -384,6 +384,37 @@ class Units:
 
         return self.units[key]
 
+    def get_unit_from_mac_address(self, *, mac_address: str) -> Unit:
+        """
+        Get unit from mac address
+        """
+        for key in self.units:
+            unit = None
+
+            try:
+                unit = self.units[key]
+            except KeyError as err:
+                err_msg = f"Caught KeyError when trying to lookup key: {key} "
+                err_msg += f"in get_unit_from_mac_address, units: {pformat(self.units)}"
+                LOGGER.exception(err_msg)
+
+                raise err
+
+            if unit.address == mac_address:
+                return unit
+
+        return None
+
+    def get_unit_id_from_mac_address(self, *, mac_address: str) -> int:
+        """
+        Getter for unit id
+        """
+        unit = self.get_unit_from_mac_address(mac_address=mac_address)
+
+        if unit:
+            return unit.unit_id
+        return None
+
     def get_unit_value(self, *, unit_id: int) -> int:
         """
         Get unit
@@ -575,15 +606,15 @@ class Units:
             tmp = units[unit_id]
             key = f"{self._network_id}-{unit_id}"
 
-            type = None
+            light_type = None
 
             if "type" in tmp:
-                type = tmp["type"]
+                light_type = tmp["type"]
 
             unit = Unit(
                 name=tmp["name"].strip(),
                 address=tmp["address"],
-                type=type,
+                type=light_type,
                 unit_id=unit_id,
                 wire_id=self._wire_id,
                 network_id=self._network_id,

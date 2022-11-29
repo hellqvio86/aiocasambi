@@ -12,7 +12,7 @@ setup(
     name="aiocasambi",
     packages=find_packages("src"),
     package_dir={"": "src"},
-    version="0.256",
+    version="0.257",
     license="MIT",
     description="aio library to control Casambi light through cloudapi",
     long_description=long_description,

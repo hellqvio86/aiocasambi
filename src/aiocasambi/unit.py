@@ -282,7 +282,7 @@ class Unit:
         Getter for unique_id
         """
 
-        return f"{self._network_id}-{self._unit_id}"
+        return f"{self._network_id}-{self._address}"
 
     @property
     def controller(self):
@@ -298,6 +298,20 @@ class Unit:
         Setter for controller
         """
         self._controller = controller
+
+    @property
+    def address(self):
+        """
+        Getter for address
+        """
+        return self._address
+
+    @property
+    def unit_id(self):
+        """
+        Getter for unit_id
+        """
+        return self._unit_id
 
     async def turn_unit_off(self) -> None:
         """

@@ -97,7 +97,12 @@ class Controller:
 
     def get_scenes(self) -> list:
         """Getter for getting scenes."""
-        return self.scenes.get_scenes()
+        result = []
+        for network_id in self._network_ids:
+            for scene in self.scenes[network_id].get_scenes():
+                result.append(scene)
+
+        return result
 
     async def create_session(self) -> None:
         LOGGER.debug("Create session called!")
@@ -112,9 +117,11 @@ class Controller:
 
                     return
             except TimeoutError:
-                LOGGER.debug(
-                    "caught asyncio.TimeoutError when trying to create user session, trying again"
+                dbg_msg = (
+                    "caught asyncio.TimeoutError when trying to create user session,"
                 )
+                dbg_msg += f" trying again, try: {i}"
+                LOGGER.debug(dbg_msg)
 
                 await sleep(self.network_timeout)
 
@@ -349,9 +356,9 @@ class Controller:
 
                     break
                 except TimeoutError:
-                    LOGGER.debug(
-                        "caught asyncio.TimeoutError when initialize tried to fetch network information, trying again"
-                    )
+                    dbg_msg = "caught asyncio.TimeoutError when initialize tried "
+                    dbg_msg += f"to fetch network information, trying again, try {i}"
+                    LOGGER.debug(dbg_msg)
 
                     await sleep(self.network_timeout)
 
@@ -392,7 +399,9 @@ class Controller:
         Getter for getting the unit state from Casambis cloud api
         """
         # GET https://door.casambi.com/v1/networks/{id}
-        unit_regexp = re.compile(r"(?P<network_id>[a-zA-Z0-9]+)-(?P<unit_id>\d+)$")
+        unit_regexp = re.compile(
+            r"(?P<network_id>[a-zA-Z0-9]+)-(?P<mac_address>[0-9a-f]{12})$"
+        )
         unique_ids = self.units[network_id].get_units_unique_ids()
 
         LOGGER.debug(f"init_unit_state_controls unique_ids: {pformat(unique_ids)}")
@@ -400,9 +409,17 @@ class Controller:
         for unique_unit_id in unique_ids:
             match = unit_regexp.match(unique_unit_id)
             network_id = match.group("network_id")
-            unit_id = match.group("unit_id")
+            mac_address = match.group("mac_address")
+
+            unit_id = self.units[network_id].get_unit_id_from_mac_address(
+                mac_address=mac_address
+            )
 
             data = None
+
+            LOGGER.debug(
+                f"init_unit_state_controls unique_unit_id: {unique_unit_id} unit_id: {unit_id}"
+            )
 
             for i in range(0, MAX_RETRIES):
                 try:
@@ -410,9 +427,9 @@ class Controller:
                         unit_id=unit_id, network_id=network_id
                     )
                 except TimeoutError:
-                    LOGGER.debug(
-                        f"caught asyncio.TimeoutError when initialize tried to fetch network information, trying again, try: {i}"
-                    )
+                    dbg_msg = "caught asyncio.TimeoutError when initialize tried "
+                    dbg_msg += f"to fetch network information, trying again, try: {i}"
+                    LOGGER.debug(dbg_msg)
 
                     await sleep(self.network_timeout)
 
@@ -468,9 +485,17 @@ class Controller:
         try:
             data = await self.request("get", url=url, headers=self.headers)
         except LoginRequired as err:
-            LOGGER.error("get_unit_state caught LoginRequired exception")
-            raise err
+            err_msg = "get_unit_state caught LoginRequired exception, "
+            err_msg += f"unit_id: {unit_id}, network_id: {network_id}"
+            LOGGER.error(err_msg)
 
+            raise err
+        except ResponseError as err:
+            err_msg = "get_unit_state caught ResponseError exception, "
+            err_msg += f"unit_id: {unit_id}, network_id: {network_id}"
+            LOGGER.exception(err_msg)
+
+            raise err
         LOGGER.debug(
             f"get_unit_state called, unit_id: {unit_id}, network_id: {network_id} session_id: {session_id} data: {pformat(data)}"
         )
@@ -506,6 +531,10 @@ class Controller:
             'type': 'Luminaire'
         }
         """
+        LOGGER.debug(
+            f"get_unit_state_controls called unit_id:{unit_id} network_id: {network_id}"
+        )
+
         data = await self.get_unit_state(unit_id=unit_id, network_id=network_id)
 
         LOGGER.debug(f"get_unit_state_controls data: {pformat(data)}")
@@ -846,7 +875,7 @@ class Controller:
             break
 
         # Set new session ids for websocket
-        for network_id in self.websocket.keys():
+        for network_id, _ in self.websocket.items():
             self.websocket[network_id].session_id = self._session_ids[network_id]
         LOGGER.debug("Controller is reconnected")
 
@@ -915,6 +944,9 @@ class Controller:
         return result
 
     def set_wire_id(self, *, wire_id: int, network_id: str) -> None:
+        """
+        Setter for wire_id
+        """
         self.units[network_id].set_wire_id(wire_id=wire_id)
         self.scenes[network_id].set_wire_id(wire_id=wire_id)
 
@@ -966,14 +998,14 @@ class Controller:
         wire_ids_to_remove = []
         if network_id in self.websocket:
             # Stopping websocket
-            await self.websocket.stop_websocket(network_id=network_id)
+            await self.stop_websocket(network_id=network_id)
             self.websocket.pop(network_id)
 
         if network_id in self._network_ids:
             self._network_ids.pop(network_id)
 
         if network_id in self._session_ids:
-            self.set_session_id.pop(network_id)
+            self._session_ids.pop(network_id)
 
         for wire_id, wire_network_id in self._wire_id_to_network_id.items():
             if wire_network_id == network_id:

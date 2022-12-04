@@ -1052,6 +1052,8 @@ class Unit:
 
         result = f"<Unit {name}:"
         result += f"unit_id={unit_id} "
+        result += f"oem={self._oem} "
+        result += f"fixture_model={self._fixture_model} "
         result += f"address={address} "
 
         if self._type:
@@ -1067,12 +1069,6 @@ class Unit:
 
         if self._fixture:
             result = f"{result} fixure={self._fixture}"
-
-        if self._fixture_model:
-            result = f"{result} fixture_model={self._fixture_model}"
-
-        if self._oem:
-            result = f"{result} oem={self._oem}"
 
         if self._firmware_version:
             result = f"{result} firmware_version={self._firmware_version}"

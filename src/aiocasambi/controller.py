@@ -323,8 +323,168 @@ class Controller:
         return result
 
     async def get_network_state(self) -> dict:
-        """Get network state."""
-        # GET https://door.casambi.com/v1/networks/{networkId}/state
+        """Get network state.
+
+        GET https://door.casambi.com/v1/networks/{networkId}/state
+        {
+            "id": "VcrTwqLZJ26UYMXxTClmpfZxELcrPUAa",
+            "name": "Demo Room",
+            "revision": 125,
+            "grade": "EVOLUTION",
+            "address": "b02ef7956bcc",
+            "gateway": {
+                "name": "Demo iPad"
+            },
+            "type": "OPEN",
+            "timezone": "Europe/Helsinki",
+            "dimLevel": 0.5,
+            "activeScenes": [
+                3,
+                4
+            ],
+            "photos": [
+                {
+                    "name": "Photo",
+                    "controls": [],
+                    "image": "iR4aIP3vXcB348Pijif2d4Y7AnowFbdD",
+                    "position": 0
+                },
+                {
+                    "name": "Photo",
+                    "controls": [],
+                    "image": "KLejfitLiEFeiUnhak6ID69VzJhvWYER",
+                    "position": 1
+                }
+            ],
+            "units": {
+                "15": {
+                    "id": 15,
+                    "address": "44363c069a45",
+                    "name": "Sensor Z",
+                    "position": 4,
+                    "fixtureId": 45602,
+                    "firmwareVersion": "32.10",
+                    "groupId": 0,
+                    "priority": 0,
+                    "scene": 0,
+                    "online": false,
+                    "condition": 0,
+                    "status": "ok",
+                    "activeSceneId": 0,
+                    "controls": [
+                        [
+                            {
+                                "type": "Presence",
+                                "status": "absent"
+                            },
+                            {
+                                "level": 0,
+                                "type": "Lux",
+                                "value": 0
+                            },
+                            {
+                                "type": "Switch"
+                            }
+                        ]
+                    ],
+                    "details": {
+                        "_name": "ccb3e63c069a",
+                        "OEM": "Tridonic GmbH & Co KG",
+                        "fixture_model": "bDW (PIR)"
+                    },
+                    "dimLevel": 0,
+                    "type": "Sensor"
+                },
+                "18": {
+                    "id": 18,
+                    "address": "dfe579c30c88",
+                    "name": "TestUnit",
+                    "image": "456ghkOxsfuE6GTR6utJl8OEAPkSqh",
+                    "position": 4,
+                    "fixtureId": 16574,
+                    "firmwareVersion": "32.10",
+                    "groupId": 0,
+                    "priority": 3,
+                    "scene": 0,
+                    "online": true,
+                    "condition": 134,
+                    "status": "status_message",
+                    "activeSceneId": 4,
+                    "controls": [
+                        [
+                            {
+                                "type": "Dimmer",
+                                "value": 1
+                            },
+                            {
+                                "source": "XY",
+                                "type": "Colorsource"
+                            },
+                            {
+                                "x": 0.14753297508549096,
+                                "y": 0.13727405959941377,
+                                "rgb": "rgb(136, 255, 255)",
+                                "type": "Color"
+                            },
+                            {
+                                "tw": 23.52941,
+                                "min": 2700,
+                                "max": 6000,
+                                "type": "CCT",
+                                "value": 6000,
+                                "level": 1
+                            }
+                        ]
+                    ],
+                    "dimLevel": 1,
+                    "type": "Luminaire"
+                }
+            },
+            "scenes": {
+                "1": {
+                    "name": "Timer",
+                    "id": 1,
+                    "position": 0,
+                    "icon": 0,
+                    "color": "#FFFFFF",
+                    "type": "REGULAR",
+                    "hidden": false,
+                    "units": {
+                        "12": {
+                            "id": 12
+                        }
+                    }
+                },
+                "4": {
+                    "name": "Presence",
+                    "id": 2,
+                    "position": 1,
+                    "icon": 0,
+                    "color": "#06FF29",
+                    "type": "REGULAR",
+                    "hidden": false,
+                    "units": {
+                        "18": {
+                            "id": 18
+                        }
+                    }
+                }
+            },
+            "groups": {
+                "3": {
+                    "id": 3,
+                    "name": "Demo Group",
+                    "position": 2,
+                    "units": [
+                        {
+                            "0": 12,
+                            "position": 0
+                        }
+                    ]
+                }
+            }
+        }
+        """
         result = []
         failed_network_ids = []
 

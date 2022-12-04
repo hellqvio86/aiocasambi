@@ -164,6 +164,24 @@ class Units:
                 # self.units[key].value = unit_data['dimLevel']
                 self.units[key].controls = unit_data["controls"]
 
+            # Try to add oem and fixure_model
+            oem = None
+            fixture_model = None
+            if "OEM" in unit_data:
+                oem = unit_data["OEM"]
+            elif "details" in unit_data and "OEM" in unit_data["details"]:
+                oem = unit_data["details"]["OEM"]
+            if "OEM" in unit_data:
+                fixture_model = unit_data["fixture_model"]
+            elif "details" in unit_data and "fixture_model" in unit_data["details"]:
+                fixture_model = unit_data["details"]["fixture_model"]
+
+            if oem:
+                self.units[key].oem = oem
+
+            if fixture_model:
+                self.units[key].fixture_model = fixture_model
+
     def process_unit_event(self, msg: dict) -> dict:
         """
         Event like:

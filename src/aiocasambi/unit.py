@@ -32,6 +32,7 @@ class Unit:
         controls: dict,
         value: float = 0,
         distribution: float = 0,
+        fixture_id: int = 0,
         online: bool = True,
         enabled: bool = True,
         state: str = UNIT_STATE_OFF,
@@ -39,6 +40,7 @@ class Unit:
         self._name = name
         self._address = address
         self._unit_id = int(unit_id)
+        self._fixture_id = int(fixture_id)
         self._network_id = network_id
         self._value = value
         self._distribution = distribution
@@ -161,6 +163,20 @@ class Unit:
         Setter for fixture model
         """
         self._fixture_model = fixture_model
+
+    @property
+    def fixture_id(self) -> str:
+        """
+        Getter for fixture id
+        """
+        return self._fixture_id
+
+    @fixture_id.setter
+    def fixture_id(self, fixture_id: int) -> None:
+        """
+        Setter for fixture model
+        """
+        self._fixture_id = fixture_id
 
     @property
     def online(self) -> bool:
@@ -1052,6 +1068,7 @@ class Unit:
 
         result = f"<Unit {name}:"
         result += f"unit_id={unit_id} "
+        result += f"fixture_id={self._fixture_id} "
         result += f"oem={self._oem} "
         result += f"fixture_model={self._fixture_model} "
         result += f"address={address} "

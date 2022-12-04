@@ -662,6 +662,84 @@ class Controller:
 
         return data
 
+    async def get_fixture_information(
+        self, *, network_id: str, fixture_id: int
+    ) -> dict:
+        """
+        Get fixure information
+
+        GET https://door.casambi.com/v1/fixtures/{id}
+
+        {
+            "id": 23456,
+            "type": "Driver",
+            "vendor": "Oktalite Lichttechnik GmbH",
+            "model": "Oktalite AGIRA PLUS",
+            "translations": {},
+            "controls": [
+                {
+                    "type": "button",
+                    "name": "Button",
+                    "buttonLabel": "Button",
+                    "dataname": "button",
+                    "id": 0,
+                    "readonly": true
+                },
+                {
+                    "type": "dimmer",
+                    "id": 1,
+                    "readonly": false
+                },
+                {
+                    "type": "rgb",
+                    "id": 7,
+                    "readonly": false
+                },
+                {
+                    "type": "temperature",
+                    "id": 25,
+                    "readonly": false
+                },
+                {
+                    "type": "colorsource",
+                    "id": 31,
+                    "readonly": false
+                },
+                {
+                    "type": "slider",
+                    "name": "Slider",
+                    "unit": "",
+                    "id": 33,
+                    "readonly": false,
+                    "valueType": "FLOAT"
+                }
+            ]
+        }
+        """
+        if fixture_id == 0:
+            LOGGER.debug("get_fixture_information fixture_id is 0 exiting")
+            return {}
+
+        self.set_session_id(session_id=self._session_ids[network_id])
+        url = f"{self.rest_url}/fixtures/{fixture_id}"
+
+        dbg_msg = f"get_fixture_information request <url: {url} "
+        dbg_msg += f"headers= {self.headers}>"
+        LOGGER.debug(dbg_msg)
+
+        data = None
+        try:
+            data = await self.request("get", url=url, headers=self.headers)
+        except LoginRequired as err:
+            LOGGER.error(
+                f"get_fixture_information caught LoginRequired exception for network_id: {network_id}"
+            )
+            raise err
+
+        LOGGER.debug(f"get_fixture_information response: {pformat(data)}")
+
+        return data
+
     async def get_unit_state_controls(self, *, unit_id: int, network_id: str) -> list:
         """
         Get unit controls for unit
@@ -760,6 +838,10 @@ class Controller:
 
         for network_id in self._network_ids:
             await self.init_unit_state_controls(network_id=network_id)
+
+        # Get fixture information
+        for network_id in self._network_ids:
+            await self.units[network_id].get_fixture_information_for_all_units()
 
         return
 

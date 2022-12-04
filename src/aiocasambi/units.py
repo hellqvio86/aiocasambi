@@ -303,6 +303,7 @@ class Units:
                     if key not in self.units:
                         # New unit discovered
                         address = None
+                        fixture_id = 0
                         if "details" in msg and "address" in msg["details"]:
                             address = msg["details"]["address"]
                         elif "address" in msg:
@@ -322,6 +323,9 @@ class Units:
                         if "controls" in msg:
                             controls = msg["controls"]
 
+                        if "fixtureId" in msg:
+                            fixture_id = msg["fixtureId"]
+
                         unit = Unit(
                             name=name,
                             address=address,
@@ -331,6 +335,7 @@ class Units:
                             wire_id=self._wire_id,
                             network_id=self._network_id,
                             controller=self._controller,
+                            fixture_id=fixture_id,
                             controls=controls,
                         )
 
@@ -468,6 +473,71 @@ class Units:
             result.append(value.unique_id)
 
         return result
+
+    async def get_fixture_information_for_all_units(self) -> None:
+        """
+        Get fixure information for all units
+
+        Example response:
+        {
+            "id": 23456,
+            "type": "Driver",
+            "vendor": "Oktalite Lichttechnik GmbH",
+            "model": "Oktalite AGIRA PLUS",
+            "translations": {},
+            "controls": [
+                {
+                    "type": "button",
+                    "name": "Button",
+                    "buttonLabel": "Button",
+                    "dataname": "button",
+                    "id": 0,
+                    "readonly": true
+                },
+                {
+                    "type": "dimmer",
+                    "id": 1,
+                    "readonly": false
+                },
+                {
+                    "type": "rgb",
+                    "id": 7,
+                    "readonly": false
+                },
+                {
+                    "type": "temperature",
+                    "id": 25,
+                    "readonly": false
+                },
+                {
+                    "type": "colorsource",
+                    "id": 31,
+                    "readonly": false
+                },
+                {
+                    "type": "slider",
+                    "name": "Slider",
+                    "unit": "",
+                    "id": 33,
+                    "readonly": false,
+                    "valueType": "FLOAT"
+                }
+            ]
+        }
+        """
+        for key, value in self.units.items():
+            response = await self._controller.get_fixture_information(
+                network_id=self._network_id, fixture_id=value.fixture_id
+            )
+
+            if "type" in response:
+                self.units[key].type = response["type"]
+
+            if "vendor" in response:
+                self.units[key].oem = response["vendor"]
+
+            if "model" in response:
+                self.units[key].fixture_model = response["model"]
 
     async def turn_unit_on(self, *, unit_id: int) -> None:
         """
@@ -625,9 +695,13 @@ class Units:
             key = f"{self._network_id}-{unit_id}"
 
             light_type = None
+            fixture_id = 0
 
             if "type" in tmp:
                 light_type = tmp["type"]
+
+            if "fixtureId" in tmp:
+                fixture_id = tmp["fixtureId"]
 
             unit = Unit(
                 name=tmp["name"].strip(),
@@ -637,6 +711,7 @@ class Units:
                 wire_id=self._wire_id,
                 network_id=self._network_id,
                 controller=self._controller,
+                fixture_id=fixture_id,
                 controls=[],
             )
             self.units[key] = unit

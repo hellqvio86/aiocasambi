@@ -297,8 +297,15 @@ class Unit:
         """
         Getter for unique_id
         """
+        unique_id = None
 
-        return f"{self._network_id}-{self._address}"
+        if self._address:
+            unique_id = f"{self._network_id}-{self._address}"
+        else:
+            # Use unit id as fallback
+            unique_id = f"{self._network_id}-{self._unit_id}"
+
+        return unique_id
 
     @property
     def controller(self):

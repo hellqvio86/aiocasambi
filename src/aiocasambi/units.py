@@ -411,7 +411,7 @@ class Units:
         """
         Get unit from mac address
         """
-        for key in self.units:
+        for key, _ in self.units.items():
             unit = None
 
             try:

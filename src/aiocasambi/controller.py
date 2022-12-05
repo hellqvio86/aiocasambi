@@ -559,21 +559,31 @@ class Controller:
         Getter for getting the unit state from Casambis cloud api
         """
         # GET https://door.casambi.com/v1/networks/{id}
-        unit_regexp = re.compile(
+        unit_mac_regexp = re.compile(
             r"(?P<network_id>[a-zA-Z0-9]+)-(?P<mac_address>[0-9a-f]{12})$"
         )
+        unit_id_regexp = re.compile(r"(?P<network_id>[a-zA-Z0-9]+)-(?P<unit_id>\d+)$")
         unique_ids = self.units[network_id].get_units_unique_ids()
 
         LOGGER.debug(f"init_unit_state_controls unique_ids: {pformat(unique_ids)}")
 
         for unique_unit_id in unique_ids:
-            match = unit_regexp.match(unique_unit_id)
-            network_id = match.group("network_id")
-            mac_address = match.group("mac_address")
+            network_id = None
+            mac_address = None
+            unit_id = None
+            match = unit_mac_regexp.match(unique_unit_id)
 
-            unit_id = self.units[network_id].get_unit_id_from_mac_address(
-                mac_address=mac_address
-            )
+            if match:
+                network_id = match.group("network_id")
+                mac_address = match.group("mac_address")
+
+                unit_id = self.units[network_id].get_unit_id_from_mac_address(
+                    mac_address=mac_address
+                )
+            else:
+                match = unit_id_regexp.match(unique_unit_id)
+                network_id = match.group("network_id")
+                unit_id = match.group("unit_id")
 
             data = None
 

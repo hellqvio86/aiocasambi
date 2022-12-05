@@ -741,10 +741,13 @@ class Controller:
         try:
             data = await self.request("get", url=url, headers=self.headers)
         except LoginRequired as err:
-            LOGGER.error(
+            LOGGER.warning(
                 f"get_fixture_information caught LoginRequired exception for network_id: {network_id}"
             )
-            raise err
+
+            # Hue lights don't support get_fixture_information,
+            # thats why its no raise of exception
+            return {}
 
         LOGGER.debug(f"get_fixture_information response: {pformat(data)}")
 

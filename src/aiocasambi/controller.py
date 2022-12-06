@@ -87,8 +87,8 @@ class Controller:
         self.headers["X-Casambi-Session"] = session_id
 
     def get_units(self) -> list:
-        result = []
         """Getter for getting units."""
+        result = []
         for network_id in self._network_ids:
             for unit in self.units[network_id].get_units():
                 result.append(unit)
@@ -740,7 +740,10 @@ class Controller:
         data = None
         try:
             data = await self.request("get", url=url, headers=self.headers)
-        except LoginRequired as err:
+        except ResponseError:
+            LOGGER.warning(f"Failed to get fixture information for {fixture_id}")
+            return {}
+        except LoginRequired:
             LOGGER.warning(
                 f"get_fixture_information caught LoginRequired exception for network_id: {network_id}"
             )

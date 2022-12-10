@@ -955,13 +955,21 @@ class Controller:
             # Try to reconnect
             await self.reconnect()
 
-    def get_websocket_states(self) -> str:
-        """Getter for websocket state"""
+    def get_websockets_states(self) -> str:
+        """
+        Getter for websocket state
+        """
         result = []
         for network_id, _ in self.websocket.items():
             result.append(self.websocket[network_id].state)
 
         return result
+
+    def get_websocket_state(self, *, network_id: str) -> str:
+        """
+        Get websocket state
+        """
+        return self.websocket[network_id].state
 
     async def stop_websockets(self) -> None:
         """Close websession and websocket to Casambi."""
@@ -1000,7 +1008,7 @@ class Controller:
             if new_items and self.callback:
                 self.callback(SIGNAL_DATA, new_items)
         elif signal == SIGNAL_CONNECTION_STATE and self.callback:
-            dbg_msg = "session_handler is handling"
+            dbg_msg = "session_handler is handling "
             dbg_msg += f"SIGNAL_CONNECTION_STATE: {signal}"
             LOGGER.debug(dbg_msg)
 
@@ -1073,7 +1081,7 @@ class Controller:
         """async function for checking connection"""
         all_running = True
 
-        states = self.get_websocket_states()
+        states = self.get_websockets_states()
         for state in states:
             if state != STATE_RUNNING:
                 all_running = False
@@ -1085,7 +1093,9 @@ class Controller:
         await self.reconnect()
 
     async def reconnect(self) -> None:
-        """async function for reconnecting."""
+        """
+        async function for reconnecting.
+        """
         LOGGER.debug("Controller is reconnecting")
 
         if self._reconnecting:

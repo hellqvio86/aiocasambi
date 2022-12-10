@@ -213,9 +213,10 @@ class Unit:
                 # Recusive call
                 self.controls = control
         elif isinstance(controls, dict):
-            LOGGER.debug(
-                f"unit_id={self._unit_id} - setter controls - Adding following control to controls: {controls}"
-            )
+            dbg_msg = f"unit_id={self._unit_id} - setter controls"
+            dbg_msg += f" - Adding following control to controls: {controls}"
+            LOGGER.debug(dbg_msg)
+
             key = controls["type"]
             self._controls[key] = controls
 
@@ -419,7 +420,7 @@ class Unit:
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id)
+                f"expected unit_id to be an integer, got: {unit_id}"
             )
 
         white_value = white / 255.0
@@ -464,7 +465,7 @@ class Unit:
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id)
+                f"expected unit_id to be an integer, got: {unit_id}"
             )
 
         if not send_rgb_format:
@@ -547,7 +548,7 @@ class Unit:
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id)
+                f"expected unit_id to be an integer, got: {unit_id}"
             )
 
         target_controls = {
@@ -588,7 +589,7 @@ class Unit:
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id)
+                f"expected unit_id to be an integer, got: {unit_id}"
             )
 
         if not (value >= 0 and value <= 1):
@@ -627,7 +628,7 @@ class Unit:
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id)
+                f"expected unit_id to be an integer, got: {unit_id}"
             )
 
         if not (distribution >= 0 and distribution <= 1):
@@ -670,7 +671,7 @@ class Unit:
             unit_id = int(unit_id)
         else:
             raise AiocasambiException(
-                "expected unit_id to be an integer, got: {}".format(unit_id)
+                f"expected unit_id to be an integer, got: {unit_id}"
             )
 
         message = {

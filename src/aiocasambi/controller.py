@@ -1147,7 +1147,13 @@ class Controller:
         # Set new session ids for websocket
         for network_id, _ in self.websocket.items():
             self.websocket[network_id].session_id = self._session_ids[network_id]
-        LOGGER.debug("Controller is reconnected")
+
+        connected = True
+        for state in self.get_websockets_states():
+            if state != STATE_RUNNING:
+                connected = False
+        if connected:
+            LOGGER.debug("Controller is reconnected")
 
     async def turn_unit_on(self, *, unit_id: int, network_id: str) -> None:
         """

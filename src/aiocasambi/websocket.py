@@ -225,7 +225,10 @@ class WSClient:
                 if self.state != STATE_STOPPED:
                     LOGGER.error("websocket caught aiohttp.ClientConnectorError")
                     self.state = STATE_DISCONNECTED
-
+            except aiohttp.WSServerHandshakeError:
+                if self.state != STATE_STOPPED:
+                    LOGGER.error("websocket caught aiohttp.WSServerHandshakeError")
+                    self.state = STATE_DISCONNECTED
             except Exception as err:
                 if self.state != STATE_STOPPED:
                     error_msg = f"websocket: Unexpected Exception: < {err} "

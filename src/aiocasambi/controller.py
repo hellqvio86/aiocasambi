@@ -955,6 +955,17 @@ class Controller:
             # Try to reconnect
             await self.reconnect()
 
+    def get_websockets(self) -> list:
+        """
+        Get websockets
+        """
+        result = []
+
+        for _, item in self.websocket.items():
+            result.append(item)
+
+        return result
+
     def get_websockets_states(self) -> str:
         """
         Getter for websocket state

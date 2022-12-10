@@ -179,8 +179,8 @@ async def main(
                     controller=controller, unit_id=unit_id, network_id=network_id
                 )
 
-            ws_states = controller.get_websockets_states()
-            LOGGER.info(f"ws_states: {pformat(ws_states)}")
+            ws_sockets = controller.get_websockets()
+            LOGGER.info(f"ws_sockets: {pformat(ws_sockets)}")
 
     except asyncio.CancelledError as err:
         LOGGER.debug(f"Caught asyncio.CancelledError in main loop: {err}")

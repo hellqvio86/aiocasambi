@@ -96,7 +96,9 @@ class WSClient:
             self._loop.create_task(self.running())
 
     def stop(self) -> None:
-        """Close websocket connection."""
+        """
+        Close websocket connection.
+        """
         self.state = STATE_STOPPED
 
     async def ws_open(self) -> None:
@@ -228,15 +230,30 @@ class WSClient:
                     self.state = STATE_DISCONNECTED
             except aiohttp.ClientConnectorError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error(
+                    err_msg = (
                         f"websocket caught aiohttp.ClientConnectorError, err: {err}"
                     )
+                    if hasattr(err, "message"):
+                        err_msg += f' message: "{err.message}"'
+                    if hasattr(err, "status"):
+                        err_msg += f' status: "{err.status}"'
+                    LOGGER.error(err_msg)
+
                     self.state = STATE_DISCONNECTED
             except aiohttp.WSServerHandshakeError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error(
+                    err_msg = (
                         f"websocket caught aiohttp.WSServerHandshakeError, err: {err}"
                     )
+                    if hasattr(err, "message"):
+                        err_msg += f' message: "{err.message}"'
+                    if hasattr(err, "status"):
+                        err_msg += f' status: "{err.status}"'
+
+                        if err.status == 429:
+                            err_msg += ' 429=="Too many active websocket connections"'
+                    LOGGER.error(err_msg)
+
                     self.state = STATE_DISCONNECTED
             except Exception as err:
                 if self.state != STATE_STOPPED:

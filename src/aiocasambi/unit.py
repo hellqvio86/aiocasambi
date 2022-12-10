@@ -8,6 +8,7 @@ from typing import Tuple, Union
 from colorsys import rgb_to_hsv
 
 from .errors import AiocasambiException
+from .consts import STATE_RUNNING
 
 
 LOGGER = logging.getLogger(__name__)
@@ -183,6 +184,13 @@ class Unit:
         """
         Getter for online
         """
+        if (
+            self.controller.get_websocket_state(network_id=self._network_id)
+            != STATE_RUNNING
+        ):
+            # Return false if websocket isnt online
+            return False
+
         return self._online
 
     @online.setter
@@ -1088,7 +1096,7 @@ class Unit:
         if self.supports_distribution():
             result += f"distribution={self._distribution} "
         result += f"state={state} "
-        result += f"online={self._online} "
+        result += f"online={self.online} "
         result += f"network_id={network_id} "
         result += f"wire_id={wire_id}"
 

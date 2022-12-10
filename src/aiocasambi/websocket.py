@@ -57,7 +57,7 @@ class WSClient:
         self.wire_id = wire_id
 
         self._data = None
-        self._state = None
+        self._state = STATE_DISCONNECTED
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -114,6 +114,8 @@ class WSClient:
             "type": 1,  # Client type, use value 1 (FRONTEND)
         }
 
+        LOGGER.debug(f"ws_open message: {message}")
+
         await self.web_sock.send_str(json.dumps(message))
 
     async def send_message(self, message: dict) -> bool:
@@ -153,56 +155,59 @@ class WSClient:
         """
         Main websocket loop
         """
-        async with self.session.ws_connect(
+        LOGGER.debug("Starting ws_loop")
+
+        web_sock = await self.session.ws_connect(
             self.url, ssl=self.ssl_context, heartbeat=15, protocols=(self.api_key,)
-        ) as web_sock:
-            self.state = STATE_RUNNING
+        )
 
-            self.web_sock = web_sock
+        self.state = STATE_RUNNING
 
-            await self.ws_open()
+        self.web_sock = web_sock
 
-            async for msg in self.web_sock:
-                dbg_msg = "websocket running: "
-                dbg_msg += f"wire_id: {self.wire_id} "
-                dbg_msg += f"msg: {msg}"
+        await self.ws_open()
+
+        async for msg in self.web_sock:
+            dbg_msg = "websocket running: "
+            dbg_msg += f"wire_id: {self.wire_id} "
+            dbg_msg += f"msg: {msg}"
+
+            LOGGER.debug(dbg_msg)
+
+            if self.state == STATE_STOPPED:
+                LOGGER.debug("websocket running STATE_STOPPED")
+                break
+
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                self._data = json.loads(msg.data)
+                self.session_handler_callback(SIGNAL_DATA, self.wire_id)
+
+                dbg_msg = "websocket recived "
+                dbg_msg += "msg.type: aiohttp.WSMsgType.TEXT "
+                dbg_msg += f"data: {self._data}"
 
                 LOGGER.debug(dbg_msg)
+            elif msg.type == aiohttp.WSMsgType.BINARY:
+                self._data = json.loads(msg.data)
+                self.session_handler_callback(SIGNAL_DATA, self.wire_id)
 
-                if self.state == STATE_STOPPED:
-                    LOGGER.debug("websocket running STATE_STOPPED")
-                    break
+                dbg_msg = "websocket recived "
+                dbg_msg += "msg.type: aiohttp.WSMsgType.BINARY "
+                dbg_msg += f"data: {self._data}"
 
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    self._data = json.loads(msg.data)
-                    self.session_handler_callback(SIGNAL_DATA, self.wire_id)
+                LOGGER.debug(dbg_msg)
+            elif msg.type == aiohttp.WSMsgType.CLOSED:
+                warning_msg = "websocket recived "
+                warning_msg += "aiohttp.WSMsgType.CLOSED "
+                warning_msg += "websocket connection closed"
 
-                    dbg_msg = "websocket recived "
-                    dbg_msg += "msg.type: aiohttp.WSMsgType.TEXT "
-                    dbg_msg += f"data: {self._data}"
+                LOGGER.warning(warning_msg)
 
-                    LOGGER.debug(dbg_msg)
-                elif msg.type == aiohttp.WSMsgType.BINARY:
-                    self._data = json.loads(msg.data)
-                    self.session_handler_callback(SIGNAL_DATA, self.wire_id)
+                break
 
-                    dbg_msg = "websocket recived "
-                    dbg_msg += "msg.type: aiohttp.WSMsgType.BINARY "
-                    dbg_msg += f"data: {self._data}"
-
-                    LOGGER.debug(dbg_msg)
-                elif msg.type == aiohttp.WSMsgType.CLOSED:
-                    warning_msg = "websocket recived "
-                    warning_msg += "aiohttp.WSMsgType.CLOSED "
-                    warning_msg += "websocket connection closed"
-
-                    LOGGER.warning(warning_msg)
-
-                    break
-
-                elif msg.type == aiohttp.WSMsgType.ERROR:
-                    LOGGER.error("websocket recived AIOHTTP websocket error")
-                    break
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                LOGGER.error("websocket recived AIOHTTP websocket error")
+                break
 
     async def running(self) -> None:
         """
@@ -213,21 +218,25 @@ class WSClient:
             try:
                 await self.ws_loop()
 
-            except ConnectionResetError:
+            except ConnectionResetError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error("websocket caught ConnectionResetError")
+                    LOGGER.error(f"websocket caught ConnectionResetError, err: {err}")
                     self.state = STATE_DISCONNECTED
-            except ConnectionError:
+            except ConnectionError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error("websocket caught ConnectionError")
+                    LOGGER.error(f"websocket caught ConnectionError, err: {err}")
                     self.state = STATE_DISCONNECTED
-            except aiohttp.ClientConnectorError:
+            except aiohttp.ClientConnectorError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error("websocket caught aiohttp.ClientConnectorError")
+                    LOGGER.error(
+                        f"websocket caught aiohttp.ClientConnectorError, err: {err}"
+                    )
                     self.state = STATE_DISCONNECTED
-            except aiohttp.WSServerHandshakeError:
+            except aiohttp.WSServerHandshakeError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error("websocket caught aiohttp.WSServerHandshakeError")
+                    LOGGER.error(
+                        f"websocket caught aiohttp.WSServerHandshakeError, err: {err}"
+                    )
                     self.state = STATE_DISCONNECTED
             except Exception as err:
                 if self.state != STATE_STOPPED:

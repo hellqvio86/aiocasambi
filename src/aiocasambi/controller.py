@@ -105,10 +105,12 @@ class Controller:
         return result
 
     async def create_session(self) -> None:
+        """
+        Create session
+        """
         LOGGER.debug("Create session called!")
 
         for i in range(0, MAX_RETRIES):
-            """Create Casambi session."""
             try:
                 if self.user_password:
                     LOGGER.debug("Creating user session")
@@ -805,7 +807,7 @@ class Controller:
 
         network_information = None
 
-        for i in range(0, MAX_RETRIES):
+        for _ in range(0, MAX_RETRIES):
             try:
                 network_information = await self.get_network_information()
                 break

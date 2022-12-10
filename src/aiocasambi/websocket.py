@@ -103,7 +103,7 @@ class WSClient:
         """
         Send open message to Casambi Cloud api
         """
-        reference = "{}".format(uuid.uuid1())
+        reference = f"{uuid.uuid1()}"
 
         message = {
             "method": "open",
@@ -234,5 +234,6 @@ class WSClient:
                     LOGGER.error(error_msg)
                     LOGGER.exception("An unknown exception was thrown!")
                     self.state = STATE_DISCONNECTED
+
                     raise err
             await asyncio.sleep(60)

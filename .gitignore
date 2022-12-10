@@ -2,3 +2,9 @@ casambi.yaml
 casambi.log
 dist
 .vscode/settings.json
+egg-info
+.dccache
+*.egg-info
+lib
+lib64
+bin

@@ -15,6 +15,7 @@ from .consts import (
     STATE_DISCONNECTED,
     STATE_STARTING,
     STATE_STOPPED,
+    CASAMBI_REASONS_BY_STATUS_CODE,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -230,28 +231,30 @@ class WSClient:
                     self.state = STATE_DISCONNECTED
             except aiohttp.ClientConnectorError as err:
                 if self.state != STATE_STOPPED:
-                    err_msg = (
-                        f"websocket caught aiohttp.ClientConnectorError, err: {err}"
-                    )
-                    if hasattr(err, "message"):
-                        err_msg += f' message: "{err.message}"'
+                    err_msg = "websocket caught aiohttp.ClientConnectorError"
                     if hasattr(err, "status"):
                         err_msg += f' status: "{err.status}"'
+                        if err.status in CASAMBI_REASONS_BY_STATUS_CODE:
+                            reason = CASAMBI_REASONS_BY_STATUS_CODE[err.status]
+                            err_msg += f' reason: "{reason}"'
+                        else:
+                            if hasattr(err, "message"):
+                                err_msg += f' message: "{err.message}"'
                     LOGGER.error(err_msg)
 
                     self.state = STATE_DISCONNECTED
             except aiohttp.WSServerHandshakeError as err:
                 if self.state != STATE_STOPPED:
-                    err_msg = (
-                        f"websocket caught aiohttp.WSServerHandshakeError, err: {err}"
-                    )
-                    if hasattr(err, "message"):
-                        err_msg += f' message: "{err.message}"'
+                    err_msg = "websocket caught aiohttp.WSServerHandshakeError,"
                     if hasattr(err, "status"):
                         err_msg += f' status: "{err.status}"'
 
-                        if err.status == 429:
-                            err_msg += ' 429=="Too many active websocket connections"'
+                        if err.status in CASAMBI_REASONS_BY_STATUS_CODE:
+                            reason = CASAMBI_REASONS_BY_STATUS_CODE[err.status]
+                            err_msg += f' reason: "{reason}"'
+                        else:
+                            if hasattr(err, "message"):
+                                err_msg += f' message: "{err.message}"'
                     LOGGER.error(err_msg)
 
                     self.state = STATE_DISCONNECTED

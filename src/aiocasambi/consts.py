@@ -12,3 +12,16 @@ STATE_STOPPED = "stopped"
 
 MAX_NETWORK_IDS = 100
 MAX_RETRIES = 10
+
+CASAMBI_REASONS_BY_STATUS_CODE = {
+    200: "request OK",
+    400: "Bad request, given parameters invalid",
+    401: "Unauthorized. Invalid API key or credentials given",
+    403: "Api not enabled by Casambi administrator or trying to create session after failed attempt too soon",
+    404: "Requested data not found",
+    405: "Method not allowed",
+    410: "Invalid session",
+    416: "Retrieval interval is too long",
+    429: "Quota limits exceeded",
+    500: "Server error",
+}

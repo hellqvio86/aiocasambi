@@ -525,19 +525,31 @@ class Units:
             ]
         }
         """
-        for key, value in self.units.items():
+        all_fixture_ids = {}
+
+        # Get all unique fixture ids that are not set
+        for _, value in self.units.items():
+            if not (value.type and value.oem and value.fixture_model):
+                all_fixture_ids[value.fixture_id] = {}
+
+        for fixture_id, _ in all_fixture_ids.items():
             response = await self._controller.get_fixture_information(
-                network_id=self._network_id, fixture_id=value.fixture_id
+                network_id=self._network_id, fixture_id=fixture_id
             )
 
-            if "type" in response:
-                self.units[key].type = response["type"]
+            all_fixture_ids[fixture_id] = response
 
-            if "vendor" in response:
-                self.units[key].oem = response["vendor"]
+        for key, value in self.units.items():
+            if value.fixture_id in all_fixture_ids:
+                response = all_fixture_ids[value.fixture_id]
+                if "type" in response:
+                    self.units[key].type = response["type"]
 
-            if "model" in response:
-                self.units[key].fixture_model = response["model"]
+                if "vendor" in response:
+                    self.units[key].oem = response["vendor"]
+
+                if "model" in response:
+                    self.units[key].fixture_model = response["model"]
 
     async def turn_unit_on(self, *, unit_id: int) -> None:
         """

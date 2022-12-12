@@ -1087,6 +1087,7 @@ class Unit:
         result += f"fixture_id={self._fixture_id} "
         result += f"oem={self._oem} "
         result += f"fixture_model={self._fixture_model} "
+        result += f"type={self._type} "
         result += f"address={address} "
 
         if self._type:

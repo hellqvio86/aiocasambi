@@ -5,6 +5,7 @@ import logging
 from typing import Tuple, Union
 from pprint import pformat
 from .unit import Unit
+from .consts import CASAMBI_FIXTURE_IDS
 
 LOGGER = logging.getLogger(__name__)
 
@@ -526,6 +527,20 @@ class Units:
         }
         """
         all_fixture_ids = {}
+
+        # Use const
+        for key, value in self.units.items():
+            if value.fixture_id in CASAMBI_FIXTURE_IDS:
+                fixture_data = CASAMBI_FIXTURE_IDS[value.fixture_id]
+
+                if "type" in fixture_data:
+                    self.units[key].type = fixture_data["type"]
+
+                if "oem" in fixture_data:
+                    self.units[key].oem = fixture_data["oem"]
+
+                if "fixture_model" in fixture_data:
+                    self.units[key].fixture_model = fixture_data["fixture_model"]
 
         # Get all unique fixture ids that are not set
         for _, value in self.units.items():

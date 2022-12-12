@@ -25,3 +25,9 @@ CASAMBI_REASONS_BY_STATUS_CODE = {
     429: "Quota limits exceeded",
     500: "Server error",
 }
+
+CASAMBI_FIXTURE_IDS = {
+    2516: {"oem": "Vadsbo", "fixture_model": "LD220WCM_onoff", "type": "Luminaire"},
+    4027: {"oem": "Casambi", "fixture_model": "CBU-PWM4 RGBW", "type": "Luminaire"},
+    14235: {"oem": "AIMOTION", "fixture_model": "GLOW", "type": "Luminaire"},
+}

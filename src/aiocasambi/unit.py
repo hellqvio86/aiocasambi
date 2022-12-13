@@ -189,6 +189,7 @@ class Unit:
             != STATE_RUNNING
         ):
             # Return false if websocket isnt online
+            LOGGER.debug(f"websocket is offline for unit: {self}")
             return False
 
         return self._online

@@ -58,11 +58,8 @@ async def get_casambi_controller(
             await controller.create_session()
         return controller
 
-    except aiocasambi.LoginRequired:
-        LOGGER.warning("Connected to casambi but couldn't log in")
-
     except aiocasambi.Unauthorized:
-        LOGGER.warning("Connected to casambi but not registered")
+        LOGGER.warning("Connected to casambi but couldn't log in")
 
     except (asyncio.TimeoutError, aiocasambi.RequestError):
         LOGGER.exception("Error connecting to the Casambi")

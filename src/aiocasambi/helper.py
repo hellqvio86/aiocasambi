@@ -8,7 +8,14 @@ import logging
 import aiohttp
 
 
-from .errors import LoginRequired, ResponseError, RateLimit, CasambiAPIServerError
+from .errors import (
+    Unauthorized,
+    ResponseError,
+    RateLimit,
+    CasambiAPIServerError,
+    ERROR_CODES,
+    get_error,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -114,32 +121,19 @@ class Helper:
             ) as res:
                 LOGGER.debug(f"request: {res.status} {res.content_type} {res}")
 
-                if res.status == 401:
-                    raise LoginRequired(f"Call {url} received 401 Unauthorized")
+                if res.status in ERROR_CODES:
+                    text = await res.text()
+                    error = get_error(status_code=res.status)
 
-                if res.status == 404:
-                    raise ResponseError(f"Call {url} received 404 Not Found")
+                    err_msg = f"got status_code: {res.status} text: {text}"
+                    LOGGER.error(err_msg)
 
-                if res.status == 410:
-                    raise ResponseError(f"Call {url} received 410 Gone")
-
-                if res.status == 429:
-                    raise RateLimit(
-                        f"Call {url} received 429 Server rate limit exceeded!"
-                    )
-
-                if res.status == 500:
-                    log_msg = f"Server Error: url: {url} "
-                    log_msg += f"headers: {headers} "
-                    log_msg += f"status: {res.status} "
-                    log_msg += f"response: {res}"
-                    raise CasambiAPIServerError(log_msg)
+                    raise error(err_msg)
 
                 if res.content_type == "application/json":
                     response = await res.json()
 
                     return response
-                return res
 
         except aiohttp.client_exceptions.ClientError as err:
             raise err

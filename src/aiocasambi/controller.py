@@ -12,10 +12,11 @@ from aiohttp import client_exceptions
 
 from .errors import (
     AiocasambiException,
-    LoginRequired,
+    Unauthorized,
     ResponseError,
     RateLimit,
-    CasambiAPIServerError,
+    ERROR_CODES,
+    get_error,
 )
 
 from .websocket import (
@@ -205,8 +206,8 @@ class Controller:
         data = None
         try:
             data = await self.request("post", url=url, json=auth, headers=headers)
-        except LoginRequired as err:
-            LOGGER.error("create_user_session caught LoginRequired exception")
+        except Unauthorized as err:
+            LOGGER.error("create_user_session caught Unauthorized exception")
             raise err
 
         LOGGER.debug(f"create_user_session data from request {data}")
@@ -268,8 +269,9 @@ class Controller:
         data = None
         try:
             data = await self.request("post", url=url, json=auth, headers=headers)
-        except LoginRequired as err:
-            LOGGER.error("create_network_session: caught LoginRequired exception")
+        except Unauthorized as err:
+            err_msg = "create_network_session: caught Unauthorized exception"
+            LOGGER.error(err_msg)
             raise err
 
         LOGGER.debug(f"create_network_session: data from request {pformat(data)}")
@@ -304,9 +306,9 @@ class Controller:
             data = None
             try:
                 data = await self.request("get", url=url, headers=self.headers)
-            except LoginRequired:
+            except Unauthorized:
                 LOGGER.error(
-                    f"get_network_information caught LoginRequired exception for network_id: {network_id}"
+                    f"get_network_information caught Unauthorized exception for network_id: {network_id}"
                 )
                 failed_network_ids.append(network_id)
                 continue
@@ -509,9 +511,9 @@ class Controller:
             for i in range(0, MAX_RETRIES):
                 try:
                     data = await self.request("get", url=url, headers=self.headers)
-                except LoginRequired:
+                except Unauthorized:
                     LOGGER.error(
-                        f"get_network_state caught LoginRequired exception for network_id: {network_id}"
+                        f"get_network_state caught Unauthorized exception for network_id: {network_id}"
                     )
                     failed_network_ids.append(network_id)
                     failed_network_request = True
@@ -656,15 +658,16 @@ class Controller:
         data = None
         try:
             data = await self.request("get", url=url, headers=self.headers)
-        except LoginRequired as err:
-            err_msg = "get_unit_state caught LoginRequired exception, "
+        except Unauthorized as err:
+            err_msg = "get_unit_state caught Unauthorized exception, "
             err_msg += f"unit_id: {unit_id}, network_id: {network_id}"
             LOGGER.error(err_msg)
 
             raise err
-        except ResponseError as err:
-            err_msg = "get_unit_state caught ResponseError exception, "
-            err_msg += f"unit_id: {unit_id}, network_id: {network_id}"
+        except AiocasambiException as err:
+            err_msg = "get_unit_state caught AiocasambiException exception, "
+            err_msg += f"unit_id: {unit_id}, network_id: {network_id} "
+            err_msg += f"err: {err}"
             LOGGER.exception(err_msg)
 
             raise err
@@ -745,9 +748,9 @@ class Controller:
         except ResponseError:
             LOGGER.warning(f"Failed to get fixture information for {fixture_id}")
             return {}
-        except LoginRequired:
+        except Unauthorized:
             LOGGER.warning(
-                f"get_fixture_information caught LoginRequired exception for network_id: {network_id}"
+                f"get_fixture_information caught Unauthorized exception for network_id: {network_id}"
             )
 
             # Hue lights don't support get_fixture_information,
@@ -1324,28 +1327,19 @@ class Controller:
                 headers=headers,
                 **kwargs,
             ) as res:
-                LOGGER.debug(f"request: {res.status} {res.content_type} {res}")
+                dbg_msg = f"request status:{res.status} "
+                dbg_msg += f"content_type:{res.content_type} "
+                dbg_msg += f"result:{res}"
+                LOGGER.debug(dbg_msg)
 
-                if res.status == 401:
-                    raise LoginRequired(f"Call {url} received 401 Unauthorized")
+                if res.status in ERROR_CODES:
+                    text = await res.text()
+                    error = get_error(status_code=res.status)
 
-                if res.status == 404:
-                    raise ResponseError(f"Call {url} received 404 Not Found")
+                    err_msg = f"got status_code: {res.status} text: {text}"
+                    LOGGER.error(err_msg)
 
-                if res.status == 410:
-                    raise ResponseError(f"Call {url} received 410 Gone")
-
-                if res.status == 429:
-                    raise RateLimit(
-                        f"Call {url} received 429 Server rate limit exceeded!"
-                    )
-
-                if res.status == 500:
-                    log_msg = f"Server Error: url: {url} "
-                    log_msg += f"headers: {headers} "
-                    log_msg += f"status: {res.status} "
-                    log_msg += f"response: {res}"
-                    raise CasambiAPIServerError(log_msg)
+                    raise error(err_msg)
 
                 if res.content_type == "application/json":
                     response = await res.json()

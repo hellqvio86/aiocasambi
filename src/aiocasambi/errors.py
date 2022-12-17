@@ -5,8 +5,12 @@ class AiocasambiException(Exception):
     """Base error for aiocasambi."""
 
 
+class RateLimit(AiocasambiException):
+    """Rate limiting exception (deprecated)"""
+
+
 class ResponseError(AiocasambiException):
-    """Error to raise on invalid response"""
+    """Error to raise on invalid response (deprecated)"""
 
 
 class BadRequest(AiocasambiException):

@@ -1129,6 +1129,10 @@ class Unit:
 
             result = f"{result} controls={self._controls}"
 
+        websocket_state = self.controller.get_websocket_state(
+            network_id=self._network_id
+        )
+        result = f"{result} websocket_state={websocket_state}"
         result = f"{result} >"
 
         return result

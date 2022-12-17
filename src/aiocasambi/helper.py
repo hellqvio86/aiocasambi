@@ -6,13 +6,11 @@ Used for validate credentials
 
 import logging
 import aiohttp
+import asyncio
 
 
 from .errors import (
     Unauthorized,
-    ResponseError,
-    RateLimit,
-    CasambiAPIServerError,
     ERROR_CODES,
     get_error,
 )
@@ -65,6 +63,7 @@ class Helper:
         Test user session password
         """
         url = f"{self.rest_url}/users/session"
+        data = None
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
@@ -75,17 +74,35 @@ class Helper:
 
         LOGGER.debug(f" headers: {headers} auth: {auth}")
 
-        data = await self.request("post", url=url, json=auth, headers=headers)
+        for _ in range(0, 10):
+            try:
+                data = await self.request("post", url=url, json=auth, headers=headers)
+            except aiohttp.client_exceptions.ClientConnectorError as err:
+                err_msg = "Caught Client ConnectorError trying again, "
+                err_msg += f"err: {err}"
+                LOGGER.error(err_msg)
 
-        LOGGER.debug(f"create_user_session data from request {data}")
+                await asyncio.sleep(60)
 
-        return True
+                continue
+
+            except Unauthorized:
+                return False
+
+            break
+
+        LOGGER.debug(f"test_user_password data from request {data}")
+
+        if data:
+            return True
+        return False
 
     async def test_network_password(self, *, password: str) -> bool:
         """
         Creating network session.
         """
         url = f"{self.rest_url}/networks/session"
+        data = None
 
         headers = {"Content-type": "application/json", "X-Casambi-Key": self.api_key}
 
@@ -96,11 +113,28 @@ class Helper:
 
         LOGGER.debug(f"headers: {headers} auth: {auth}")
 
-        data = await self.request("post", url=url, json=auth, headers=headers)
+        for _ in range(0, 10):
+            try:
+                data = await self.request("post", url=url, json=auth, headers=headers)
+            except aiohttp.client_exceptions.ClientConnectorError as err:
+                err_msg = "Caught Client ConnectorError trying again, "
+                err_msg += f"err: {err}"
+                LOGGER.error(err_msg)
 
-        LOGGER.debug(f"create_network_session data from request {data}")
+                await asyncio.sleep(60)
 
-        return True
+                continue
+
+            except Unauthorized:
+                return False
+
+            break
+
+        LOGGER.debug(f"test_network_password data from request {data}")
+
+        if data:
+            return True
+        return False
 
     async def request(
         self, method, json=None, url=None, headers=None, **kwargs

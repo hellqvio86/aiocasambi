@@ -120,10 +120,9 @@ class Controller:
 
                     return
             except TimeoutError:
-                dbg_msg = (
-                    "caught asyncio.TimeoutError when trying to create user session,"
-                )
-                dbg_msg += f" trying again, try: {i}"
+                dbg_msg = "caught asyncio.TimeoutError when "
+                dbg_msg += "trying to create user session"
+                dbg_msg += f",  trying again, try: {i}"
                 LOGGER.debug(dbg_msg)
 
                 await sleep(self.network_timeout)
@@ -138,9 +137,9 @@ class Controller:
 
                     return
             except TimeoutError:
-                LOGGER.debug(
-                    "caught asyncio.TimeoutError when trying to create network session, trying again"
-                )
+                dbg_msg = "caught TimeoutError when trying to "
+                dbg_msg += "create network session, trying again"
+                LOGGER.debug(dbg_msg)
 
                 await sleep(self.network_timeout)
 
@@ -199,9 +198,9 @@ class Controller:
             "password": self.user_password,
         }
 
-        LOGGER.debug(
-            f"create_user_session headers: {pformat(headers)} auth: {pformat(auth)}"
-        )
+        dbg_msg = f"create_user_session headers: {pformat(headers)} "
+        dbg_msg += f"auth: {pformat(auth)}"
+        LOGGER.debug(dbg_msg)
 
         data = None
         try:
@@ -224,9 +223,9 @@ class Controller:
             else:
                 self._session_ids[network_key] = data["sessionId"]
 
-        LOGGER.debug(
-            f"network_ids: {pformat(self._network_ids)} session_ids: {pformat(self._session_ids)}"
-        )
+        dbg_msg = f"network_ids: {pformat(self._network_ids)} "
+        dbg_msg += f"session_ids: {pformat(self._session_ids)}"
+        LOGGER.debug(dbg_msg)
 
     async def create_network_session(self) -> None:
         """
@@ -264,7 +263,8 @@ class Controller:
             "password": self.network_password,
         }
 
-        LOGGER.debug(f"create_network_session headers: {headers} auth: {auth}")
+        dbg_msg = f"create_network_session headers: {headers} auth: {auth}"
+        LOGGER.debug(dbg_msg)
 
         data = None
         try:
@@ -274,15 +274,16 @@ class Controller:
             LOGGER.error(err_msg)
             raise err
 
-        LOGGER.debug(f"create_network_session: data from request {pformat(data)}")
+        dbg_msg = f"create_network_session: data from request {pformat(data)}"
+        LOGGER.debug(dbg_msg)
 
         for network_id in data.keys():
             self._network_ids.add(data[network_id]["id"])
             self._session_ids[network_id] = data[network_id]["sessionId"]
 
-        LOGGER.debug(
-            f"create_network_session: network_ids: {pformat(self._network_ids)} session_ids: {pformat(self._session_ids)}"
-        )
+        dbg_msg = f"create_network_session: network_ids: {pformat(self._network_ids)} "
+        dbg_msg += f"session_ids: {pformat(self._session_ids)}"
+        LOGGER.debug(dbg_msg)
 
     async def get_network_information(self) -> dict:
         """Get network information."""
@@ -307,19 +308,23 @@ class Controller:
             try:
                 data = await self.request("get", url=url, headers=self.headers)
             except Unauthorized:
-                LOGGER.error(
-                    f"get_network_information caught Unauthorized exception for network_id: {network_id}"
-                )
+                err_msg = "get_network_information caught Unauthorized"
+                err_msg += f" exception for network_id: {network_id}"
+                LOGGER.error(err_msg)
+
                 failed_network_ids.append(network_id)
+
                 continue
 
-            LOGGER.debug(f"get_network_information response: {pformat(data)}")
+            dbg_msg = f"get_network_information response: {pformat(data)}"
+            LOGGER.debug(dbg_msg)
+
             result[network_id] = data
 
         if len(result) == 0:
-            raise AiocasambiException(
-                "get_network_information Failed to get any network information!"
-            )
+            err_msg = "get_network_information failed "
+            err_msg += "to get any network information!"
+            raise AiocasambiException(err_msg)
 
         for failed_network_id in failed_network_ids:
             self.__remove_network_id(network_id=failed_network_id)
@@ -495,16 +500,16 @@ class Controller:
         if not self._network_ids or len(self._network_ids) == 0:
             raise AiocasambiException("Network ids not set")
 
-        LOGGER.debug(f"get_network_state called units: {pformat(self.units)}")
+        dbg_msg = f"get_network_state called units: {pformat(self.units)}"
+        LOGGER.debug(dbg_msg)
 
         for network_id in self._network_ids:
             failed_network_request = False
             self.set_session_id(session_id=self._session_ids[network_id])
             url = f"{self.rest_url}/networks/{network_id}/state"
 
-            LOGGER.debug(
-                f"get_network_state request url: {url} headers= {self.headers}"
-            )
+            dbg_msg = f"get_network_state request url: {url} headers= {self.headers}"
+            LOGGER.debug(dbg_msg)
 
             data = None
 
@@ -512,16 +517,18 @@ class Controller:
                 try:
                     data = await self.request("get", url=url, headers=self.headers)
                 except Unauthorized:
-                    LOGGER.error(
-                        f"get_network_state caught Unauthorized exception for network_id: {network_id}"
-                    )
+                    err_msg = "get_network_state caught Unauthorized "
+                    err_msg += f"exception for network_id: {network_id}"
+                    LOGGER.error(err_msg)
+
                     failed_network_ids.append(network_id)
                     failed_network_request = True
 
                     break
                 except TimeoutError:
-                    dbg_msg = "caught asyncio.TimeoutError when initialize tried "
-                    dbg_msg += f"to fetch network information, trying again, try {i}"
+                    dbg_msg = "caught asyncio.TimeoutError when initialize "
+                    dbg_msg += "tried  to fetch network information, "
+                    dbg_msg += f"trying again, try {i}"
                     LOGGER.debug(dbg_msg)
 
                     await sleep(self.network_timeout)
@@ -540,7 +547,8 @@ class Controller:
 
                 raise AiocasambiException(error_msg)
 
-            LOGGER.debug(f"get_network_state response: {data}")
+            dbg_msg = "get_network_state response: {data}"
+            LOGGER.debug(dbg_msg)
 
             self.units[network_id].process_network_state(data)
 
@@ -569,7 +577,8 @@ class Controller:
         unit_id_regexp = re.compile(r"(?P<network_id>[a-zA-Z0-9]+)-(?P<unit_id>\d+)$")
         unique_ids = self.units[network_id].get_units_unique_ids()
 
-        LOGGER.debug(f"init_unit_state_controls unique_ids: {pformat(unique_ids)}")
+        dbg_msg = f"init_unit_state_controls unique_ids: {pformat(unique_ids)}"
+        LOGGER.debug(dbg_msg)
 
         for unique_unit_id in unique_ids:
             network_id = None
@@ -591,9 +600,9 @@ class Controller:
 
             data = None
 
-            LOGGER.debug(
-                f"init_unit_state_controls unique_unit_id: {unique_unit_id} unit_id: {unit_id}"
-            )
+            dbg_msg = f"init_unit_state_controls unique_unit_id: {unique_unit_id} "
+            dbg_msg += f"unit_id: {unit_id}"
+            LOGGER.debug(dbg_msg)
 
             for i in range(0, MAX_RETRIES):
                 try:
@@ -613,9 +622,10 @@ class Controller:
                 break
 
             if not data:
-                debug_msg = f"init_unit_state_controls failed to get unit state for unit: {unique_unit_id} data: {pformat(data)}"
+                dbg_msg = "init_unit_state_controls failed to get unit state "
+                dbg_msg += f"for unit: {unique_unit_id} data: {pformat(data)}"
 
-                LOGGER.debug(debug_msg)
+                LOGGER.debug(dbg_msg)
 
                 return
 
@@ -671,9 +681,12 @@ class Controller:
             LOGGER.exception(err_msg)
 
             raise err
-        LOGGER.debug(
-            f"get_unit_state called, unit_id: {unit_id}, network_id: {network_id} session_id: {session_id} data: {pformat(data)}"
-        )
+
+        dbg_msg = f"get_unit_state called, unit_id: {unit_id}, "
+        dbg_msg += f"network_id: {network_id} session_id: {session_id} "
+        dbg_msg += f"data: {pformat(data)}"
+
+        LOGGER.debug(dbg_msg)
 
         return data
 
@@ -746,18 +759,20 @@ class Controller:
         try:
             data = await self.request("get", url=url, headers=self.headers)
         except RequestedDataNotFound:
-            LOGGER.warning(f"Failed to get fixture information for {fixture_id}")
+            warn_msg = f"Failed to get fixture information for {fixture_id}"
+            LOGGER.warning(warn_msg)
             return {}
         except Unauthorized:
-            LOGGER.warning(
-                f"get_fixture_information caught Unauthorized exception for network_id: {network_id}"
-            )
+            warn_msg = f"get_fixture_information caught Unauthorized "
+            warn_msg += f"exception for network_id: {network_id}"
+            LOGGER.warning(warn_msg)
 
             # Hue lights don't support get_fixture_information,
             # thats why its no raise of exception
             return {}
 
-        LOGGER.debug(f"get_fixture_information response: {pformat(data)}")
+        dbg_msg = f"get_fixture_information response: {pformat(data)}"
+        LOGGER.debug(dbg_msg)
 
         return data
 
@@ -790,13 +805,15 @@ class Controller:
             'type': 'Luminaire'
         }
         """
-        LOGGER.debug(
+        dbg_msg = (
             f"get_unit_state_controls called unit_id:{unit_id} network_id: {network_id}"
         )
+        LOGGER.debug(dbg_msg)
 
         data = await self.get_unit_state(unit_id=unit_id, network_id=network_id)
 
-        LOGGER.debug(f"get_unit_state_controls data: {pformat(data)}")
+        dbg_msg = f"get_unit_state_controls data: {pformat(data)}"
+        LOGGER.debug(dbg_msg)
 
         if "controls" in data:
             return data["controls"]
@@ -815,9 +832,9 @@ class Controller:
                 network_information = await self.get_network_information()
                 break
             except TimeoutError:
-                LOGGER.debug(
-                    "caught asyncio.TimeoutError when initialize tried to fetch network information, trying again"
-                )
+                dbg_msg = "caught asyncio.TimeoutError when initialize "
+                dbg_msg += "tried to fetch network information, trying again"
+                LOGGER.debug(dbg_msg)
 
                 await sleep(self.network_timeout)
 
@@ -848,14 +865,16 @@ class Controller:
                 wire_id=0,
             )
 
-        LOGGER.debug(f"initialize network__information: {pformat(network_information)}")
+        dbg_msg = "initialize network__information: "
+        dbg_msg += f"{pformat(network_information)}"
+        LOGGER.debug(dbg_msg)
 
         # Get initial network state
         await self.get_network_state()
 
-        LOGGER.debug(
-            f"initialize getting unit state for all units in network_ids: {pformat(self._network_ids)}"
-        )
+        dbg_msg = "initialize getting unit state for all units in "
+        dbg_msg += f"network_ids: {pformat(self._network_ids)}"
+        LOGGER.debug(dbg_msg)
 
         for network_id in self._network_ids:
             await self.init_unit_state_controls(network_id=network_id)
@@ -873,23 +892,29 @@ class Controller:
         LOGGER.debug("start_websockets called")
 
         for network_id in self._network_ids:
-            LOGGER.debug(f"start_websockets starting network_id: {network_id}")
+            dbg_msg = f"start_websockets starting network_id: {network_id}"
+            LOGGER.debug(dbg_msg)
+
             await self.start_websocket(network_id=network_id)
 
     async def start_websocket(self, *, network_id: str) -> None:
         """
         Start websession and websocket to Casambi.
         """
-        LOGGER.debug(f"start_websocket called network_id: {network_id}")
+        dbg_msg = f"start_websocket called network_id: {network_id}"
+        LOGGER.debug(dbg_msg)
+
         wire_id = random.randint(1, MAX_NETWORK_IDS)
 
         while wire_id not in self._wire_id_to_network_id:
             wire_id = random.randint(1, MAX_NETWORK_IDS)
             self._wire_id_to_network_id[wire_id] = network_id
 
-        LOGGER.debug(
+        dbg_msg = (
             f"start_websocket generate wire_id: {wire_id} network_id: {network_id}"
         )
+        LOGGER.debug(dbg_msg)
+
         session_id = self._session_ids[network_id]
 
         dbg_msg = f"start_websocket: api_key: {self.api_key},"
@@ -908,6 +933,7 @@ class Controller:
             wire_id=wire_id,
             controller=self,
             callback=self.session_handler,
+            network_timeout=self.network_timeout,
         )
 
         self.websocket[network_id].start()
@@ -926,7 +952,8 @@ class Controller:
             # Ping should be sent every 5 min
             msg = "Not sending websocket ping, "
             msg += f"current_time: {current_time}, "
-            msg += f"last websocket ping: {self._last_websocket_ping}"
+            msg += f"last websocket ping: {self._last_websocket_ping} "
+            msg += f"websocket states: {self.get_websockets_states()} "
             LOGGER.debug(msg)
             return
 
@@ -936,7 +963,8 @@ class Controller:
                 "wire": wire_id,
             }
 
-            LOGGER.debug(f"Sending websocket ping: {message}")
+            dbg_msg = f"Sending websocket ping: {message}"
+            LOGGER.debug(dbg_msg)
 
             succcess = await self.websocket[network_id].send_message(message)
 
@@ -950,7 +978,8 @@ class Controller:
         """Send websocket message to casambi api"""
         await self.ws_ping()
 
-        LOGGER.debug(f"Sending websocket message: msg {msg}")
+        dbg_msg = f"Sending websocket message: msg {msg}"
+        LOGGER.debug(dbg_msg)
 
         succcess = await self.websocket[network_id].send_message(msg)
 
@@ -1010,7 +1039,8 @@ class Controller:
         if len(self.websocket) == 0:
             return
 
-        LOGGER.debug(f"session_handler: websockets {self.websocket}")
+        dbg_msg = f"session_handler: websockets {self.websocket}"
+        LOGGER.debug(dbg_msg)
 
         if signal == SIGNAL_DATA:
             LOGGER.debug(f"session_handler is handling SIGNAL_DATA: {signal}")
@@ -1030,7 +1060,8 @@ class Controller:
 
             self.callback(SIGNAL_CONNECTION_STATE, self.websocket[network_id].state)
         else:
-            LOGGER.debug(f"session_handler is NOT handling signal: {signal}")
+            dbg_msg = f"session_handler is NOT handling signal: {signal}"
+            LOGGER.debug(dbg_msg)
 
     def message_handler(self, message: dict, wire_id: str) -> dict:
         """
@@ -1038,7 +1069,8 @@ class Controller:
         """
         changes = {}
 
-        LOGGER.debug(f"message_handler recieved websocket message: {message}")
+        dbg_msg = f"message_handler recieved websocket message: {message}"
+        LOGGER.debug(dbg_msg)
 
         # Signaling of online gateway
         # {'wire': 9, 'method': 'peerChanged', 'online': True}
@@ -1130,9 +1162,8 @@ class Controller:
 
                 await self.create_session()
             except QoutaLimitsExceeded as err:
-                LOGGER.debug(
-                    f"caught QoutaLimitsExceeded exception: {err}, trying again"
-                )
+                dbg_msg = f"caught QoutaLimitsExceeded exception: {err}, trying again"
+                LOGGER.debug(dbg_msg)
 
                 await sleep(self.network_timeout)
 
@@ -1318,7 +1349,8 @@ class Controller:
         """Make a request to the API."""
         await self.ws_ping()
 
-        LOGGER.debug(f"request url: {url}")
+        dbg_msg = f"request url: {url}"
+        LOGGER.debug(dbg_msg)
 
         try:
             async with self.session.request(

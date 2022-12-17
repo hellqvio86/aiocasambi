@@ -294,9 +294,8 @@ class Units:
                     elif "name" in msg:
                         name = (msg["name"]).strip()
 
-                    dbg_msg = (
-                        f"processing_unit_event - key: {key} name: {name} msg: {msg} "
-                    )
+                    dbg_msg = f"processing_unit_event - key: {key} "
+                    dbg_msg += f" name: {name} msg: {msg} "
                     dbg_msg += "method unit changed control"
                     dbg_msg += f" value: {pformat(control['value'])}"
                     LOGGER.debug(dbg_msg)

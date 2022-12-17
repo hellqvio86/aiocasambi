@@ -37,6 +37,7 @@ class WSClient:
         callback,
         controller,
         wire_id=3,
+        network_timeout=30,
     ):
         """
         Constructor for Web Socket Client
@@ -44,6 +45,7 @@ class WSClient:
         self.api_key = api_key
         self.network_id = network_id
         self.session_id = session_id
+        self.network_timeout = network_timeout
 
         self.session = session
         self.ssl_context = ssl_context
@@ -223,15 +225,21 @@ class WSClient:
 
             except ConnectionResetError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error(f"websocket caught ConnectionResetError, err: {err}")
+                    err_msg = "websocket caught ConnectionResetError, "
+                    err_msg += f"err: {err}"
+                    LOGGER.error(err_msg)
+
                     self.state = STATE_DISCONNECTED
             except ConnectionError as err:
                 if self.state != STATE_STOPPED:
-                    LOGGER.error(f"websocket caught ConnectionError, err: {err}")
+                    err_msg = f"websocket caught ConnectionError, err: {err}"
+                    LOGGER.error(err_msg)
+
                     self.state = STATE_DISCONNECTED
             except aiohttp.ClientConnectorError as err:
                 if self.state != STATE_STOPPED:
                     err_msg = "websocket caught aiohttp.ClientConnectorError"
+
                     if hasattr(err, "status"):
                         err_msg += f' status: "{err.status}"'
                         if err.status in CASAMBI_REASONS_BY_STATUS_CODE:
@@ -265,7 +273,8 @@ class WSClient:
 
                     LOGGER.error(error_msg)
                     LOGGER.exception("An unknown exception was thrown!")
+
                     self.state = STATE_DISCONNECTED
 
                     raise err
-            await asyncio.sleep(60)
+            await asyncio.sleep(self.network_timeout)

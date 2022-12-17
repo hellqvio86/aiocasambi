@@ -38,7 +38,7 @@ class Unit:
         enabled: bool = True,
         state: str = UNIT_STATE_OFF,
     ):
-        self._name = name
+        self._name = name.strip()
         self._address = address
         self._unit_id = int(unit_id)
         self._fixture_id = int(fixture_id)
@@ -135,7 +135,7 @@ class Unit:
         """
         Setter for name
         """
-        self._name = name
+        self._name = name.strip()
 
     @property
     def type(self) -> str:

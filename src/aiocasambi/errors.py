@@ -5,6 +5,10 @@ class AiocasambiException(Exception):
     """Base error for aiocasambi."""
 
 
+class ResponseError(AiocasambiException):
+    """Error to raise on invalid response"""
+
+
 class BadRequest(AiocasambiException):
     """400 Bad request, given parameters invalid."""
 

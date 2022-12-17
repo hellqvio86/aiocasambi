@@ -82,7 +82,7 @@ class Helper:
                 err_msg += f"err: {err}"
                 LOGGER.error(err_msg)
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(5)
 
                 continue
 
@@ -121,7 +121,7 @@ class Helper:
                 err_msg += f"err: {err}"
                 LOGGER.error(err_msg)
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(5)
 
                 continue
 

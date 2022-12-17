@@ -5,29 +5,6 @@ class AiocasambiException(Exception):
     """Base error for aiocasambi."""
 
 
-class RequestError(AiocasambiException):
-    """
-    Unable to fulfill request.
-    Raised when host or API cannot be reached.
-    """
-
-
-class ResponseError(AiocasambiException):
-    """Invalid response."""
-
-
-class LoginRequired(AiocasambiException):
-    """User is logged out."""
-
-
-class NoPermission(AiocasambiException):
-    """Users permissions are read only."""
-
-
-class RateLimit(AiocasambiException):
-    """Exceeded server rate limit"""
-
-
 class BadRequest(AiocasambiException):
     """400 Bad request, given parameters invalid."""
 

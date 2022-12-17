@@ -13,8 +13,8 @@ from aiohttp import client_exceptions
 from .errors import (
     AiocasambiException,
     Unauthorized,
-    ResponseError,
-    RateLimit,
+    RequestedDataNotFound,
+    QoutaLimitsExceeded,
     ERROR_CODES,
     get_error,
 )
@@ -745,7 +745,7 @@ class Controller:
         data = None
         try:
             data = await self.request("get", url=url, headers=self.headers)
-        except ResponseError:
+        except RequestedDataNotFound:
             LOGGER.warning(f"Failed to get fixture information for {fixture_id}")
             return {}
         except Unauthorized:
@@ -1129,8 +1129,10 @@ class Controller:
                 LOGGER.debug(dbg_msg)
 
                 await self.create_session()
-            except RateLimit as err:
-                LOGGER.debug(f"caught RateLimit exception: {err}, trying again")
+            except QoutaLimitsExceeded as err:
+                LOGGER.debug(
+                    f"caught QoutaLimitsExceeded exception: {err}, trying again"
+                )
 
                 await sleep(self.network_timeout)
 

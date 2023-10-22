@@ -338,6 +338,13 @@ class Unit:
         Getter for address
         """
         return self._address
+    
+    @property
+    def network_id(self):
+        """
+        Getter for network_id
+        """
+        return self._network_id
 
     @property
     def unit_id(self):

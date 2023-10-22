@@ -29,5 +29,6 @@ CASAMBI_REASONS_BY_STATUS_CODE = {
 CASAMBI_FIXTURE_IDS = {
     2516: {"oem": "Vadsbo", "fixture_model": "LD220WCM_onoff", "type": "Luminaire"},
     4027: {"oem": "Casambi", "fixture_model": "CBU-PWM4 RGBW", "type": "Luminaire"},
+    8223: {"oem": "Tridonic GmbH & Co KG", "fixture_model": "bDW Driver (Dim/PushBUTTON)", "type": "Luminaire"}
     14235: {"oem": "AIMOTION", "fixture_model": "GLOW", "type": "Luminaire"},
 }

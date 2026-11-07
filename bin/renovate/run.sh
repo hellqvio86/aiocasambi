@@ -190,6 +190,8 @@ echo "Image:      ${RENOVATE_IMAGE}"
 DOCKER_ARGS=(
   docker run --rm -i
   --user "$(id -u):$(id -g)"
+  --group-add 0
+  -e "HOME=/tmp"
   -e "LOG_LEVEL=${LOG_LEVEL}"
   -e "RENOVATE_DRY_RUN=${DRY_RUN}"
   -e "RENOVATE_PLATFORM=${PLATFORM}"

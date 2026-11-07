@@ -9,4 +9,10 @@ build:
 	python3 setup.py sdist bdist_wheel
 upload: clean build
 	python3 setup.py sdist bdist_wheel; twine upload dist/*
-.PHONY: build clean upload
+.PHONY: build clean upload renovate renovate-summary
+
+renovate:
+	@./bin/renovate/run.sh
+
+renovate-summary:
+	@./bin/renovate/run.sh --summary

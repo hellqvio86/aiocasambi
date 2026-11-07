@@ -7,4 +7,5 @@ egg-info
 *.egg-info
 lib
 lib64
-bin
+bin/*
+!bin/renovate/

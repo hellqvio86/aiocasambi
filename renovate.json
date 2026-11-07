@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "bump",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
+  "timezone": "Europe/Stockholm",
+  "schedule": [
+    "before 6:00am on monday"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["pip_requirements", "pip_setup"],
+      "groupName": "python dependencies",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
+}

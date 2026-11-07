@@ -1,152 +1,247 @@
 #!/usr/bin/env bash
-# Run Renovate CLI locally in dry-run mode against this repository using Docker / Podman.
 set -euo pipefail
+
+# bin/renovate/run.sh - Run Renovate CLI locally via Docker container
+#
+# Supports:
+#   - Local dry-run inspection (default, no GitHub credentials needed)
+#   - Full remote runs against GitHub (with GITHUB_TOKEN or RENOVATE_TOKEN)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
 
-DEFAULT_REPO_NAME="$(git -C "${REPO_ROOT}" config --get remote.origin.url 2>/dev/null | sed -E 's/.*[:\/]([^\/]+\/[^\/\.]+)(\.git)?$/\1/' || :)"
-REPO_NAME="${REPO_NAME:-${DEFAULT_REPO_NAME:-hellqvio86/aiocasambi}}"
-PLATFORM="${PLATFORM:-github}"
-DRY_RUN="${DRY_RUN:-full}"
-LOG_LEVEL="${LOG_LEVEL:-debug}"
+if [[ -f "${REPO_ROOT}/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  . "${REPO_ROOT}/.env"
+  set +a
+fi
+
+CACHE_DIR="${HOME}/.cache/renovate"
 RENOVATE_IMAGE="${RENOVATE_IMAGE:-ghcr.io/renovatebot/renovate:latest}"
-CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/renovate"
+LOG_LEVEL="${LOG_LEVEL:-info}"
+DRY_RUN="full"
+PLATFORM=""
+TOKEN="${RENOVATE_TOKEN:-${GITHUB_TOKEN:-}}"
+REPO_NAME="hellqvio86/aiocasambi"
 
-mkdir -p "${CACHE_DIR}"
+SUMMARY="false"
 
-CONTAINER_ENGINE=""
-if command -v docker >/dev/null 2>&1; then
-  CONTAINER_ENGINE="docker"
-elif command -v podman >/dev/null 2>&1; then
-  CONTAINER_ENGINE="podman"
-else
-  echo "Error: Neither docker nor podman was found on PATH." >&2
-  exit 1
-fi
+show_help() {
+  cat <<'EOF'
+Usage: ./bin/renovate/run.sh [OPTIONS]
 
-GITHUB_TOKEN="${GITHUB_TOKEN:-${RENOVATE_TOKEN:-}}"
-TOKEN_SOURCE="none"
-if [ -n "${GITHUB_TOKEN}" ]; then
-  TOKEN_SOURCE="environment variable"
-elif command -v gh >/dev/null 2>&1 && gh auth token >/dev/null 2>&1; then
-  GITHUB_TOKEN="$(gh auth token 2>/dev/null || :)"
-  if [ -n "${GITHUB_TOKEN}" ]; then
-    TOKEN_SOURCE="GitHub CLI (auto-detected via gh)"
-  fi
-fi
-
-if [ -z "${GITHUB_TOKEN}" ]; then
-  echo "Warning: No GITHUB_TOKEN or RENOVATE_TOKEN provided, and 'gh auth token' is unavailable." >&2
-  echo "GitHub rate limits for unauthenticated requests may cause Renovate to fail." >&2
-fi
-
-SUMMARY_ONLY=0
-POSITIONAL_ARGS=()
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --summary)
-      SUMMARY_ONLY=1
-      shift
-      ;;
-    -h|--help)
-      cat <<EOF
-Usage: $(basename "$0") [options] [-- <renovate-args>]
-
-Run Renovate locally against this repository in dry-run mode.
+Run Renovate locally inside a container against this repository.
 
 Options:
-  --summary          Run Renovate and print only detected branches / PR updates.
-  -h, --help         Show this help message.
+  -s, --summary            Print a clean summary of proposed upgrade branches
+  -w, --write, --apply     Live mode: create/update local git branches (equivalent to --dry-run null)
+  -d, --dry-run <mode>     Dry-run mode: 'full' (default), 'lookup', or 'null' (live write)
+  -l, --log-level <level>  Log level: info (default), debug, warn, error
+  -t, --token <token>      GitHub Personal Access Token (or set GITHUB_TOKEN / RENOVATE_TOKEN)
+  -p, --platform <name>    Platform: 'local' (default without token) or 'github'
+  --cache-dir <dir>        Directory to store Renovate cache (default: ~/.cache/renovate)
+  -h, --help               Show this help message and exit
 
-Environment variables:
-  GITHUB_TOKEN       GitHub Personal Access Token (defaults to 'gh auth token').
-  REPO_NAME          Repository name (defaults to '${REPO_NAME}').
-  PLATFORM           Renovate platform (defaults to 'github').
-  DRY_RUN            Renovate dryRun mode: full, lookup, or extract (defaults to 'full').
-  LOG_LEVEL          Renovate log level: debug, info, warn, error (defaults to 'debug').
-  RENOVATE_IMAGE     Renovate container image (defaults to 'ghcr.io/renovatebot/renovate:latest').
+Examples:
+  # View clean summary list of available update branches (no tokens needed):
+  ./bin/renovate/run.sh --summary
+
+  # Create local git branches and commits for updates:
+  ./bin/renovate/run.sh --write
+
+  # Detailed debug inspection:
+  ./bin/renovate/run.sh --log-level debug
+
+  # Check with GitHub token in dry-run mode (simulates remote PR creation):
+  GITHUB_TOKEN="ghp_xxx" ./bin/renovate/run.sh
 EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      show_help
       exit 0
       ;;
-    --)
+    -s|--summary)
+      SUMMARY="true"
+      LOG_LEVEL="debug"
       shift
-      POSITIONAL_ARGS+=("$@")
-      break
+      ;;
+    -w|--write|--apply|--no-dry-run)
+      DRY_RUN="null"
+      shift
+      ;;
+    -d|--dry-run)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a mode argument (full, lookup, null)." >&2
+        exit 1
+      fi
+      DRY_RUN="$2"
+      shift 2
+      ;;
+    --dry-run=*)
+      DRY_RUN="${1#*=}"
+      shift
+      ;;
+    -l|--log-level)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a level argument." >&2
+        exit 1
+      fi
+      LOG_LEVEL="$2"
+      shift 2
+      ;;
+    --log-level=*)
+      LOG_LEVEL="${1#*=}"
+      shift
+      ;;
+    -t|--token)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a token argument." >&2
+        exit 1
+      fi
+      TOKEN="$2"
+      shift 2
+      ;;
+    --token=*)
+      TOKEN="${1#*=}"
+      shift
+      ;;
+    -p|--platform)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a platform argument (local, github)." >&2
+        exit 1
+      fi
+      PLATFORM="$2"
+      shift 2
+      ;;
+    --platform=*)
+      PLATFORM="${1#*=}"
+      shift
+      ;;
+    --cache-dir)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a directory path." >&2
+        exit 1
+      fi
+      CACHE_DIR="$2"
+      shift 2
+      ;;
+    --cache-dir=*)
+      CACHE_DIR="${1#*=}"
+      shift
       ;;
     *)
-      POSITIONAL_ARGS+=("$1")
-      shift
+      echo "Unknown option: $1" >&2
+      show_help
+      exit 1
       ;;
   esac
 done
 
-USER_ARGS=()
-if [ ${#POSITIONAL_ARGS[@]} -gt 0 ]; then
-  USER_ARGS=("${POSITIONAL_ARGS[@]}")
+# Auto-detect GitHub credentials from gh CLI if not explicitly passed
+GH_SOURCE="manual"
+if [[ -z "$TOKEN" ]] && command -v gh >/dev/null 2>&1; then
+  TOKEN="$(gh auth token 2>/dev/null || true)"
+  if [[ -n "$TOKEN" ]]; then
+    GH_SOURCE="gh-cli"
+  fi
 fi
 
-GIT_AUTHOR_NAME="$(git -C "${REPO_ROOT}" config user.name 2>/dev/null || echo "Olof Hellqvist")"
-GIT_AUTHOR_EMAIL="$(git -C "${REPO_ROOT}" config user.email 2>/dev/null || echo "olof.hellqvist@gmail.com")"
-GIT_AUTHOR="${GIT_AUTHOR_NAME} <${GIT_AUTHOR_EMAIL}>"
+# If platform was not explicitly set, deduce based on token presence
+if [[ -z "$PLATFORM" ]]; then
+  if [[ -n "$TOKEN" ]]; then
+    PLATFORM="github"
+  else
+    PLATFORM="local"
+  fi
+fi
+
+# Detect git author
+GIT_AUTHOR_NAME="$(git config user.name 2>/dev/null || true)"
+GIT_AUTHOR_EMAIL="$(git config user.email 2>/dev/null || true)"
+if [[ -n "$GIT_AUTHOR_NAME" && -n "$GIT_AUTHOR_EMAIL" ]]; then
+  GIT_AUTHOR="${GIT_AUTHOR_NAME} <${GIT_AUTHOR_EMAIL}>"
+else
+  GIT_AUTHOR="Olof Hellqvist <olof.hellqvist@gmail.com>"
+fi
+
+mkdir -p "$CACHE_DIR"
 
 echo "=== 🚀 Running Renovate Locally ==="
-echo "Repository: ${REPO_NAME}"
 echo "Platform:   ${PLATFORM}"
-echo "Auth:       ${TOKEN_SOURCE}"
+if [[ "$PLATFORM" == "github" ]]; then
+  if [[ "$GH_SOURCE" == "gh-cli" ]]; then
+    echo "Auth:       GitHub CLI (auto-detected via gh)"
+  else
+    echo "Auth:       Custom token provided"
+  fi
+fi
 echo "Git Author: ${GIT_AUTHOR}"
 echo "Dry Run:    ${DRY_RUN}"
 echo "Log Level:  ${LOG_LEVEL}"
 echo "Cache Dir:  ${CACHE_DIR}"
 echo "Image:      ${RENOVATE_IMAGE}"
 
-ENV_FILE="$(mktemp)"
-trap 'rm -f "${ENV_FILE}"' EXIT
-
-{
-  echo "RENOVATE_PLATFORM=${PLATFORM}"
-  echo "RENOVATE_DRY_RUN=${DRY_RUN}"
-  echo "RENOVATE_LOG_LEVEL=${LOG_LEVEL}"
-  echo "RENOVATE_GIT_AUTHOR=${GIT_AUTHOR}"
-  echo "RENOVATE_REQUIRE_CONFIG=ignored"
-  if [ -n "${GITHUB_TOKEN}" ]; then
-    echo "RENOVATE_TOKEN=${GITHUB_TOKEN}"
-    echo "GITHUB_COM_TOKEN=${GITHUB_TOKEN}"
-  fi
-} > "${ENV_FILE}"
-
-DOCKER_CMD=(
-  "${CONTAINER_ENGINE}" run --rm -i
+# Prepare Docker run arguments
+DOCKER_ARGS=(
+  docker run --rm -i
   --user "$(id -u):$(id -g)"
-  --env-file "${ENV_FILE}"
-  -v "${REPO_ROOT}:/usr/src/app:ro"
-  -v "${CACHE_DIR}:/tmp/renovate:rw"
-  -e RENOVATE_CACHE_DIR=/tmp/renovate
-  -w /usr/src/app
-  "${RENOVATE_IMAGE}"
-  renovate
-  --local-config "/usr/src/app/renovate.json"
+  -e "LOG_LEVEL=${LOG_LEVEL}"
+  -e "RENOVATE_DRY_RUN=${DRY_RUN}"
+  -e "RENOVATE_PLATFORM=${PLATFORM}"
+  -e "RENOVATE_GIT_AUTHOR=${GIT_AUTHOR}"
+  -e "RENOVATE_CACHE_DIR=/tmp/renovate/cache"
+  -e "RENOVATE_CONFIG_FILE=/usr/src/app/renovate.json"
+  -e "RENOVATE_REQUIRE_CONFIG=ignored"
+  -e "RENOVATE_ONBOARDING=false"
+  -v "${CACHE_DIR}:/tmp/renovate/cache"
+  -v "${REPO_ROOT}:/usr/src/app"
+  -w "/usr/src/app"
 )
 
-if [ ${#USER_ARGS[@]} -gt 0 ]; then
-  DOCKER_CMD+=("${USER_ARGS[@]}")
+if [[ -t 0 ]]; then
+  DOCKER_ARGS+=(-t)
 fi
 
-DOCKER_CMD+=("${REPO_NAME}")
+if [[ "$PLATFORM" == "local" ]]; then
+  DOCKER_ARGS+=(
+    "$RENOVATE_IMAGE"
+    renovate --platform=local
+  )
+else
+  if [[ -z "$TOKEN" ]]; then
+    echo "❌ Error: Platform is '${PLATFORM}' but no GitHub token was provided." >&2
+    echo "Pass --token <token> or export GITHUB_TOKEN / RENOVATE_TOKEN." >&2
+    exit 1
+  fi
+  DOCKER_ARGS+=(
+    -e "RENOVATE_TOKEN=${TOKEN}"
+    -e "RENOVATE_REPOSITORIES=[\"${REPO_NAME}\"]"
+    "$RENOVATE_IMAGE"
+    renovate
+  )
+fi
 
-if [ "${SUMMARY_ONLY}" -eq 1 ]; then
+if [[ "$SUMMARY" == "true" ]]; then
   echo "Scanning dependencies and evaluating upgrades..."
-  OUTPUT="$("${DOCKER_CMD[@]}" 2>&1 || :)"
-  echo ""
+  TMP_LOG="$(mktemp)"
+  "${DOCKER_ARGS[@]}" > "$TMP_LOG" 2>&1 || true
+
+  echo
   echo "=== 📋 Detected Renovate Upgrade Branches ==="
-  BRANCHES="$(echo "${OUTPUT}" | grep -o 'Branch: [^ ]*' | sed 's/Branch: //' | sort -u || :)"
-  if [ -n "${BRANCHES}" ]; then
-    while IFS= read -r branch; do
-      [ -n "${branch}" ] && echo "  - ${branch}"
-    done <<< "${BRANCHES}"
+  BRANCHES=$(grep -E '"branchName": "renovate/' "$TMP_LOG" | sed -E 's/.*"branchName": "(.*)".*/  - \1/' | sort -u || true)
+  if [[ -n "$BRANCHES" ]]; then
+    echo "$BRANCHES"
+    echo
+    echo "Tip: Run './bin/renovate/run.sh --write' to create these branches and open PRs."
   else
     echo "  (No update branches proposed)"
   fi
+  rm -f "$TMP_LOG"
 else
-  "${DOCKER_CMD[@]}"
+  "${DOCKER_ARGS[@]}"
 fi

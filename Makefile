@@ -9,7 +9,13 @@ build:
 	python3 setup.py sdist bdist_wheel
 upload: clean build
 	python3 setup.py sdist bdist_wheel; twine upload dist/*
-.PHONY: build clean upload renovate renovate-summary
+.PHONY: build clean upload test coverage-badge renovate renovate-summary hooks secrets trivy
+
+test: ## Run unit tests with coverage
+	PYTHONPATH=src uv run --with pytest --with pytest-asyncio --with pytest-cov --with aiohttp --with pyyaml pytest --cov=aiocasambi --cov-fail-under=80 --cov-report=term-missing --cov-report=json tests/
+
+coverage-badge: test ## Generate coverage.svg badge from coverage report
+	uv run python3 .github/scripts/generate_coverage_badge.py
 
 renovate:
 	@./bin/renovate/run.sh
